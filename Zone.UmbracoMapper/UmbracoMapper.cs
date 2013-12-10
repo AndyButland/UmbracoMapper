@@ -118,7 +118,7 @@
             // TODO: implement
             return this;
         }
-        
+
         /// <summary>
         /// Maps a collection of IPublishedContent to the passed view model
         /// </summary>
@@ -149,6 +149,22 @@
         }
 
         /// <summary>
+        /// Maps a collection of content held in XML to the passed view model collection based on conventions (and/or overrides)
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="xml">XML fragment to map from</param>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        public IUmbracoMapper MapCollection<T>(XElement xml,
+            IList<T> modelCollection,
+            Dictionary<string, string> propertyNameMappings = null) where T : new()
+        {
+            // TODO: implement
+            return this;
+        }
+
+        /// <summary>
         /// Maps a collection custom data held in an Id linked dictionary to a collection
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
@@ -158,7 +174,7 @@
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(Dictionary<int, Dictionary<string, object>> customDataCollection,
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null)
+            Dictionary<string, string> propertyNameMappings = null) where T : new()
         {
             // TODO: implement
             return this;

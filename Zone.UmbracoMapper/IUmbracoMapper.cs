@@ -24,8 +24,12 @@
             Dictionary<string, string> propertyNameMappings = null,
             string[] recursiveProperties = null) where T : new();
 
+        IUmbracoMapper MapCollection<T>(XElement xml,
+            IList<T> modelCollection,
+            Dictionary<string, string> propertyNameMappings = null) where T : new();
+
         IUmbracoMapper MapCollection<T>(Dictionary<int, Dictionary<string, object>> customDataCollection, 
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null);
+            Dictionary<string, string> propertyNameMappings = null) where T : new();
     }
 }

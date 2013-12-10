@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Xml.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Zone.UmbracoMapper.Tests.Stubs;
 
@@ -10,10 +11,7 @@
     {
         private const string SiteUrl = "http://www.example.com";        
 
-        private IUmbracoMapper GetMapper()
-        {
-            return new UmbracoMapper(SiteUrl);
-        }
+        #region Test methods
 
         [TestMethod]
         public void UmbracoMapper_MapsNativePropertiesWithMatchingNames()
@@ -62,6 +60,43 @@
             // Assert
             Assert.AreEqual("This is the body text", model.BodyText);
         }
+
+        #endregion
+
+        #region Test helpers
+
+        private IUmbracoMapper GetMapper()
+        {
+            return new UmbracoMapper(SiteUrl);
+        }
+
+        private XElement GetXmlForSingle()
+        {
+            return new XElement("item",
+                new XElement("id", 1),
+                new XElement("name", "Test name")
+            );
+        }
+
+        private XElement GetXmlForCollection()
+        {
+            return new XElement("items",
+                new XElement("item",
+                    new XElement("id", 1),
+                    new XElement("name", "Test name 1")
+                ),
+                new XElement("item",
+                    new XElement("id", 2),
+                    new XElement("name", "Test name 2")
+                ),
+                new XElement("item",
+                    new XElement("id", 3),
+                    new XElement("name", "Test name 3")
+                )
+            );
+        }
+
+        #endregion
 
         #region Test model classes
 
