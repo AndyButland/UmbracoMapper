@@ -6,6 +6,8 @@
 
     public interface IUmbracoMapper
     {
+        string AssetsRootUrl { get; set; }
+
         IUmbracoMapper Map<T>(IPublishedContent content, 
             T model, 
             Dictionary<string, string> propertyNameMappings = null,
@@ -28,14 +30,14 @@
             IList<T> modelCollection,
             Dictionary<string, string> propertyNameMappings = null,
             string groupElementName = "Item", 
-            bool createItemsIfNotAlreadyInList = false,
+            bool createItemsIfNotAlreadyInList = true,
             string modelPropNameForMatchingExistingItems = "Id",
             string itemElementNameForMatchingExistingItems = "Id") where T : new();
 
         IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
             IList<T> modelCollection,
             Dictionary<string, string> propertyNameMappings = null,
-            bool createItemsIfNotAlreadyInList = false,
+            bool createItemsIfNotAlreadyInList = true,
             string modelPropNameForMatchingExistingItems = "Id",
             string itemElementNameForMatchingExistingItems = "Id") where T : new();
     }

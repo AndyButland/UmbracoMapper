@@ -9,8 +9,6 @@
     [TestClass]
     public class UmbracoMapperTests
     {
-        private const string SiteUrl = "http://www.example.com";        
-
         #region Test methods
 
         [TestMethod]
@@ -22,7 +20,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content, model);            
+            mapper.Map(content, model);
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -47,7 +45,7 @@
         }
 
         // TODO: get this failing test working (requires mock or stub of IPublishedContent and dependencies)
-        //[TestMethod]
+        // [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
         {
             // Arrange
@@ -79,6 +77,7 @@
             Assert.AreEqual(21, model.Age);
             Assert.AreEqual(1234567890, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+            Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
 
         [TestMethod]
@@ -98,6 +97,26 @@
             Assert.AreEqual(21, model.Age);
             Assert.AreEqual(1234567890, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromXml_MapsPropertiesWithCaseInsensitiveMatchOnElementNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel4();
+            var xml = GetXmlForSingle3();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(xml, model);
+
+            // Assert
+            Assert.AreEqual(1, model.Id);
+            Assert.AreEqual("Test name", model.Name);
+            Assert.AreEqual(21, model.Age);
+            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+            Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
 
         [TestMethod]
@@ -209,6 +228,41 @@
         }
 
         [TestMethod]
+        public void UmbracoMapper_MapFromXmlToCollection_MapsPropertiesWithCustomItemElementName()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                    new Comment
+                    {
+                        Id = 2,                         
+                    }
+                }
+            };
+
+            var xml = GetXmlForCommentsCollection4();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(xml, model.Comments, null, "Entry");
+
+            // Assert
+            Assert.AreEqual(2, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+            Assert.AreEqual("Fred's comment", model.Comments[0].Text);
+            Assert.AreEqual("Sally's comment", model.Comments[1].Text);
+            Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
+        }
+
+        [TestMethod]
         public void UmbracoMapper_MapFromXmlToCollection_DoesntMapNonExistingItemsUnlessRequestedToDoSo()
         {
             // Arrange
@@ -229,7 +283,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(xml, model.Comments);
+            mapper.MapCollection(xml, model.Comments, null, "Item", false);
 
             // Assert
             Assert.AreEqual(1, model.Comments.Count);
@@ -257,7 +311,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(xml, model.Comments, null, "Item", true);
+            mapper.MapCollection(xml, model.Comments);
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -300,7 +354,7 @@
             Assert.AreEqual("Sally's comment", model.Comments[1].Text);
             Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
         }
-        
+
         [TestMethod]
         public void UmbracoMapper_MapFromDictionaryToCollection_MapsPropertiesForExistingEntriesWithMatchingNames()
         {
@@ -392,7 +446,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments);
+            mapper.MapCollection(dictionary, model.Comments, null, false);
 
             // Assert
             Assert.AreEqual(1, model.Comments.Count);
@@ -470,7 +524,7 @@
 
         private IUmbracoMapper GetMapper()
         {
-            return new UmbracoMapper(SiteUrl);
+            return new UmbracoMapper();
         }
 
         private XElement GetXmlForSingle()
@@ -480,8 +534,8 @@
                 new XElement("Name", "Test name"),
                 new XElement("Age", "21"),
                 new XElement("FacebookId", "1234567890"),
-                new XElement("RegisteredOn", "2013-04-13")
-            );
+                new XElement("RegisteredOn", "2013-04-13"),
+                new XElement("AverageScore", "12.73"));
         }
 
         private XElement GetXmlForSingle2()
@@ -491,8 +545,18 @@
                 new XElement("Name2", "Test name"),
                 new XElement("Age", "21"),
                 new XElement("FacebookId", "1234567890"),
-                new XElement("RegistrationDate", "2013-04-13")
-            );
+                new XElement("RegistrationDate", "2013-04-13"));
+        }
+
+        private XElement GetXmlForSingle3()
+        {
+            return new XElement("item",
+                new XElement("id", 1),
+                new XElement("name", "Test name"),
+                new XElement("age", "21"),
+                new XElement("facebookId", "1234567890"),
+                new XElement("registeredOn", "2013-04-13"),
+                new XElement("averageScore", "12.73"));
         }
 
         private XElement GetXmlForCommentsCollection()
@@ -502,15 +566,12 @@
                     new XElement("Id", 1),
                     new XElement("Name", "Fred Bloggs"),
                     new XElement("Text", "Fred's comment"),
-                    new XElement("CreatedOn", "2013-04-13 09:30")
-                ),
+                    new XElement("CreatedOn", "2013-04-13 09:30")),
                 new XElement("Item",
                     new XElement("Id", 2),
                     new XElement("Name", "Sally Smith"),
                     new XElement("Text", "Sally's comment"),
-                    new XElement("CreatedOn", "2013-04-13 10:30")
-                )
-            );
+                    new XElement("CreatedOn", "2013-04-13 10:30")));
         }
 
         private XElement GetXmlForCommentsCollection2()
@@ -520,15 +581,12 @@
                     new XElement("Id", 1),
                     new XElement("Name", "Fred Bloggs"),
                     new XElement("Text", "Fred's comment"),
-                    new XElement("RecordedOn", "2013-04-13 09:30")
-                ),
+                    new XElement("RecordedOn", "2013-04-13 09:30")),
                 new XElement("Item",
                     new XElement("Id", 2),
                     new XElement("Name", "Sally Smith"),
                     new XElement("Text", "Sally's comment"),
-                    new XElement("RecordedOn", "2013-04-13 10:30")
-                )
-            );
+                    new XElement("RecordedOn", "2013-04-13 10:30")));
         }
 
         private XElement GetXmlForCommentsCollection3()
@@ -538,20 +596,33 @@
                     new XElement("Identifier", 1),
                     new XElement("Name", "Fred Bloggs"),
                     new XElement("Text", "Fred's comment"),
-                    new XElement("CreatedOn", "2013-04-13 09:30")
-                ),
+                    new XElement("CreatedOn", "2013-04-13 09:30")),
                 new XElement("Item",
                     new XElement("Identifier", 2),
                     new XElement("Name", "Sally Smith"),
                     new XElement("Text", "Sally's comment"),
-                    new XElement("CreatedOn", "2013-04-13 10:30")
-                )
-            );
+                    new XElement("CreatedOn", "2013-04-13 10:30")));
+        }
+
+        private XElement GetXmlForCommentsCollection4()
+        {
+            return new XElement("Entries",
+                new XElement("Entry",
+                    new XElement("Id", 1),
+                    new XElement("Name", "Fred Bloggs"),
+                    new XElement("Text", "Fred's comment"),
+                    new XElement("CreatedOn", "2013-04-13 09:30")),
+                new XElement("Entry",
+                    new XElement("Id", 2),
+                    new XElement("Name", "Sally Smith"),
+                    new XElement("Text", "Sally's comment"),
+                    new XElement("CreatedOn", "2013-04-13 10:30")));
         }
 
         private Dictionary<string, object> GetDictionaryForSingle()
         {
-            return new Dictionary<string, object> { 
+            return new Dictionary<string, object> 
+            { 
                 { "Id", 1 }, 
                 { "Name", "Test name" },
                 { "Age", 21 },
@@ -562,7 +633,8 @@
 
         private Dictionary<string, object> GetDictionaryForSingle2()
         {
-            return new Dictionary<string, object> { 
+            return new Dictionary<string, object> 
+            { 
                 { "Id", 1 }, 
                 { "Name2", "Test name" },
                 { "Age", 21 },
@@ -573,7 +645,8 @@
 
         private IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection()
         {
-            return new List<Dictionary<string, object>> { 
+            return new List<Dictionary<string, object>> 
+            { 
                 new Dictionary<string, object>
                     {
                     { "Id", 1 }, 
@@ -593,7 +666,8 @@
 
         private IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection2()
         {
-            return new List<Dictionary<string, object>> { 
+            return new List<Dictionary<string, object>>
+            { 
                 new Dictionary<string, object>
                     {
                     { "Id", 1 }, 
@@ -613,7 +687,8 @@
 
         private IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection3()
         {
-            return new List<Dictionary<string, object>> { 
+            return new List<Dictionary<string, object>> 
+            { 
                 new Dictionary<string, object>
                     {
                     { "Identifier", 1 }, 
@@ -658,10 +733,12 @@
 
             public long FacebookId { get; set; }
 
+            public decimal AverageScore { get; set; }
+
             public DateTime RegisteredOn { get; set; }
         }
 
-        private class SimpleViewModelWithCollection: SimpleViewModel
+        private class SimpleViewModelWithCollection : SimpleViewModel
         {
             public IList<Comment> Comments { get; set; }
         }

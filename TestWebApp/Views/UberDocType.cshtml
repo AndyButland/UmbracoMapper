@@ -1,0 +1,63 @@
+﻿@inherits Umbraco.Web.Mvc.UmbracoViewPage<TestWebApp.Models.UberDocTypeViewModel>
+
+@{
+    Layout = null;
+}
+
+<h1>@Model.Heading</h1>
+<p>Created on: @Model.CreatedOn</p>
+@Html.Raw(Model.BodyText)
+<p>Rating: @Model.StarRating stars</p>
+<p>Approved: @(Model.IsApproved ? "Yes" : "No")</p>
+<p>Average Score: @Model.AverageScore</p>
+
+@if (Model.MainImage != null)
+{
+    <img src="@Model.MainImage.Url" />
+}
+
+<h2>Comments</h2>
+
+@if (Model.Comments.Any())
+{
+    foreach (var comment in Model.Comments)
+    {
+        <p>@comment.Text | <em>@comment.Author on @comment.CreatedOn.ToString("d-MMM-yyyy HH:mm")</em></p>
+    }
+}
+else
+{
+    <p>There are no comments.</p>
+}
+
+<h2>Countries</h2>
+
+@if (Model.Countries.Any())
+{
+    <ul>
+        @foreach (var country in Model.Countries)
+        {
+            <li>@country.Name</li>
+        }
+    </ul>
+}
+else
+{
+    <p>There are no countries.</p>
+}
+
+<h2>Related Links</h2>
+
+@if (Model.RelatedLinks.Any())
+{
+    <ul>
+        @foreach (var link in Model.RelatedLinks)
+        {
+            <li><a href="@link.Link" target="_@(link.NewWindow ? "blank" : "self")">@link.Title</a></li>
+        }
+    </ul>
+}
+else
+{
+    <p>There are no related link.</p>
+}

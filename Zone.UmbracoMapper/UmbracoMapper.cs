@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
+    using System.Web;
     using System.Xml.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
@@ -11,15 +12,19 @@
 
     public class UmbracoMapper : IUmbracoMapper
     {
-        /// <summary>
-        /// Primary domain of the current Umbraco website, used for creating absolute paths to image files
-        /// </summary>
-        private readonly string _siteUrl;
-
-        public UmbracoMapper(string siteUrl)
+        public UmbracoMapper()
         {
-            _siteUrl = siteUrl;
         }
+
+        #region Properties
+
+        /// <summary>
+        /// Gets or sets the root URL from where assets are served from in order to populate
+        /// absolute URLs for media files (and support CDN delivery)
+        /// </summary>
+        public string AssetsRootUrl { get; set; }
+
+        #endregion
 
         #region Interface methods
 
@@ -60,12 +65,11 @@
                         property.SetValue(model, mf);
                         break;
 
-                    case "String":
-                    case "IHtmlString":
+                    default:
                         var value = content.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
                         if (value != null)
                         {
-                            property.SetValue(model, value);
+                            SetTypedPropertyValue(model, property, value.ToString());
                         }
 
                         break;
@@ -92,18 +96,29 @@
             // Loop through all settable properties on model
             foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
             {
-                var propName = GetMappedPropertyName(property.Name, propertyNameMappings);
+                var propName = GetMappedPropertyName(property.Name, propertyNameMappings, false);
 
-                // If element with mapped name found, map the value
-                if (xml.Element(propName) != null)
+                // If element with mapped name found, map the value (check case insensitively)
+                var mappedElement = GetXElementCaseInsensitive(xml, propName);
+                if (mappedElement != null)
                 {
-                    var stringValue = xml.Element(propName).Value;
+                    var stringValue = mappedElement.Value;
                     SetTypedPropertyValue<T>(model, property, stringValue);
+                }
+                else
+                {
+                    // Try to see if it's in an attribute too
+                    var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
+                    if (mappedAttribute != null)
+                    {
+                        var stringValue = mappedAttribute.Value;
+                        SetTypedPropertyValue<T>(model, property, stringValue);
+                    }
                 }
             }
 
             return this;
-        }        
+        }
 
         /// <summary>
         /// Maps custom data held in a dictionary
@@ -147,16 +162,19 @@
             Dictionary<string, string> propertyNameMappings = null,
             string[] recursiveProperties = null) where T : new()
         {
-            if (modelCollection == null)
+            if (contentCollection != null)
             {
-                modelCollection = new List<T>();
-            }
+                if (modelCollection == null)
+                {
+                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
+                }
 
-            foreach (var item in contentCollection)
-            {
-                var itemToCreate = new T();
-                Map<T>(item, itemToCreate, propertyNameMappings, recursiveProperties);
-                modelCollection.Add(itemToCreate);
+                foreach (var item in contentCollection)
+                {
+                    var itemToCreate = new T();
+                    Map<T>(item, itemToCreate, propertyNameMappings, recursiveProperties);
+                    modelCollection.Add(itemToCreate);
+                }
             }
 
             return this;
@@ -171,45 +189,48 @@
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="groupElementName">Name of the element grouping each item in the XML (defaults to "Item")</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
-        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").</param>
-        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
+        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(XElement xml,
             IList<T> modelCollection,
             Dictionary<string, string> propertyNameMappings = null,
             string groupElementName = "item",
-            bool createItemsIfNotAlreadyInList = false,
+            bool createItemsIfNotAlreadyInList = true,
             string modelPropNameForMatchingExistingItems = "Id",
             string itemElementNameForMatchingExistingItems = "Id") where T : new()
         {
-            if (modelCollection == null)
+            if (xml != null)
             {
-                modelCollection = new List<T>();
-            }
-
-            // Loop through each of the items defined in the XML
-            foreach (var element in xml.Elements(groupElementName))
-            {
-                // Check if item is already in the list by looking up provided unique key
-                var itemToUpdate = modelCollection
-                    .Where(x => x.GetType()
-                        .GetProperties()
-                        .Single(p => p.Name == modelPropNameForMatchingExistingItems)
-                        .GetValue(x).ToString().ToLowerInvariant() == element.Element(itemElementNameForMatchingExistingItems).Value.ToLowerInvariant())
-                    .SingleOrDefault();
-                if (itemToUpdate != null)
+                if (modelCollection == null)
                 {
-                    // Item found, so map it
-                    Map<T>(element, itemToUpdate, propertyNameMappings);
+                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
                 }
-                else
+
+                // Loop through each of the items defined in the XML
+                foreach (var element in xml.Elements(groupElementName))
                 {
-                    // Item not found, so create if that was requested
-                    if (createItemsIfNotAlreadyInList)
+                    // Check if item is already in the list by looking up provided unique key
+                    T itemToUpdate = default(T);
+                    if (TypeHasProperty(typeof(T), modelPropNameForMatchingExistingItems))
                     {
-                        var itemToCreate = new T();
-                        Map<T>(element, itemToCreate, propertyNameMappings);
-                        modelCollection.Add(itemToCreate);
+                        itemToUpdate = GetExistingItemFromCollection(modelCollection, modelPropNameForMatchingExistingItems, element.Element(itemElementNameForMatchingExistingItems).Value);
+                    }
+
+                    if (itemToUpdate != null)
+                    {
+                        // Item found, so map it
+                        Map<T>(element, itemToUpdate, propertyNameMappings);
+                    }
+                    else
+                    {
+                        // Item not found, so create if that was requested
+                        if (createItemsIfNotAlreadyInList)
+                        {
+                            var itemToCreate = new T();
+                            Map<T>(element, itemToCreate, propertyNameMappings);
+                            modelCollection.Add(itemToCreate);
+                        }
                     }
                 }
             }
@@ -225,44 +246,47 @@
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
-        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").</param>
-        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
+        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries,
             IList<T> modelCollection,
             Dictionary<string, string> propertyNameMappings = null,
-            bool createItemsIfNotAlreadyInList = false,
+            bool createItemsIfNotAlreadyInList = true,
             string modelPropNameForMatchingExistingItems = "Id",
             string itemElementNameForMatchingExistingItems = "Id") where T : new()
         {
-            if (modelCollection == null)
+            if (dictionaries != null)
             {
-                modelCollection = new List<T>();
-            }
-
-            // Loop through each of the items defined in the XML
-            foreach (var customDataItem in dictionaries)
-            {
-                // Check if item is already in the list by looking up provided unique key
-                var itemToUpdate = modelCollection
-                    .Where(x => x.GetType()
-                        .GetProperties()
-                        .Single(p => p.Name == modelPropNameForMatchingExistingItems)
-                        .GetValue(x).ToString().ToLowerInvariant() == customDataItem[itemElementNameForMatchingExistingItems].ToString().ToLowerInvariant())
-                    .SingleOrDefault();
-                if (itemToUpdate != null)
+                if (modelCollection == null)
                 {
-                    // Item found, so map it
-                    Map<T>(customDataItem, itemToUpdate, propertyNameMappings);
+                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
                 }
-                else
+
+                // Loop through each of the items defined in the XML
+                foreach (var customDataItem in dictionaries)
                 {
-                    // Item not found, so create if that was requested
-                    if (createItemsIfNotAlreadyInList)
+                    // Check if item is already in the list by looking up provided unique key
+                    T itemToUpdate = default(T);
+                    if (TypeHasProperty(typeof(T), modelPropNameForMatchingExistingItems))
                     {
-                        var itemToCreate = new T();
-                        Map<T>(customDataItem, itemToCreate, propertyNameMappings);
-                        modelCollection.Add(itemToCreate);
+                        itemToUpdate = GetExistingItemFromCollection(modelCollection, modelPropNameForMatchingExistingItems, customDataItem[itemElementNameForMatchingExistingItems].ToString());
+                    }
+
+                    if (itemToUpdate != null)
+                    {
+                        // Item found, so map it
+                        Map<T>(customDataItem, itemToUpdate, propertyNameMappings);
+                    }
+                    else
+                    {
+                        // Item not found, so create if that was requested
+                        if (createItemsIfNotAlreadyInList)
+                        {
+                            var itemToCreate = new T();
+                            Map<T>(customDataItem, itemToCreate, propertyNameMappings);
+                            modelCollection.Add(itemToCreate);
+                        }
                     }
                 }
             }
@@ -281,7 +305,8 @@
         /// <param name="propertyNameMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
         /// <returns>Name of property to map from</returns>
-        private string GetMappedPropertyName(string propName, Dictionary<string, string> propertyNameMappings, bool convertToCamelCase = false)
+        private string GetMappedPropertyName(string propName, Dictionary<string, string> propertyNameMappings,
+            bool convertToCamelCase = false)
         {
             var mappedName = propName;
             if (propertyNameMappings != null && propertyNameMappings.ContainsKey(propName))
@@ -291,11 +316,182 @@
 
             if (convertToCamelCase)
             {
-                mappedName = char.ToLowerInvariant(mappedName[0]) + mappedName.Substring(1);
+                mappedName = CamelCase(mappedName);
             }
 
             return mappedName;
+        }        
+
+        /// <summary>
+        /// Helper to check whether given property is defined as recursive
+        /// </summary>
+        /// <param name="recursiveProperties">Array of recursive property names</param>
+        /// <param name="propertyName">Name of property</param>
+        /// <returns>True if in list of recursive properties</returns>
+        private bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
+        {
+            return recursiveProperties != null && recursiveProperties.Contains(propertyName);
         }
+
+        /// <summary>
+        /// Helper method to convert a string value to an appropriate type for setting via reflection
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">View model to map to</param>
+        /// <param name="property">Property to map to</param>
+        /// <param name="stringValue">String representation of property value</param>
+        private void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue)
+        {
+            switch (property.PropertyType.Name)
+            {
+                case "Boolean":
+                    bool boolValue;
+                    if (bool.TryParse(stringValue, out boolValue))
+                    {
+                        property.SetValue(model, boolValue);
+                    }
+
+                    break;
+                case "Byte":
+                    byte byteValue;
+                    if (byte.TryParse(stringValue, out byteValue))
+                    {
+                        property.SetValue(model, byteValue);
+                    }
+
+                    break;
+                case "Int16":
+                    short shortValue;
+                    if (short.TryParse(stringValue, out shortValue))
+                    {
+                        property.SetValue(model, shortValue);
+                    }
+
+                    break;
+                case "Int32":
+                    int intValue;
+                    if (int.TryParse(stringValue, out intValue))
+                    {
+                        property.SetValue(model, intValue);
+                    }
+
+                    break;
+                case "Int64":
+                    long longValue;
+                    if (long.TryParse(stringValue, out longValue))
+                    {
+                        property.SetValue(model, longValue);
+                    }
+
+                    break;
+                case "Decimal":
+                    decimal decimalValue;
+                    if (decimal.TryParse(stringValue, out decimalValue))
+                    {
+                        property.SetValue(model, decimalValue);
+                    }
+
+                    break;
+                case "Float":
+                    float floatValue;
+                    if (float.TryParse(stringValue, out floatValue))
+                    {
+                        property.SetValue(model, floatValue);
+                    }
+
+                    break;
+                case "Double":
+                    double doubleValue;
+                    if (double.TryParse(stringValue, out doubleValue))
+                    {
+                        property.SetValue(model, doubleValue);
+                    }
+
+                    break;
+                case "DateTime":
+                    DateTime dateTimeValue;
+                    if (DateTime.TryParse(stringValue, out dateTimeValue))
+                    {
+                        property.SetValue(model, dateTimeValue);
+                    }
+
+                    break;
+                case "IHtmlString":
+                    var htmlString = new HtmlString(stringValue);
+                    property.SetValue(model, htmlString);
+                    break;
+                case "String":                
+                    property.SetValue(model, stringValue);
+                    break;
+            }
+        }
+
+        /// <summary>
+        /// Helper to check if a given type has a property
+        /// </summary>
+        /// <param name="type">Type to check</param>
+        /// <param name="propName">Name of property</param>
+        /// <returns>True of property exists on type</returns>
+        private bool TypeHasProperty(Type type, string propName)
+        {
+            return type
+                .GetProperties()
+                .SingleOrDefault(p => p.Name == propName) != null;
+        }
+
+        /// <summary>
+        /// Helper method to get an existing item from the model collection
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="modelPropertyName">Model property name to look up</param>
+        /// <param name="valueToMatch">Property value to match on</param>
+        /// <returns>Single instance of T if found in the collection</returns>
+        private T GetExistingItemFromCollection<T>(IList<T> modelCollection, string modelPropertyName, string valueToMatch) where T : new()
+        {
+            return modelCollection
+                .Where(x => x.GetType()
+                    .GetProperties()
+                    .Single(p => p.Name == modelPropertyName)
+                    .GetValue(x).ToString().ToLowerInvariant() == valueToMatch.ToLowerInvariant())
+                .SingleOrDefault();
+        }
+
+        /// <summary>
+        /// Helper method to convert a string into camel case
+        /// </summary>
+        /// <param name="input">Input string</param>
+        /// <returns>Camel cased string</returns>
+        private string CamelCase(string input)
+        {
+            return char.ToLowerInvariant(input[0]) + input.Substring(1);
+        }
+
+        /// <summary>
+        /// Helper to retrieve an XElement by name case insensitively
+        /// </summary>
+        /// <param name="xml">Xml fragment to search in</param>
+        /// <param name="propName">Element name to look up</param>
+        /// <returns>Matched XElement</returns>
+        private XElement GetXElementCaseInsensitive(XElement xml, string propName)
+        {
+            return xml.Elements().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
+        }
+
+        /// <summary>
+        /// Helper to retrieve an XAttribute by name case insensitively
+        /// </summary>
+        /// <param name="xml">Xml fragment to search in</param>
+        /// <param name="propName">Element name to look up</param>
+        /// <returns>Matched XAttribue</returns>
+        private XAttribute GetXAttributeCaseInsensitive(XElement xml, string propName)
+        {
+            return xml.Attributes().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
+        } 
+
+        #endregion
+
+        #region Specific type converters
 
         /// <summary>
         /// Helper to convert a DAMP model into a standard MediaFile object
@@ -313,7 +509,7 @@
                 mediaFile.Id = dampModelItem.Id;
                 mediaFile.Name = dampModelItem.Name;
                 mediaFile.Url = dampModelItem.Url;
-                mediaFile.DomainWithUrl = _siteUrl + dampModelItem.Url;
+                mediaFile.DomainWithUrl = AssetsRootUrl + dampModelItem.Url;
                 mediaFile.DocumentTypeAlias = dampModelItem.Type;
 
                 if (dampModelItem.Type == "Image")
@@ -347,66 +543,6 @@
             }
 
             return null;
-        }
-
-        /// <summary>
-        /// Helper to check whether given property is defined as recursive
-        /// </summary>
-        /// <param name="recursiveProperties">Array of recursive property names</param>
-        /// <param name="propertyName">Name of property</param>
-        /// <returns>True if in list of recursive properties</returns>
-        private bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
-        {
-            return recursiveProperties != null && recursiveProperties.Contains(propertyName);
-        }
-
-        /// <summary>
-        /// Helper method to convert a string value to an appropriate type for setting via reflection
-        /// </summary>
-        /// <typeparam name="T">View model type</typeparam>
-        /// <param name="model">View model to map to</param>
-        /// <param name="property">Property to map to</param>
-        /// <param name="stringValue">String representation of property value</param>
-        private void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue)
-        {
-            switch (property.PropertyType.Name)
-            {
-                case "Byte":
-                    byte byteValue;
-                    if (byte.TryParse(stringValue, out byteValue))
-                    {
-                        property.SetValue(model, byteValue);
-                    }
-
-                    break;
-                case "Int32":
-                    int intValue;
-                    if (int.TryParse(stringValue, out intValue))
-                    {
-                        property.SetValue(model, intValue);
-                    }
-
-                    break;
-                case "Int64":
-                    long longValue;
-                    if (long.TryParse(stringValue, out longValue))
-                    {
-                        property.SetValue(model, longValue);
-                    }
-
-                    break;
-                case "DateTime":
-                    DateTime dateTimeValue;
-                    if (DateTime.TryParse(stringValue, out dateTimeValue))
-                    {
-                        property.SetValue(model, dateTimeValue);
-                    }
-
-                    break;
-                case "String":
-                    property.SetValue(model, stringValue);
-                    break;
-            }
         }
 
         #endregion
