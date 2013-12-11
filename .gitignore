@@ -19,6 +19,13 @@ __MACOSX/
 /Bin
 .bin/
 .Bin/
+App_Browsers/
+*/App_Data/preview/
+*/App_Data/TEMP/
+*/App_Data/umbraco.config
+[Cc]ached/
+ClientDependency/
+ExamineIndexes/
 
 
 

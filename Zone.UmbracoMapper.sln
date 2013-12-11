@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper", "Zone.
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.Tests", "Zone.UmbracoMapper.Tests\Zone.UmbracoMapper.Tests.csproj", "{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWebApp", "TestWebApp\TestWebApp.csproj", "{281FF889-A23D-4CFC-A88B-FB392A01C4DF}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -19,6 +21,10 @@ Global
 		{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{281FF889-A23D-4CFC-A88B-FB392A01C4DF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{281FF889-A23D-4CFC-A88B-FB392A01C4DF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{281FF889-A23D-4CFC-A88B-FB392A01C4DF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{281FF889-A23D-4CFC-A88B-FB392A01C4DF}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

@@ -15,7 +15,7 @@
             T model,
             Dictionary<string, string> propertyNameMappings = null);
 
-        IUmbracoMapper Map<T>(Dictionary<string, object> customData,
+        IUmbracoMapper Map<T>(Dictionary<string, object> dictionary,
             T model,
             Dictionary<string, string> propertyNameMappings = null);
 
@@ -26,10 +26,17 @@
 
         IUmbracoMapper MapCollection<T>(XElement xml,
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null) where T : new();
+            Dictionary<string, string> propertyNameMappings = null,
+            string groupElementName = "Item", 
+            bool createItemsIfNotAlreadyInList = false,
+            string modelPropNameForMatchingExistingItems = "Id",
+            string itemElementNameForMatchingExistingItems = "Id") where T : new();
 
-        IUmbracoMapper MapCollection<T>(Dictionary<int, Dictionary<string, object>> customDataCollection, 
+        IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null) where T : new();
+            Dictionary<string, string> propertyNameMappings = null,
+            bool createItemsIfNotAlreadyInList = false,
+            string modelPropNameForMatchingExistingItems = "Id",
+            string itemElementNameForMatchingExistingItems = "Id") where T : new();
     }
 }

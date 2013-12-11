@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Reflection;
     using System.Xml.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
@@ -69,7 +70,7 @@
 
                         break;
 
-                    // TODO: further type mappings
+                    // TODO: further type mappings (date, numbers, boolean)
                 }
             }
 
@@ -96,26 +97,39 @@
                 // If element with mapped name found, map the value
                 if (xml.Element(propName) != null)
                 {
-                    property.SetValue(model, xml.Element(propName).Value);
+                    var stringValue = xml.Element(propName).Value;
+                    SetTypedPropertyValue<T>(model, property, stringValue);
                 }
             }
 
             return this;
-        }
+        }        
 
         /// <summary>
         /// Maps custom data held in a dictionary
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
-        /// <param name="customData">Dictionary of property name/value pairs</param>
+        /// <param name="dictionary">Dictionary of property name/value pairs</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Instance of IUmbracoMapper</returns>
-        public IUmbracoMapper Map<T>(Dictionary<string, object> customData, 
+        public IUmbracoMapper Map<T>(Dictionary<string, object> dictionary, 
             T model,
             Dictionary<string, string> propertyNameMappings = null)
         {
-            // TODO: implement
+            // Loop through all settable properties on model
+            foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+            {
+                var propName = GetMappedPropertyName(property.Name, propertyNameMappings);
+
+                // If element with mapped name found, map the value
+                if (dictionary.ContainsKey(propName))
+                {
+                    var stringValue = dictionary[propName].ToString();
+                    SetTypedPropertyValue<T>(model, property, stringValue);
+                }
+            }
+
             return this;
         }
 
@@ -140,9 +154,9 @@
 
             foreach (var item in contentCollection)
             {
-                var obj = new T();
-                Map<T>(item, obj, propertyNameMappings, recursiveProperties);
-                modelCollection.Add(obj);
+                var itemToCreate = new T();
+                Map<T>(item, itemToCreate, propertyNameMappings, recursiveProperties);
+                modelCollection.Add(itemToCreate);
             }
 
             return this;
@@ -155,28 +169,104 @@
         /// <param name="xml">XML fragment to map from</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="groupElementName">Name of the element grouping each item in the XML (defaults to "Item")</param>
+        /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
+        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").</param>
+        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(XElement xml,
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null) where T : new()
+            Dictionary<string, string> propertyNameMappings = null,
+            string groupElementName = "item",
+            bool createItemsIfNotAlreadyInList = false,
+            string modelPropNameForMatchingExistingItems = "Id",
+            string itemElementNameForMatchingExistingItems = "Id") where T : new()
         {
-            // TODO: implement
+            if (modelCollection == null)
+            {
+                modelCollection = new List<T>();
+            }
+
+            // Loop through each of the items defined in the XML
+            foreach (var element in xml.Elements(groupElementName))
+            {
+                // Check if item is already in the list by looking up provided unique key
+                var itemToUpdate = modelCollection
+                    .Where(x => x.GetType()
+                        .GetProperties()
+                        .Single(p => p.Name == modelPropNameForMatchingExistingItems)
+                        .GetValue(x).ToString().ToLowerInvariant() == element.Element(itemElementNameForMatchingExistingItems).Value.ToLowerInvariant())
+                    .SingleOrDefault();
+                if (itemToUpdate != null)
+                {
+                    // Item found, so map it
+                    Map<T>(element, itemToUpdate, propertyNameMappings);
+                }
+                else
+                {
+                    // Item not found, so create if that was requested
+                    if (createItemsIfNotAlreadyInList)
+                    {
+                        var itemToCreate = new T();
+                        Map<T>(element, itemToCreate, propertyNameMappings);
+                        modelCollection.Add(itemToCreate);
+                    }
+                }
+            }
+
             return this;
         }
 
         /// <summary>
-        /// Maps a collection custom data held in an Id linked dictionary to a collection
+        /// Maps a collection custom data held in an linked dictionary to a collection
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
-        /// <param name="customDataCollection">Collection of custom data containing a dictionary of property name/value pairs wrapped in a dictionary providing the Id for lookup on an existing collection</param>
+        /// <param name="dictionaries">Collection of custom data containing a list of dictionary of property name/value pairs.  One of these keys provides a lookup for the existing collection.</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
+        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").</param>
+        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identifiy and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
-        public IUmbracoMapper MapCollection<T>(Dictionary<int, Dictionary<string, object>> customDataCollection,
+        public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries,
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null) where T : new()
+            Dictionary<string, string> propertyNameMappings = null,
+            bool createItemsIfNotAlreadyInList = false,
+            string modelPropNameForMatchingExistingItems = "Id",
+            string itemElementNameForMatchingExistingItems = "Id") where T : new()
         {
-            // TODO: implement
+            if (modelCollection == null)
+            {
+                modelCollection = new List<T>();
+            }
+
+            // Loop through each of the items defined in the XML
+            foreach (var customDataItem in dictionaries)
+            {
+                // Check if item is already in the list by looking up provided unique key
+                var itemToUpdate = modelCollection
+                    .Where(x => x.GetType()
+                        .GetProperties()
+                        .Single(p => p.Name == modelPropNameForMatchingExistingItems)
+                        .GetValue(x).ToString().ToLowerInvariant() == customDataItem[itemElementNameForMatchingExistingItems].ToString().ToLowerInvariant())
+                    .SingleOrDefault();
+                if (itemToUpdate != null)
+                {
+                    // Item found, so map it
+                    Map<T>(customDataItem, itemToUpdate, propertyNameMappings);
+                }
+                else
+                {
+                    // Item not found, so create if that was requested
+                    if (createItemsIfNotAlreadyInList)
+                    {
+                        var itemToCreate = new T();
+                        Map<T>(customDataItem, itemToCreate, propertyNameMappings);
+                        modelCollection.Add(itemToCreate);
+                    }
+                }
+            }
+
             return this;
         }
 
@@ -268,6 +358,55 @@
         private bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
         {
             return recursiveProperties != null && recursiveProperties.Contains(propertyName);
+        }
+
+        /// <summary>
+        /// Helper method to convert a string value to an appropriate type for setting via reflection
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">View model to map to</param>
+        /// <param name="property">Property to map to</param>
+        /// <param name="stringValue">String representation of property value</param>
+        private void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue)
+        {
+            switch (property.PropertyType.Name)
+            {
+                case "Byte":
+                    byte byteValue;
+                    if (byte.TryParse(stringValue, out byteValue))
+                    {
+                        property.SetValue(model, byteValue);
+                    }
+
+                    break;
+                case "Int32":
+                    int intValue;
+                    if (int.TryParse(stringValue, out intValue))
+                    {
+                        property.SetValue(model, intValue);
+                    }
+
+                    break;
+                case "Int64":
+                    long longValue;
+                    if (long.TryParse(stringValue, out longValue))
+                    {
+                        property.SetValue(model, longValue);
+                    }
+
+                    break;
+                case "DateTime":
+                    DateTime dateTimeValue;
+                    if (DateTime.TryParse(stringValue, out dateTimeValue))
+                    {
+                        property.SetValue(model, dateTimeValue);
+                    }
+
+                    break;
+                case "String":
+                    property.SetValue(model, stringValue);
+                    break;
+            }
         }
 
         #endregion
