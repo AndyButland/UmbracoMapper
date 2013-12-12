@@ -24,7 +24,7 @@
 
             // Create view model and run mapping
             var model = new UberDocTypeViewModel();
-            Mapper.Map(CurrentPage, model, new Dictionary<string, string> { { "CreatedOn", "CreateDate" }, })
+            Mapper.Map(CurrentPage, model, new Dictionary<string, string> { { "CreatcdOn", "CreateDate" }, })
                   .MapCollection(CurrentPage.Children, model.Comments)
                   .MapCollection(countryNodes, model.Countries)
                   .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
