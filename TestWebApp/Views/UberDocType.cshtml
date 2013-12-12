@@ -61,3 +61,17 @@ else
 {
     <p>There are no related link.</p>
 }
+
+<h2>More Random Things</h2>
+
+<p>Single value from XML: @Model.SingleValueFromXml</p>
+
+<p>XML collection: @string.Join(", ", Model.CollectionFromXml.Select(x => x.Name).ToArray())</p>
+
+<p>Single value from Dictionary: @Model.SingleValueFromDictionary</p>
+
+<p>Dictionary collection: @string.Join(", ", Model.CollectionFromDictionary.Select(x => x.Name).ToArray())</p>
+
+<p>Single value from JSON: @Model.SingleValueFromJson</p>
+
+<p>JSON collection: @string.Join(", ", Model.CollectionFromJson.Select(x => x.Name).ToArray())</p>

@@ -250,6 +250,7 @@
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\UberDocTypeController.cs" />
     <Compile Include="Models\CommentViewModel.cs" />
+    <Compile Include="Models\NamedItemViewModel.cs" />
     <Compile Include="Models\LinkViewModel.cs" />
     <Compile Include="Models\CountryViewModel.cs" />
     <Compile Include="Models\UberDocTypeViewModel.cs" />
