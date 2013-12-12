@@ -21,24 +21,34 @@
             T model,
             Dictionary<string, string> propertyNameMappings = null);
 
+        IUmbracoMapper Map<T>(string json,
+            T model,
+            Dictionary<string, string> propertyNameMappings = null);
+
         IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
             IList<T> modelCollection,
             Dictionary<string, string> propertyNameMappings = null,
             string[] recursiveProperties = null) where T : new();
 
-        IUmbracoMapper MapCollection<T>(XElement xml,
-            IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null,
+        IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
+            Dictionary<string, string> propertyNameMappings = null, 
             string groupElementName = "Item", 
-            bool createItemsIfNotAlreadyInList = true,
-            string modelPropNameForMatchingExistingItems = "Id",
-            string itemElementNameForMatchingExistingItems = "Id") where T : new();
+            bool createItemsIfNotAlreadyInList = true, 
+            string sourceIdentifyingPropName = "Id", 
+            string destIdentifyingPropName = "Id") where T : new();
 
         IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
-            IList<T> modelCollection,
+            IList<T> modelCollection, 
+            Dictionary<string, string> propertyNameMappings = null, 
+            bool createItemsIfNotAlreadyInList = true, 
+            string sourceIdentifyingPropName = "Id", 
+            string destIdentifyingPropName = "Id") where T : new();
+
+        IUmbracoMapper MapCollection<T>(string json, IList<T> modelCollection, 
             Dictionary<string, string> propertyNameMappings = null,
-            bool createItemsIfNotAlreadyInList = true,
-            string modelPropNameForMatchingExistingItems = "Id",
-            string itemElementNameForMatchingExistingItems = "Id") where T : new();
+            string rootElementName = "items", 
+            bool createItemsIfNotAlreadyInList = true, 
+            string sourceIdentifyingPropName = "Id", 
+            string destIdentifyingPropName = "Id") where T : new();
     }
 }

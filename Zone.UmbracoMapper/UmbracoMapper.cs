@@ -6,6 +6,7 @@
     using System.Reflection;
     using System.Web;
     using System.Xml.Linq;
+    using Newtonsoft.Json.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using DampModel = DAMP.PropertyEditorValueConverter.Model;
@@ -149,6 +150,40 @@
         }
 
         /// <summary>
+        /// Maps information held in a JSON string
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="json">JSON string</param>
+        /// <param name="model">View model to map to</param>
+        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        public IUmbracoMapper Map<T>(string json,
+            T model,
+            Dictionary<string, string> propertyNameMappings = null)
+        {
+            if (!string.IsNullOrEmpty(json))
+            {
+                // Parse JSON string to queryable object
+                var jsonObj = JObject.Parse(json);
+
+                // Loop through all settable properties on model
+                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+                {
+                    var propName = GetMappedPropertyName(property.Name, propertyNameMappings, false);
+
+                    // If element with mapped name found, map the value
+                    var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName);
+                    if (!string.IsNullOrEmpty(stringValue))
+                    {
+                        SetTypedPropertyValue<T>(model, property, stringValue);
+                    }                    
+                }
+            }
+
+            return this;
+        }
+
+        /// <summary>
         /// Maps a collection of IPublishedContent to the passed view model
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
@@ -189,16 +224,15 @@
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="groupElementName">Name of the element grouping each item in the XML (defaults to "Item")</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
-        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
-        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
+        /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
-        public IUmbracoMapper MapCollection<T>(XElement xml,
-            IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null,
-            string groupElementName = "item",
-            bool createItemsIfNotAlreadyInList = true,
-            string modelPropNameForMatchingExistingItems = "Id",
-            string itemElementNameForMatchingExistingItems = "Id") where T : new()
+        public IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
+            Dictionary<string, string> propertyNameMappings = null, 
+            string groupElementName = "item", 
+            bool createItemsIfNotAlreadyInList = true, 
+            string sourceIdentifyingPropName = "Id", 
+            string destIdentifyingPropName = "Id") where T : new()
         {
             if (xml != null)
             {
@@ -212,9 +246,9 @@
                 {
                     // Check if item is already in the list by looking up provided unique key
                     T itemToUpdate = default(T);
-                    if (TypeHasProperty(typeof(T), modelPropNameForMatchingExistingItems))
+                    if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                     {
-                        itemToUpdate = GetExistingItemFromCollection(modelCollection, modelPropNameForMatchingExistingItems, element.Element(itemElementNameForMatchingExistingItems).Value);
+                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, element.Element(sourceIdentifyingPropName).Value);
                     }
 
                     if (itemToUpdate != null)
@@ -246,15 +280,15 @@
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
-        /// <param name="modelPropNameForMatchingExistingItems">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
-        /// <param name="itemElementNameForMatchingExistingItems">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
+        /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
-        public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries,
-            IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null,
-            bool createItemsIfNotAlreadyInList = true,
-            string modelPropNameForMatchingExistingItems = "Id",
-            string itemElementNameForMatchingExistingItems = "Id") where T : new()
+        public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
+            IList<T> modelCollection, 
+            Dictionary<string, string> propertyNameMappings = null, 
+            bool createItemsIfNotAlreadyInList = true, 
+            string sourceIdentifyingPropName = "Id", 
+            string destIdentifyingPropName = "Id") where T : new()
         {
             if (dictionaries != null)
             {
@@ -263,14 +297,14 @@
                     throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
                 }
 
-                // Loop through each of the items defined in the XML
+                // Loop through each of the items defined in the dictionary
                 foreach (var customDataItem in dictionaries)
                 {
                     // Check if item is already in the list by looking up provided unique key
                     T itemToUpdate = default(T);
-                    if (TypeHasProperty(typeof(T), modelPropNameForMatchingExistingItems))
+                    if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                     {
-                        itemToUpdate = GetExistingItemFromCollection(modelCollection, modelPropNameForMatchingExistingItems, customDataItem[itemElementNameForMatchingExistingItems].ToString());
+                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, customDataItem[sourceIdentifyingPropName].ToString());
                     }
 
                     if (itemToUpdate != null)
@@ -285,6 +319,64 @@
                         {
                             var itemToCreate = new T();
                             Map<T>(customDataItem, itemToCreate, propertyNameMappings);
+                            modelCollection.Add(itemToCreate);
+                        }
+                    }
+                }
+            }
+
+            return this;
+        }
+
+        /// <summary>
+        /// Maps a collection custom data held in a JSON string to a collection
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="json">JSON string containing collection</param>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="rootElementName">Name of root element in JSON array</param>
+        /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
+        /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
+        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        public IUmbracoMapper MapCollection<T>(string json, IList<T> modelCollection,
+            Dictionary<string, string> propertyNameMappings = null,
+            string rootElementName = "items", 
+            bool createItemsIfNotAlreadyInList = true,
+            string sourceIdentifyingPropName = "Id",
+            string destIdentifyingPropName = "Id") where T : new()
+        {
+            if (!string.IsNullOrEmpty(json))
+            {
+                if (modelCollection == null)
+                {
+                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
+                }
+
+                // Loop through each of the items defined in the JSON
+                var jsonObject = JObject.Parse(json);
+                foreach (var element in jsonObject[rootElementName].Children())
+                {
+                    // Check if item is already in the list by looking up provided unique key
+                    T itemToUpdate = default(T);
+                    if (TypeHasProperty(typeof(T), destIdentifyingPropName))
+                    {
+                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, element[sourceIdentifyingPropName].Value<string>());
+                    }
+
+                    if (itemToUpdate != null)
+                    {
+                        // Item found, so map it
+                        Map<T>(element.ToString(), itemToUpdate, propertyNameMappings);
+                    }
+                    else
+                    {
+                        // Item not found, so create if that was requested
+                        if (createItemsIfNotAlreadyInList)
+                        {
+                            var itemToCreate = new T();
+                            Map<T>(element.ToString(), itemToCreate, propertyNameMappings);
                             modelCollection.Add(itemToCreate);
                         }
                     }
@@ -487,7 +579,32 @@
         private XAttribute GetXAttributeCaseInsensitive(XElement xml, string propName)
         {
             return xml.Attributes().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
-        } 
+        }
+
+        /// <summary>
+        /// Helper to retrieve a JSON field by name case insensitively
+        /// </summary>
+        /// <param name="jsonObj"></param>
+        /// <param name="propName"></param>
+        /// <returns></returns>
+        private string GetJsonFieldCaseInsensitive(JObject jsonObj, string propName)
+        {
+            var stringValue = (string)jsonObj[propName];
+
+            // If not found, try with lower case
+            if (string.IsNullOrEmpty(stringValue))
+            {
+                stringValue = (string)jsonObj[propName.ToLowerInvariant()];
+            }
+
+            // If still not found, try with camel case
+            if (string.IsNullOrEmpty(stringValue))
+            {
+                stringValue = (string)jsonObj[CamelCase(propName)];
+            }
+
+            return stringValue;
+        }
 
         #endregion
 

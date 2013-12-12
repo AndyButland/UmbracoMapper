@@ -9,7 +9,7 @@
     [TestClass]
     public class UmbracoMapperTests
     {
-        #region Test methods
+        #region Tests - Single Maps From IPublishedContent
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesWithMatchingNames()
@@ -59,6 +59,10 @@
             // Assert
             Assert.AreEqual("This is the body text", model.BodyText);
         }
+
+        #endregion
+
+        #region Tests - Single Maps From XML
 
         [TestMethod]
         public void UmbracoMapper_MapFromXml_MapsPropertiesWithMatchingNames()
@@ -119,6 +123,10 @@
             Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
 
+        #endregion
+
+        #region Tests - Single Maps From Dictionary
+
         [TestMethod]
         public void UmbracoMapper_MapFromDictionary_MapsPropertiesWithMatchingNames()
         {
@@ -156,6 +164,73 @@
             Assert.AreEqual(1234567890, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
         }
+
+        #endregion
+
+        #region Tests - Single Maps From JSON
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJson_MapsPropertiesWithMatchingNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel4();
+            var json = GetJsonForSingle();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(json, model);
+
+            // Assert
+            Assert.AreEqual(1, model.Id);
+            Assert.AreEqual("Test name", model.Name);
+            Assert.AreEqual(21, model.Age);
+            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+            Assert.AreEqual((decimal)12.73, model.AverageScore);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJson_MapsPropertiesWithDifferentNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel4();
+            var json = GetJsonForSingle2();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(json, model, new Dictionary<string, string> { { "Name", "Name2" }, { "RegisteredOn", "RegistrationDate" } });
+
+            // Assert
+            Assert.AreEqual(1, model.Id);
+            Assert.AreEqual("Test name", model.Name);
+            Assert.AreEqual(21, model.Age);
+            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJson_MapsPropertiesWithCaseInsensitiveMatchOnElementNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel4();
+            var json = GetJsonForSingle3();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(json, model);
+
+            // Assert
+            Assert.AreEqual(1, model.Id);
+            Assert.AreEqual("Test name", model.Name);
+            Assert.AreEqual(21, model.Age);
+            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+            Assert.AreEqual((decimal)12.73, model.AverageScore);
+        }
+
+        #endregion
+
+        #region Tests - Collection Maps From XML
 
         [TestMethod]
         public void UmbracoMapper_MapFromXmlToCollection_MapsPropertiesForExistingEntriesWithMatchingNames()
@@ -345,7 +420,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(xml, model.Comments, null, "Item", false, "Id", "Identifier");
+            mapper.MapCollection(xml, model.Comments, null, "Item", false, "Identifier", "Id");
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -354,6 +429,10 @@
             Assert.AreEqual("Sally's comment", model.Comments[1].Text);
             Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
         }
+
+        #endregion
+
+        #region Tests - Collection Maps From Dictionary
 
         [TestMethod]
         public void UmbracoMapper_MapFromDictionaryToCollection_MapsPropertiesForExistingEntriesWithMatchingNames()
@@ -508,7 +587,209 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments, null, false, "Id", "Identifier");
+            mapper.MapCollection(dictionary, model.Comments, null, false, "Identifier", "Id");
+
+            // Assert
+            Assert.AreEqual(2, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+            Assert.AreEqual("Fred's comment", model.Comments[0].Text);
+            Assert.AreEqual("Sally's comment", model.Comments[1].Text);
+            Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
+        }
+
+        #endregion
+
+        #region Tests - Collection Maps From JSON
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJsonToCollection_MapsPropertiesForExistingEntriesWithMatchingNames()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                    new Comment
+                    {
+                        Id = 2,                         
+                    }
+                }
+            };
+
+            var json = GetJsonForCommentsCollection();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(json, model.Comments);
+
+            // Assert
+            Assert.AreEqual(2, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+            Assert.AreEqual("Fred's comment", model.Comments[0].Text);
+            Assert.AreEqual("Sally's comment", model.Comments[1].Text);
+            Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJsonToCollection_MapsPropertiesForExistingEntriesWithDifferentNames()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                    new Comment
+                    {
+                        Id = 2,                         
+                    }
+                }
+            };
+
+            var json = GetJsonForCommentsCollection2();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(json, model.Comments, new Dictionary<string, string> { { "CreatedOn", "RecordedOn" } });
+
+            // Assert
+            Assert.AreEqual(2, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+            Assert.AreEqual("Fred's comment", model.Comments[0].Text);
+            Assert.AreEqual("Sally's comment", model.Comments[1].Text);
+            Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJsonToCollection_DoesntMapNonExistingItemsUnlessRequestedToDoSo()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                }
+            };
+
+            var json = GetJsonForCommentsCollection();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(json, model.Comments, null, "items", false);
+
+            // Assert
+            Assert.AreEqual(1, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJsonToCollection_MapsAdditionalItemsWhenRequestedToDoSo()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                }
+            };
+
+            var json = GetJsonForCommentsCollection();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(json, model.Comments);
+
+            // Assert
+            Assert.AreEqual(2, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+            Assert.AreEqual(2, model.Comments[1].Id);
+            Assert.AreEqual("Sally Smith", model.Comments[1].Name);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJsonToCollection_MapsWithDifferentLookUpPropertyNames()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                    new Comment
+                    {
+                        Id = 2,                         
+                    },
+                }
+            };
+
+            var json = GetJsonForCommentsCollection3();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(json, model.Comments, null, "items", false, "Identifier", "Id");
+
+            // Assert
+            Assert.AreEqual(2, model.Comments.Count);
+            Assert.AreEqual("Fred Bloggs", model.Comments[0].Name);
+            Assert.AreEqual("Fred's comment", model.Comments[0].Text);
+            Assert.AreEqual("Sally's comment", model.Comments[1].Text);
+            Assert.AreEqual("13-Apr-2013 10:30", model.Comments[1].CreatedOn.ToString("dd-MMM-yyyy HH:mm"));
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJsonToCollection_MapsPropertiesWithCustomRootElementName()
+        {
+            // Arrange
+            var model = new SimpleViewModelWithCollection
+            {
+                Id = 1,
+                Name = "Test name",
+                Comments = new List<Comment>
+                {
+                    new Comment
+                    {
+                        Id = 1,                         
+                    },
+                    new Comment
+                    {
+                        Id = 2,                         
+                    }
+                }
+            };
+
+            var json = GetJsonForCommentsCollection4();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.MapCollection(json, model.Comments, null, "entries");
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -704,6 +985,105 @@
                     { "CreatedOn", new DateTime(2013, 4, 13, 10, 30, 0) },
                 },
             };
+        }
+
+        private string GetJsonForSingle()
+        {
+            return @"{
+                    'Id': 1,
+                    'Name': 'Test name',
+                    'Age': 21,
+                    'FacebookId': 1234567890,
+                    'RegisteredOn': '2013-04-13',
+                    'AverageScore': 12.73
+                }";
+        }
+
+        private string GetJsonForSingle2()
+        {
+            return @"{
+                    'Id': 1,
+                    'Name2': 'Test name',
+                    'Age': 21,
+                    'FacebookId': 1234567890,
+                    'RegistrationDate': '2013-04-13',
+                }";
+        }
+
+        private string GetJsonForSingle3()
+        {
+            return @"{
+                    'id': 1,
+                    'name': 'Test name',
+                    'age': 21,
+                    'facebookId': 1234567890,
+                    'registeredOn': '2013-04-13',
+                    'averageScore': 12.73
+                }";;
+        }
+
+        private string GetJsonForCommentsCollection()
+        {
+            return @"{ 'items': [{
+                    'Id': 1,
+                    'Name': 'Fred Bloggs',
+                    'Text': 'Fred\'s comment',
+                    'CreatedOn': '2013-04-13 09:30'
+                },
+                {
+                    'Id': 2,
+                    'Name': 'Sally Smith',
+                    'Text': 'Sally\'s comment',
+                    'CreatedOn': '2013-04-13 10:30'
+                }]}";
+        }
+
+        private string GetJsonForCommentsCollection2()
+        {
+            return @"{ 'items': [{
+                    'Id': 1,
+                    'Name': 'Fred Bloggs',
+                    'Text': 'Fred\'s comment',
+                    'RecordedOn': '2013-04-13 09:30'
+                },
+                {
+                    'Id': 2,
+                    'Name': 'Sally Smith',
+                    'Text': 'Sally\'s comment',
+                    'RecordedOn': '2013-04-13 10:30'
+                }]}";         
+        }
+
+        private string GetJsonForCommentsCollection3()
+        {
+            return @"{ 'items': [{
+                    'Identifier': 1,
+                    'Name': 'Fred Bloggs',
+                    'Text': 'Fred\'s comment',
+                    'CreatedOn': '2013-04-13 09:30'
+                },
+                {
+                    'Identifier': 2,
+                    'Name': 'Sally Smith',
+                    'Text': 'Sally\'s comment',
+                    'CreatedOn': '2013-04-13 10:30'
+                }]}";
+        }
+
+        private string GetJsonForCommentsCollection4()
+        {
+            return @"{ 'entries': [{
+                    'Id': 1,
+                    'Name': 'Fred Bloggs',
+                    'Text': 'Fred\'s comment',
+                    'CreatedOn': '2013-04-13 09:30'
+                },
+                {
+                    'Id': 2,
+                    'Name': 'Sally Smith',
+                    'Text': 'Sally\'s comment',
+                    'CreatedOn': '2013-04-13 10:30'
+                }]}";
         }
 
         #endregion
