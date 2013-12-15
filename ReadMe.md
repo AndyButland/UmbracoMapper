@@ -70,10 +70,10 @@ You can also map XML, JSON and Dictionaries that may have come from other source
 
 All mapping methods return an instance of the mapper itself, meaning operations can be chained in a fluent interface style.  E.g.
 
-For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 
-
     mapper.Map(CurrentPage, model)
           .MapToCollection(CurrentPage.Children, model.Comments);
+
+For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 
 
 ## Mapping to Media Files
 
