@@ -34,6 +34,8 @@ To utilise Umbraco Mapper you should be following the model of Umbraco MVC appli
 
 You also may want to implement an IoC container such as Ninject as [described here](http://ismailmayat.wordpress.com/2013/07/25/umbraco-6-mvc-and-dependency-injection/ "Using Ninject with Umbraco").  Though this isn't necessary, if preferred you can just instantiate an instance of UmbracoMapper directly.
 
+You must install DAMP Property Editor Value Converter v1.2 for this package to work correctly as it has a dependency on that.
+
 ## Examples
 
 Given an instance of UmbracoMapper you can map a the properties of a particular page to a custom view model using conventions like this:
