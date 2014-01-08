@@ -52,6 +52,12 @@ To override conventions for property mapping, you can provide a Dictionary of pr
 To map a collection use the following method.  This example maps the child nodes of the current page to a custom collection called 'Comments' on the view model.
 
     mapper.MapToCollection(CurrentPage.Children, model.Comments);
+	
+You can also override here both the property names as before, and the level at which the mapping is made.  So if for example you have one property on your view model that you want to get from the parent node, you can do this:
+
+    mapper.MapCollection(CurrentPage.Children, model.Comments, 
+		new Dictionary<string, string> { { "ParentPage", "Name" }, },
+		new Dictionary<string, int> { { "ParentPage", 1 }, });
 
 You can also map any other collection if IPublishedContent, e.g. that built up from a node picker and query:
 
