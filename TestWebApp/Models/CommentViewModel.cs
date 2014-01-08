@@ -12,5 +12,7 @@
         public DateTime CreatedOn { get; set; }
 
         public string Author { get; set; }
+
+        public string ParentPage { get; set; }
     }
 }

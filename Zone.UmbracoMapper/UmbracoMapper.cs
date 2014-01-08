@@ -36,21 +36,36 @@
         /// <param name="content">Instance of IPublishedContent</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyLevels">Optional set of details for properties, indicating the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(IPublishedContent content, 
             T model, 
             Dictionary<string, string> propertyNameMappings = null,
+            Dictionary<string, int> propertyLevels = null,
             string[] recursiveProperties = null)
         {
             // Loop through all settable properties on model
             foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
             {
+                // Check if we want to map to content at a level above the currently passed node
+                var contentToMapFrom = GetContentToMapFrom(content, propertyLevels, property.Name);
+
                 // Set native IPublishedContent properties (using convention that names match exactly)
                 var propName = GetMappedPropertyName(property.Name, propertyNameMappings);
-                if (content.GetType().GetProperty(propName) != null)
+
+                if (contentToMapFrom.GetType().GetProperty(propName) != null)
                 {
-                    property.SetValue(model, content.GetType().GetProperty(propName).GetValue(content));
+                    // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
+                    if (property.PropertyType.Name == "String")
+                    {
+                        property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
+                    }
+                    else
+                    {
+                        property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom));
+                    }                    
+                    
                     continue;
                 }
 
@@ -62,20 +77,18 @@
                 switch (property.PropertyType.Name)
                 {
                     case "MediaFile":
-                        var mf = GetMediaFile(content.GetPropertyValue<DampModel>(propName));
+                        var mf = GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName));
                         property.SetValue(model, mf);
                         break;
 
                     default:
-                        var value = content.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
+                        var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
                         if (value != null)
                         {
                             SetTypedPropertyValue(model, property, value.ToString());
                         }
 
                         break;
-
-                    // TODO: further type mappings (date, numbers, boolean)
                 }
             }
 
@@ -190,11 +203,13 @@
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyLevels">Optional set of details for properties, indicating the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
             IList<T> modelCollection,
             Dictionary<string, string> propertyNameMappings = null,
+            Dictionary<string, int> propertyLevels = null,
             string[] recursiveProperties = null) where T : new()
         {
             if (contentCollection != null)
@@ -207,7 +222,7 @@
                 foreach (var item in contentCollection)
                 {
                     var itemToCreate = new T();
-                    Map<T>(item, itemToCreate, propertyNameMappings, recursiveProperties);
+                    Map<T>(item, itemToCreate, propertyNameMappings, propertyLevels, recursiveProperties);
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -412,7 +427,28 @@
             }
 
             return mappedName;
-        }        
+        }
+
+        /// <summary>
+        /// Gets the IPublishedContent to map from.  Normally this will be the one passed but it's possible to map at a level above the current node.
+        /// </summary>
+        /// <param name="content">Passed content to map from</param>
+        /// <param name="propertyLevels">Dictionary of properties and levels to map from</param>
+        /// <param name="propName">Name of property to map</param>
+        /// <returns>Instance of IPublishedContent to map from</returns>
+        private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, int> propertyLevels, string propName)
+        {
+            var contentToMapFrom = content;
+            if (propertyLevels != null && propertyLevels.ContainsKey(propName))
+            {
+                for (int i = 0; i < propertyLevels[propName]; i++)
+                {
+                    contentToMapFrom = contentToMapFrom.Parent;
+                }
+            }
+
+            return contentToMapFrom;
+        }
 
         /// <summary>
         /// Helper to check whether given property is defined as recursive

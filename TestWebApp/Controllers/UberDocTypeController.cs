@@ -25,15 +25,17 @@
             // Create view model and run mapping
             var model = new UberDocTypeViewModel();
             Mapper.Map(CurrentPage, model, new Dictionary<string, string> { { "CreatcdOn", "CreateDate" }, })
-                  .MapCollection(CurrentPage.Children, model.Comments)
-                  .MapCollection(countryNodes, model.Countries)
-                  .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
-                  .Map(GetSingleXml(), model, new Dictionary<string, string> { { "SingleValueFromXml", "Day" }, })
-                  .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")
-                  .Map(GetSingleDictionary(), model, new Dictionary<string, string> { { "SingleValueFromDictionary", "Animal" }, })
-                  .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
-                  .Map(GetSingleJson(), model, new Dictionary<string, string> { { "SingleValueFromJson", "Name" }, })
-                  .MapCollection(GetCollectionJson(), model.CollectionFromJson);
+                .MapCollection(CurrentPage.Children, model.Comments, 
+                    new Dictionary<string, string> { { "ParentPage", "Name" }, },
+                    new Dictionary<string, int> { { "ParentPage", 1 }, })
+                .MapCollection(countryNodes, model.Countries)
+                .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
+                .Map(GetSingleXml(), model, new Dictionary<string, string> { { "SingleValueFromXml", "Day" }, })
+                .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")
+                .Map(GetSingleDictionary(), model, new Dictionary<string, string> { { "SingleValueFromDictionary", "Animal" }, })
+                .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
+                .Map(GetSingleJson(), model, new Dictionary<string, string> { { "SingleValueFromJson", "Name" }, })
+                .MapCollection(GetCollectionJson(), model.CollectionFromJson);
 
             return CurrentTemplate(model);
         }
