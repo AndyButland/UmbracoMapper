@@ -36,7 +36,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content, model, new Dictionary<string, string> { { "Author", "CreatorName" } });
+            mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "Author", new PropertyMapping { SourceProperty = "CreatorName", } } });
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -93,7 +93,10 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(xml, model, new Dictionary<string, string> { { "Name", "Name2" }, { "RegisteredOn", "RegistrationDate" } });
+            mapper.Map(xml, model, new Dictionary<string, PropertyMapping> { 
+                { "Name", new PropertyMapping { SourceProperty = "Name2" } },
+                { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
+            });
 
             // Assert
             Assert.AreEqual(1, model.Id);
@@ -155,8 +158,11 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(dictionary, model, new Dictionary<string, string> { { "Name", "Name2" }, { "RegisteredOn", "RegistrationDate" } });
-
+            mapper.Map(dictionary, model, new Dictionary<string, PropertyMapping> { 
+                { "Name", new PropertyMapping { SourceProperty = "Name2" } },
+                { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
+            });
+            
             // Assert
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
@@ -198,8 +204,11 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(json, model, new Dictionary<string, string> { { "Name", "Name2" }, { "RegisteredOn", "RegistrationDate" } });
-
+            mapper.Map(json, model, new Dictionary<string, PropertyMapping> { 
+                { "Name", new PropertyMapping { SourceProperty = "Name2" } },
+                { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
+            });
+           
             // Assert
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
@@ -292,7 +301,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(xml, model.Comments, new Dictionary<string, string> { { "CreatedOn", "RecordedOn" } });
+            mapper.MapCollection(xml, model.Comments, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn"}  } });
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -494,7 +503,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments, new Dictionary<string, string> { { "CreatedOn", "RecordedOn" } });
+            mapper.MapCollection(dictionary, model.Comments, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn" } } });
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -661,7 +670,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(json, model.Comments, new Dictionary<string, string> { { "CreatedOn", "RecordedOn" } });
+            mapper.MapCollection(json, model.Comments, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn" } } });
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);

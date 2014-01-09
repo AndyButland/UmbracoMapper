@@ -7,7 +7,7 @@
     <ProjectGuid>{55B0188A-097C-4767-A297-28AE036AED7F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zone.Umbraco.Mapper</RootNamespace>
+    <RootNamespace>Zone.UmbracoMapper</RootNamespace>
     <AssemblyName>Zone.Umbraco.Mapper</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -225,6 +225,7 @@
     <Compile Include="IUmbracoMapper.cs" />
     <Compile Include="MediaFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="PropertyMapping.cs" />
     <Compile Include="UmbracoMapper.cs" />
   </ItemGroup>
   <ItemGroup>

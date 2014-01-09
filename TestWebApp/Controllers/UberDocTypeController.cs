@@ -24,17 +24,16 @@
 
             // Create view model and run mapping
             var model = new UberDocTypeViewModel();
-            Mapper.Map(CurrentPage, model, new Dictionary<string, string> { { "CreatcdOn", "CreateDate" }, })
+            Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "CreateDate" } }, })
                 .MapCollection(CurrentPage.Children, model.Comments, 
-                    new Dictionary<string, string> { { "ParentPage", "Name" }, },
-                    new Dictionary<string, int> { { "ParentPage", 1 }, })
+                    new Dictionary<string, PropertyMapping> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, })
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
-                .Map(GetSingleXml(), model, new Dictionary<string, string> { { "SingleValueFromXml", "Day" }, })
+                .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
                 .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")
-                .Map(GetSingleDictionary(), model, new Dictionary<string, string> { { "SingleValueFromDictionary", "Animal" }, })
+                .Map(GetSingleDictionary(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
                 .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
-                .Map(GetSingleJson(), model, new Dictionary<string, string> { { "SingleValueFromJson", "Name" }, })
+                .Map(GetSingleJson(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromJson", new PropertyMapping { SourceProperty = "Name" } }, })
                 .MapCollection(GetCollectionJson(), model.CollectionFromJson);
 
             return CurrentTemplate(model);

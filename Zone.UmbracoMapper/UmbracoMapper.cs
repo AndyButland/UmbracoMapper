@@ -35,24 +35,22 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="content">Instance of IPublishedContent</param>
         /// <param name="model">View model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        /// <param name="propertyLevels">Optional set of details for properties, indicating the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(IPublishedContent content, 
             T model, 
-            Dictionary<string, string> propertyNameMappings = null,
-            Dictionary<string, int> propertyLevels = null,
+            Dictionary<string, PropertyMapping> propertyMappings = null,
             string[] recursiveProperties = null)
         {
             // Loop through all settable properties on model
             foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
             {
                 // Check if we want to map to content at a level above the currently passed node
-                var contentToMapFrom = GetContentToMapFrom(content, propertyLevels, property.Name);
+                var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
 
                 // Set native IPublishedContent properties (using convention that names match exactly)
-                var propName = GetMappedPropertyName(property.Name, propertyNameMappings);
+                var propName = GetMappedPropertyName(property.Name, propertyMappings);
 
                 if (contentToMapFrom.GetType().GetProperty(propName) != null)
                 {
@@ -71,7 +69,7 @@
 
                 // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
                 // properties, unless override provided)
-                propName = GetMappedPropertyName(property.Name, propertyNameMappings, true);
+                propName = GetMappedPropertyName(property.Name, propertyMappings, true);
 
                 // Map property for types we can handle
                 switch (property.PropertyType.Name)
@@ -101,16 +99,16 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="xml">XML fragment to map from</param>
         /// <param name="model">View model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(XElement xml, 
             T model,
-            Dictionary<string, string> propertyNameMappings = null)
+            Dictionary<string, PropertyMapping> propertyMappings = null)
         {
             // Loop through all settable properties on model
             foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
             {
-                var propName = GetMappedPropertyName(property.Name, propertyNameMappings, false);
+                var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
 
                 // If element with mapped name found, map the value (check case insensitively)
                 var mappedElement = GetXElementCaseInsensitive(xml, propName);
@@ -140,16 +138,16 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="dictionary">Dictionary of property name/value pairs</param>
         /// <param name="model">View model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(Dictionary<string, object> dictionary, 
             T model,
-            Dictionary<string, string> propertyNameMappings = null)
+            Dictionary<string, PropertyMapping> propertyMappings = null)
         {
             // Loop through all settable properties on model
             foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
             {
-                var propName = GetMappedPropertyName(property.Name, propertyNameMappings);
+                var propName = GetMappedPropertyName(property.Name, propertyMappings);
 
                 // If element with mapped name found, map the value
                 if (dictionary.ContainsKey(propName))
@@ -168,11 +166,11 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="json">JSON string</param>
         /// <param name="model">View model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(string json,
             T model,
-            Dictionary<string, string> propertyNameMappings = null)
+            Dictionary<string, PropertyMapping> propertyMappings = null)
         {
             if (!string.IsNullOrEmpty(json))
             {
@@ -182,7 +180,7 @@
                 // Loop through all settable properties on model
                 foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
                 {
-                    var propName = GetMappedPropertyName(property.Name, propertyNameMappings, false);
+                    var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
 
                     // If element with mapped name found, map the value
                     var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName);
@@ -202,14 +200,12 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        /// <param name="propertyLevels">Optional set of details for properties, indicating the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
             IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null,
-            Dictionary<string, int> propertyLevels = null,
+            Dictionary<string, PropertyMapping> propertyMappings = null,
             string[] recursiveProperties = null) where T : new()
         {
             if (contentCollection != null)
@@ -222,7 +218,7 @@
                 foreach (var item in contentCollection)
                 {
                     var itemToCreate = new T();
-                    Map<T>(item, itemToCreate, propertyNameMappings, propertyLevels, recursiveProperties);
+                    Map<T>(item, itemToCreate, propertyMappings, recursiveProperties);
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -236,14 +232,14 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="xml">XML fragment to map from</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="groupElementName">Name of the element grouping each item in the XML (defaults to "Item")</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
         /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
-            Dictionary<string, string> propertyNameMappings = null, 
+            Dictionary<string, PropertyMapping> propertyMappings = null, 
             string groupElementName = "item", 
             bool createItemsIfNotAlreadyInList = true, 
             string sourceIdentifyingPropName = "Id", 
@@ -269,7 +265,7 @@
                     if (itemToUpdate != null)
                     {
                         // Item found, so map it
-                        Map<T>(element, itemToUpdate, propertyNameMappings);
+                        Map<T>(element, itemToUpdate, propertyMappings);
                     }
                     else
                     {
@@ -277,7 +273,7 @@
                         if (createItemsIfNotAlreadyInList)
                         {
                             var itemToCreate = new T();
-                            Map<T>(element, itemToCreate, propertyNameMappings);
+                            Map<T>(element, itemToCreate, propertyMappings);
                             modelCollection.Add(itemToCreate);
                         }
                     }
@@ -293,14 +289,14 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="dictionaries">Collection of custom data containing a list of dictionary of property name/value pairs.  One of these keys provides a lookup for the existing collection.</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
         /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
             IList<T> modelCollection, 
-            Dictionary<string, string> propertyNameMappings = null, 
+            Dictionary<string, PropertyMapping> propertyMappings = null, 
             bool createItemsIfNotAlreadyInList = true, 
             string sourceIdentifyingPropName = "Id", 
             string destIdentifyingPropName = "Id") where T : new()
@@ -325,7 +321,7 @@
                     if (itemToUpdate != null)
                     {
                         // Item found, so map it
-                        Map<T>(customDataItem, itemToUpdate, propertyNameMappings);
+                        Map<T>(customDataItem, itemToUpdate, propertyMappings);
                     }
                     else
                     {
@@ -333,7 +329,7 @@
                         if (createItemsIfNotAlreadyInList)
                         {
                             var itemToCreate = new T();
-                            Map<T>(customDataItem, itemToCreate, propertyNameMappings);
+                            Map<T>(customDataItem, itemToCreate, propertyMappings);
                             modelCollection.Add(itemToCreate);
                         }
                     }
@@ -349,14 +345,14 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="json">JSON string containing collection</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
-        /// <param name="propertyNameMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="rootElementName">Name of root element in JSON array</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
         /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <param name="destIdentifyingPropName">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(string json, IList<T> modelCollection,
-            Dictionary<string, string> propertyNameMappings = null,
+            Dictionary<string, PropertyMapping> propertyMappings = null,
             string rootElementName = "items", 
             bool createItemsIfNotAlreadyInList = true,
             string sourceIdentifyingPropName = "Id",
@@ -383,7 +379,7 @@
                     if (itemToUpdate != null)
                     {
                         // Item found, so map it
-                        Map<T>(element.ToString(), itemToUpdate, propertyNameMappings);
+                        Map<T>(element.ToString(), itemToUpdate, propertyMappings);
                     }
                     else
                     {
@@ -391,7 +387,7 @@
                         if (createItemsIfNotAlreadyInList)
                         {
                             var itemToCreate = new T();
-                            Map<T>(element.ToString(), itemToCreate, propertyNameMappings);
+                            Map<T>(element.ToString(), itemToCreate, propertyMappings);
                             modelCollection.Add(itemToCreate);
                         }
                     }
@@ -409,16 +405,16 @@
         /// Helper method to find the property name to map to based on conventions (and/or overrides)
         /// </summary>
         /// <param name="propName">Name of property to map to</param>
-        /// <param name="propertyNameMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
         /// <returns>Name of property to map from</returns>
-        private string GetMappedPropertyName(string propName, Dictionary<string, string> propertyNameMappings,
+        private string GetMappedPropertyName(string propName, Dictionary<string, PropertyMapping> propertyMappings,
             bool convertToCamelCase = false)
         {
             var mappedName = propName;
-            if (propertyNameMappings != null && propertyNameMappings.ContainsKey(propName))
+            if (propertyMappings != null && propertyMappings.ContainsKey(propName))
             {
-                mappedName = propertyNameMappings[propName];
+                mappedName = propertyMappings[propName].SourceProperty;
             }
 
             if (convertToCamelCase)
@@ -433,15 +429,15 @@
         /// Gets the IPublishedContent to map from.  Normally this will be the one passed but it's possible to map at a level above the current node.
         /// </summary>
         /// <param name="content">Passed content to map from</param>
-        /// <param name="propertyLevels">Dictionary of properties and levels to map from</param>
+        /// <param name="propertyMappings">Dictionary of properties and levels to map from</param>
         /// <param name="propName">Name of property to map</param>
         /// <returns>Instance of IPublishedContent to map from</returns>
-        private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, int> propertyLevels, string propName)
+        private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             var contentToMapFrom = content;
-            if (propertyLevels != null && propertyLevels.ContainsKey(propName))
+            if (propertyMappings != null && propertyMappings.ContainsKey(propName))
             {
-                for (int i = 0; i < propertyLevels[propName]; i++)
+                for (int i = 0; i < propertyMappings[propName].LevelsAbove; i++)
                 {
                     contentToMapFrom = contentToMapFrom.Parent;
                 }
