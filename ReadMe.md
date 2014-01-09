@@ -47,7 +47,7 @@ Given an instance of UmbracoMapper you can map a the properties of a particular 
 To override conventions for property mapping, you can provide a Dictionary of property mappings.  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
 
     mapper.Map(CurrentPage, model,
-      new Dictionary<string, string> { { "Copy", "bodyText" }, });
+      new Dictionary<string, string> { { "Copy", new PropertyMapping { SourceProperty = "bodyText" } }, });
 
 To map a collection use the following method.  This example maps the child nodes of the current page to a custom collection called 'Comments' on the view model.
 
@@ -56,8 +56,7 @@ To map a collection use the following method.  This example maps the child nodes
 You can also override here both the property names as before, and the level at which the mapping is made.  So if for example you have one property on your view model that you want to get from the parent node, you can do this:
 
     mapper.MapCollection(CurrentPage.Children, model.Comments, 
-		new Dictionary<string, string> { { "ParentPage", "Name" }, },
-		new Dictionary<string, int> { { "ParentPage", 1 }, });
+		new Dictionary<string, string> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, });
 
 You can also map any other collection if IPublishedContent, e.g. that built up from a node picker and query:
 
@@ -101,30 +100,28 @@ Full signature of mapping methods are as follows:
 
     IUmbracoMapper Map<T>(IPublishedContent content, 
         T model, 
-        Dictionary<string, string> propertyNameMappings = null,
-		Dictionary<string, int> propertyLevels = null,
+        Dictionary<string, PropertyMapping> propertyNameMappings = null,
         string[] recursiveProperties = null);
 
     IUmbracoMapper Map<T>(XElement xml, 
         T model,
-        Dictionary<string, string> propertyNameMappings = null);
+        Dictionary<string, PropertyMapping> propertyNameMappings = null);
 
     IUmbracoMapper Map<T>(Dictionary<string, object> dictionary,
         T model,
-        Dictionary<string, string> propertyNameMappings = null);
+        Dictionary<string, PropertyMapping> propertyNameMappings = null);
 
     IUmbracoMapper Map<T>(string json,
         T model,
-        Dictionary<string, string> propertyNameMappings = null);
+        Dictionary<string, PropertyMapping> propertyNameMappings = null);
 
     IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
         IList<T> modelCollection,
-        Dictionary<string, string> propertyNameMappings = null,
-		Dictionary<string, int> propertyLevels = null,
+        Dictionary<string, PropertyMapping> propertyNameMappings = null,
         string[] recursiveProperties = null) where T : new();
 
     IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
-        Dictionary<string, string> propertyNameMappings = null, 
+        Dictionary<string, PropertyMapping> propertyNameMappings = null, 
         string groupElementName = "Item", 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
@@ -132,13 +129,13 @@ Full signature of mapping methods are as follows:
 
     IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
         IList<T> modelCollection, 
-        Dictionary<string, string> propertyNameMappings = null, 
+        Dictionary<string, PropertyMapping> propertyNameMappings = null, 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
         string destIdentifyingPropName = "Id") where T : new();
 
     IUmbracoMapper MapCollection<T>(string json, IList<T> modelCollection, 
-        Dictionary<string, string> propertyNameMappings = null,
+        Dictionary<string, PropertyMapping> propertyNameMappings = null,
         string rootElementName = "items", 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
@@ -150,7 +147,8 @@ Full signature of mapping methods are as follows:
 - 1.0.3
     - Made mapping to strings more flexible so source does not itself have to be a string.  Instead ToString() is called on whatever you are mapping to the string.
 	- Add the **propertyLevels** optional parameter for when mapping from IPublished content.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.
-	
+- 1.1.0
+	- Breaking change to interface of property mapping overrides, as refactored to use single dictionary with a complex type
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.
