@@ -146,9 +146,10 @@ Full signature of mapping methods are as follows:
 - 1.0.2 - First public release
 - 1.0.3
     - Made mapping to strings more flexible so source does not itself have to be a string.  Instead ToString() is called on whatever you are mapping to the string.
-	- Add the **propertyLevels** optional parameter for when mapping from IPublished content.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.
+	- Add the propertyLevels optional parameter for when mapping from IPublished content.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.
 - 1.1.0
-	- Breaking change to interface of property mapping overrides, as refactored to use single dictionary with a complex type
+	- Breaking change to interface of property mapping overrides, as refactored to use single dictionary with a complex **PropertyMapping** custom type
+	
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.
