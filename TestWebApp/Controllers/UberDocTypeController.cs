@@ -25,7 +25,7 @@
             // Create view model and run mapping
             var model = new UberDocTypeViewModel();
             Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "CreateDate" } }, })
-                .MapCollection(CurrentPage.Children, model.Comments, 
+                .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, })
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
@@ -34,7 +34,8 @@
                 .Map(GetSingleDictionary(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
                 .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
                 .Map(GetSingleJson(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromJson", new PropertyMapping { SourceProperty = "Name" } }, })
-                .MapCollection(GetCollectionJson(), model.CollectionFromJson);
+                .MapCollection(GetCollectionJson(), model.CollectionFromJson)
+                .Map(CurrentPage, model.SubModel);
 
             return CurrentTemplate(model);
         }

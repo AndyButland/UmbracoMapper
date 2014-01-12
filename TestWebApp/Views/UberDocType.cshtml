@@ -76,3 +76,14 @@ else
 <p>Single value from JSON: @Model.SingleValueFromJson</p>
 
 <p>JSON collection: @string.Join(", ", Model.CollectionFromJson.Select(x => x.Name).ToArray())</p>
+
+<h2>Sub-Model</h2>
+
+@if (Model.SubModel != null)
+{
+    <p>Id: @Model.SubModel.Id, Heading: @Model.SubModel.Heading</p>
+}
+else
+{
+    <p>Sub-model is null</p>
+}

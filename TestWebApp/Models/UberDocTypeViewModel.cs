@@ -15,6 +15,7 @@
             CollectionFromXml = new List<NamedItemViewModel>();
             CollectionFromDictionary = new List<NamedItemViewModel>();
             CollectionFromJson = new List<NamedItemViewModel>();
+            SubModel = new SubModel();
         }
 
         public int Id { get; set; }
@@ -50,5 +51,14 @@
         public IList<NamedItemViewModel> CollectionFromDictionary { get; set; }
 
         public IList<NamedItemViewModel> CollectionFromJson { get; set; }
+
+        public SubModel SubModel { get; set; }
+    }
+
+    public class SubModel
+    {
+        public int Id { get; set; }
+
+        public string Heading { get; set; }
     }
 }

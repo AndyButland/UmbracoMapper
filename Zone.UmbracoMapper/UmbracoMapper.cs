@@ -43,50 +43,59 @@
             Dictionary<string, PropertyMapping> propertyMappings = null,
             string[] recursiveProperties = null)
         {
-            // Loop through all settable properties on model
-            foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+            if (content != null)
             {
-                // Check if we want to map to content at a level above the currently passed node
-                var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
-
-                // Set native IPublishedContent properties (using convention that names match exactly)
-                var propName = GetMappedPropertyName(property.Name, propertyMappings);
-
-                if (contentToMapFrom.GetType().GetProperty(propName) != null)
+                // Ensure model is not null
+                if (model == null)
                 {
-                    // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
-                    if (property.PropertyType.Name == "String")
-                    {
-                        property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
-                    }
-                    else
-                    {
-                        property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom));
-                    }                    
-                    
-                    continue;
+                    throw new ArgumentNullException("model", "Object to map to cannot be null");
                 }
 
-                // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
-                // properties, unless override provided)
-                propName = GetMappedPropertyName(property.Name, propertyMappings, true);
-
-                // Map property for types we can handle
-                switch (property.PropertyType.Name)
+                // Loop through all settable properties on model
+                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
                 {
-                    case "MediaFile":
-                        var mf = GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName));
-                        property.SetValue(model, mf);
-                        break;
+                    // Check if we want to map to content at a level above the currently passed node
+                    var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
 
-                    default:
-                        var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
-                        if (value != null)
+                    // Set native IPublishedContent properties (using convention that names match exactly)
+                    var propName = GetMappedPropertyName(property.Name, propertyMappings);
+
+                    if (contentToMapFrom.GetType().GetProperty(propName) != null)
+                    {
+                        // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
+                        if (property.PropertyType.Name == "String")
                         {
-                            SetTypedPropertyValue(model, property, value.ToString());
+                            property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
+                        }
+                        else
+                        {
+                            property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom));
                         }
 
-                        break;
+                        continue;
+                    }
+
+                    // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
+                    // properties, unless override provided)
+                    propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+
+                    // Map property for types we can handle
+                    switch (property.PropertyType.Name)
+                    {
+                        case "MediaFile":
+                            var mf = GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName));
+                            property.SetValue(model, mf);
+                            break;
+
+                        default:
+                            var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
+                            if (value != null)
+                            {
+                                SetTypedPropertyValue(model, property, value.ToString());
+                            }
+
+                            break;
+                    }
                 }
             }
 
@@ -105,26 +114,35 @@
             T model,
             Dictionary<string, PropertyMapping> propertyMappings = null)
         {
-            // Loop through all settable properties on model
-            foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+            if (xml != null)
             {
-                var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
-
-                // If element with mapped name found, map the value (check case insensitively)
-                var mappedElement = GetXElementCaseInsensitive(xml, propName);
-                if (mappedElement != null)
+                // Ensure model is not null
+                if (model == null)
                 {
-                    var stringValue = mappedElement.Value;
-                    SetTypedPropertyValue<T>(model, property, stringValue);
+                    throw new ArgumentNullException("model", "Object to map to cannot be null");
                 }
-                else
+
+                // Loop through all settable properties on model
+                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
                 {
-                    // Try to see if it's in an attribute too
-                    var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
-                    if (mappedAttribute != null)
+                    var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
+
+                    // If element with mapped name found, map the value (check case insensitively)
+                    var mappedElement = GetXElementCaseInsensitive(xml, propName);
+                    if (mappedElement != null)
                     {
-                        var stringValue = mappedAttribute.Value;
+                        var stringValue = mappedElement.Value;
                         SetTypedPropertyValue<T>(model, property, stringValue);
+                    }
+                    else
+                    {
+                        // Try to see if it's in an attribute too
+                        var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
+                        if (mappedAttribute != null)
+                        {
+                            var stringValue = mappedAttribute.Value;
+                            SetTypedPropertyValue<T>(model, property, stringValue);
+                        }
                     }
                 }
             }
@@ -144,16 +162,25 @@
             T model,
             Dictionary<string, PropertyMapping> propertyMappings = null)
         {
-            // Loop through all settable properties on model
-            foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+            if (dictionary != null)
             {
-                var propName = GetMappedPropertyName(property.Name, propertyMappings);
-
-                // If element with mapped name found, map the value
-                if (dictionary.ContainsKey(propName))
+                // Ensure model is not null
+                if (model == null)
                 {
-                    var stringValue = dictionary[propName].ToString();
-                    SetTypedPropertyValue<T>(model, property, stringValue);
+                    throw new ArgumentNullException("model", "Object to map to cannot be null");
+                }
+
+                // Loop through all settable properties on model
+                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+                {
+                    var propName = GetMappedPropertyName(property.Name, propertyMappings);
+
+                    // If element with mapped name found, map the value
+                    if (dictionary.ContainsKey(propName))
+                    {
+                        var stringValue = dictionary[propName].ToString();
+                        SetTypedPropertyValue<T>(model, property, stringValue);
+                    }
                 }
             }
 
@@ -174,6 +201,12 @@
         {
             if (!string.IsNullOrEmpty(json))
             {
+                // Ensure model is not null
+                if (model == null)
+                {
+                    throw new ArgumentNullException("model", "Object to map to cannot be null");
+                }
+
                 // Parse JSON string to queryable object
                 var jsonObj = JObject.Parse(json);
 

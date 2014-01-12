@@ -149,7 +149,9 @@ Full signature of mapping methods are as follows:
 	- Add the propertyLevels optional parameter for when mapping from IPublished content.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.
 - 1.1.0
 	- Breaking change to interface of property mapping overrides, as refactored to use single dictionary with a complex **PropertyMapping** custom type
-	
+- 1.1.1
+    - Improved null checking on mapping single items.
+
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.
