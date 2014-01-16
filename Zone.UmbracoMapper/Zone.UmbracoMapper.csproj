@@ -8,7 +8,7 @@
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Zone.UmbracoMapper</RootNamespace>
-    <AssemblyName>Zone.Umbraco.Mapper</AssemblyName>
+    <AssemblyName>Zone.UmbracoMapper</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
   </PropertyGroup>
