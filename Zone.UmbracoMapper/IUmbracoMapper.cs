@@ -9,7 +9,7 @@
     {
         string AssetsRootUrl { get; set; }
 
-        void AddCustomPropertyMapping(string propertyTypeName,
+        void AddCustomMapping(string propertyTypeFullName,
             Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction);
 
         IUmbracoMapper Map<T>(IPublishedContent content, 

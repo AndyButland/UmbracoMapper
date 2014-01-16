@@ -24,7 +24,7 @@
         public UmbracoMapper()
         {
             _customMappings = new Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, object>>();
-            AddCustomPropertyMapping("MediaFile", DampMapper.MapMediaFile);
+            AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
         }
 
         #endregion
@@ -41,9 +41,9 @@
 
         #region Interface methods
 
-        public void AddCustomPropertyMapping(string propertyTypeName, Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction)
+        public void AddCustomMapping(string propertyTypeFullName, Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction)
         {
-            _customMappings[propertyTypeName] = mapperFunction;
+            _customMappings[propertyTypeFullName] = mapperFunction;
         }
 
         /// <summary>
@@ -97,9 +97,9 @@
                     propName = GetMappedPropertyName(property.Name, propertyMappings, true);
 
                     // Map property for types we can handle
-                    if (_customMappings.ContainsKey(property.PropertyType.Name))
+                    if (_customMappings.ContainsKey(property.PropertyType.FullName))
                     {
-                        var value = _customMappings[property.PropertyType.Name](this, contentToMapFrom, propName);
+                        var value = _customMappings[property.PropertyType.FullName](this, contentToMapFrom, propName);
                         property.SetValue(model, value);
                     }
                     else
