@@ -151,6 +151,8 @@ Full signature of mapping methods are as follows:
 	- Breaking change to interface of property mapping overrides, as refactored to use single dictionary with a complex **PropertyMapping** custom type
 - 1.1.1
     - Improved null checking on mapping single items.
+- 1.1.2
+    - Added ability to define your own custom mappings for particular types.
 
 ## Credits
 
