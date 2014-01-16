@@ -13,9 +13,21 @@
 
     public class UmbracoMapper : IUmbracoMapper
     {
+        #region Fields
+
+        private Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, object>> _customMappings;
+
+        #endregion
+
+        #region Constructor
+
         public UmbracoMapper()
         {
+            _customMappings = new Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, object>>();
+            AddCustomPropertyMapping("MediaFile", DampMapper.MapMediaFile);
         }
+
+        #endregion
 
         #region Properties
 
@@ -29,6 +41,11 @@
 
         #region Interface methods
 
+        public void AddCustomPropertyMapping(string propertyTypeName, Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction)
+        {
+            _customMappings[propertyTypeName] = mapperFunction;
+        }
+
         /// <summary>
         /// Maps an instance of IPublishedContent to the passed view model based on conventions (and/or overrides)
         /// </summary>
@@ -38,8 +55,8 @@
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
-        public IUmbracoMapper Map<T>(IPublishedContent content, 
-            T model, 
+        public IUmbracoMapper Map<T>(IPublishedContent content,
+            T model,
             Dictionary<string, PropertyMapping> propertyMappings = null,
             string[] recursiveProperties = null)
         {
@@ -80,21 +97,18 @@
                     propName = GetMappedPropertyName(property.Name, propertyMappings, true);
 
                     // Map property for types we can handle
-                    switch (property.PropertyType.Name)
+                    if (_customMappings.ContainsKey(property.PropertyType.Name))
                     {
-                        case "MediaFile":
-                            var mf = GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName));
-                            property.SetValue(model, mf);
-                            break;
-
-                        default:
-                            var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
-                            if (value != null)
-                            {
-                                SetTypedPropertyValue(model, property, value.ToString());
-                            }
-
-                            break;
+                        var value = _customMappings[property.PropertyType.Name](this, contentToMapFrom, propName);
+                        property.SetValue(model, value);
+                    }
+                    else
+                    {
+                        var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
+                        if (value != null)
+                        {
+                            SetTypedPropertyValue(model, property, value.ToString());
+                        }
                     }
                 }
             }
@@ -669,62 +683,6 @@
             }
 
             return stringValue;
-        }
-
-        #endregion
-
-        #region Specific type converters
-
-        /// <summary>
-        /// Helper to convert a DAMP model into a standard MediaFile object
-        /// </summary>
-        /// <param name="dampModel">DAMP model</param>
-        /// <returns>MediaFile instance</returns>
-        private MediaFile GetMediaFile(DampModel dampModel)
-        {
-            if (dampModel != null && dampModel.Any)
-            {
-                var mediaFile = new MediaFile();
-
-                var dampModelItem = dampModel.First;
-
-                mediaFile.Id = dampModelItem.Id;
-                mediaFile.Name = dampModelItem.Name;
-                mediaFile.Url = dampModelItem.Url;
-                mediaFile.DomainWithUrl = AssetsRootUrl + dampModelItem.Url;
-                mediaFile.DocumentTypeAlias = dampModelItem.Type;
-
-                if (dampModelItem.Type == "Image")
-                {
-                    int tempWidth;
-                    if (int.TryParse(dampModelItem.GetProperty("umbracoWidth"), out tempWidth))
-                    {
-                        mediaFile.Width = tempWidth;
-                    }
-
-                    int tempHeight;
-                    if (int.TryParse(dampModelItem.GetProperty("umbracoHeight"), out tempHeight))
-                    {
-                        mediaFile.Height = tempHeight;
-                    }
-                }
-
-                int tempSize;
-                if (int.TryParse(dampModelItem.GetProperty("umbracoBytes"), out tempSize))
-                {
-                    mediaFile.Size = tempSize;
-                }
-
-                mediaFile.FileExtension = dampModelItem.GetProperty("umbracoExtension");
-
-                mediaFile.AltText = string.IsNullOrWhiteSpace(dampModelItem.GetProperty("altText"))
-                    ? dampModelItem.Alt
-                    : dampModelItem.GetProperty("altText");
-
-                return mediaFile;
-            }
-
-            return null;
         }
 
         #endregion

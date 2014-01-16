@@ -222,6 +222,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="DampMapper.cs" />
     <Compile Include="IUmbracoMapper.cs" />
     <Compile Include="MediaFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

@@ -1,5 +1,6 @@
 ﻿namespace Zone.UmbracoMapper
 {
+    using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
     using Umbraco.Core.Models;
@@ -7,6 +8,9 @@
     public interface IUmbracoMapper
     {
         string AssetsRootUrl { get; set; }
+
+        void AddCustomPropertyMapping(string propertyTypeName,
+            Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction);
 
         IUmbracoMapper Map<T>(IPublishedContent content, 
             T model,
