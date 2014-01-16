@@ -41,6 +41,11 @@
 
         #region Interface methods
 
+        /// <summary>
+        /// Allows the mapper to use a custom mapping for a specified type
+        /// </summary>
+        /// <param name="propertyTypeName">Full name of the property type to map to</param>
+        /// <param name="mapperFunction">Mapping function</param>
         public void AddCustomMapping(string propertyTypeFullName, Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction)
         {
             _customMappings[propertyTypeFullName] = mapperFunction;

@@ -15,6 +15,13 @@
     {
         #region Specific type converters
 
+        /// <summary>
+        /// Helper to map an IPublishedContent property to an object
+        /// </summary>
+        /// <param name="mapper">Mapper</param>
+        /// <param name="contentToMapFrom">Umbraco content item to map from</param>
+        /// <param name="propName">Name of the property to map</param>
+        /// <returns>MediaFile instance</returns>
         public static object MapMediaFile(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName)
         {
             return GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName), mapper.AssetsRootUrl);
