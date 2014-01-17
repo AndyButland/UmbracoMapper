@@ -28,6 +28,8 @@ The operations supported are:
 
 Conventions are used throughout.  For example it's expected when mapping document type properties to custom view model fields that they will have the same name, with the former camel-cased (e.g. 'bodyText' will map to 'BodyText').  All methods contain an optional parameter though where these conventions can be overridden.
 
+It is possible to define custom mapping functions for property types not included in the default mapper. This could be used, for example, if you have custom Media types with properties not included in the default MediaFile class.
+
 ## Prerequisites
 
 To utilise Umbraco Mapper you should be following the model of Umbraco MVC application development that uses [route hijacking](http://our.umbraco.org/documentation/Reference/Mvc/custom-controllers "Hijacking Umbraco Routes within Umbraco Documentation").
@@ -80,6 +82,13 @@ All mapping methods return an instance of the mapper itself, meaning operations 
     mapper.Map(CurrentPage, model)
           .MapToCollection(CurrentPage.Children, model.Comments);
 
+It is possible to add custom mapping functions to the mapper, to map to custom types:
+
+	mapper.AddCustomMapping(typeof(Image).FullName, CustomMappings.GetImage);
+    ...
+    public static object GetImage(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName) {}
+
+
 For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 
 
 ## Mapping to Media Files
@@ -97,6 +106,9 @@ An automated mapping is provided for media properties using [DAMP](http://our.um
 ### Methods
 
 Full signature of mapping methods are as follows:
+
+	void AddCustomMapping(string propertyTypeFullName,
+		Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction);
 
     IUmbracoMapper Map<T>(IPublishedContent content, 
         T model, 
