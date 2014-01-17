@@ -15,7 +15,7 @@
     {
         #region Fields
 
-        private Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, object>> _customMappings;
+        private Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, bool, object>> _customMappings;
 
         #endregion
 
@@ -23,7 +23,7 @@
 
         public UmbracoMapper()
         {
-            _customMappings = new Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, object>>();
+            _customMappings = new Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, bool, object>>();
             AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
         }
 
@@ -46,7 +46,7 @@
         /// </summary>
         /// <param name="propertyTypeFullName">Full name of the property type to map to</param>
         /// <param name="mapperFunction">Mapping function</param>
-        public void AddCustomMapping(string propertyTypeFullName, Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction)
+        public void AddCustomMapping(string propertyTypeFullName, Func<IUmbracoMapper, IPublishedContent, string, bool, object> mapperFunction)
         {
             _customMappings[propertyTypeFullName] = mapperFunction;
         }
@@ -99,17 +99,19 @@
 
                     // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
                     // properties, unless override provided)
-                    propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+                    propName = GetMappedPropertyName(property.Name, propertyMappings, true);                    
 
-                    // Map property for types we can handle
+                    // Map properties, first checking for custom mappings
+                    var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
                     if (_customMappings.ContainsKey(property.PropertyType.FullName))
                     {
-                        var value = _customMappings[property.PropertyType.FullName](this, contentToMapFrom, propName);
+                        var value = _customMappings[property.PropertyType.FullName](this, contentToMapFrom, propName, isRecursiveProperty);
                         property.SetValue(model, value);
                     }
                     else
                     {
-                        var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
+                        // Otherwise map primitive types
+                        var value = contentToMapFrom.GetPropertyValue(propName, isRecursiveProperty);
                         if (value != null)
                         {
                             SetTypedPropertyValue(model, property, value.ToString());

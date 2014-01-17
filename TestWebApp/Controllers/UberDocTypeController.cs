@@ -26,7 +26,8 @@
             var model = new UberDocTypeViewModel();
             Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "CreateDate" } }, })
                 .MapCollection(CurrentPage.Children, model.Comments,
-                    new Dictionary<string, PropertyMapping> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, })
+                    new Dictionary<string, PropertyMapping> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, }, 
+                    new string[] { "mainImage" })
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })

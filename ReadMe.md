@@ -153,6 +153,8 @@ Full signature of mapping methods are as follows:
     - Improved null checking on mapping single items.
 - 1.1.2
     - Added ability to define your own custom mappings for particular types.
+- 1.2.0
+    - Amended the custom mapping to support recursive properties (though in fact this won't work until 6.2, due to [this issue](http://issues.umbraco.org/issue/U4-1958 "Umbraco issue u4-1958")
 
 ## Credits
 

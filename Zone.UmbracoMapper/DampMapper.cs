@@ -21,10 +21,11 @@
         /// <param name="mapper">Mapper</param>
         /// <param name="contentToMapFrom">Umbraco content item to map from</param>
         /// <param name="propName">Name of the property to map</param>
+        /// <param name="isRecursive">Flag to indicate if property should be retrieved recursively up the tree</param>
         /// <returns>MediaFile instance</returns>
-        public static object MapMediaFile(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName)
+        public static object MapMediaFile(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive)
         {
-            return GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName), mapper.AssetsRootUrl);
+            return GetMediaFile(contentToMapFrom.GetPropertyValue<DampModel>(propName, isRecursive, null), mapper.AssetsRootUrl);
         }
 
         /// <summary>

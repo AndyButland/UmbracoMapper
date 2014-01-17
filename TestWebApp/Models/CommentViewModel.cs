@@ -2,6 +2,7 @@
 {
     using System;
     using System.Web;
+    using Zone.UmbracoMapper;
     
     public class CommentViewModel
     {
@@ -14,5 +15,7 @@
         public string Author { get; set; }
 
         public string ParentPage { get; set; }
+
+        public MediaFile MainImage { get; set; }
     }
 }
