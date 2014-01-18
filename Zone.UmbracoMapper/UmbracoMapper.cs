@@ -9,7 +9,6 @@
     using Newtonsoft.Json.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
-    using DampModel = DAMP.PropertyEditorValueConverter.Model;
 
     public class UmbracoMapper : IUmbracoMapper
     {
@@ -24,7 +23,6 @@
         public UmbracoMapper()
         {
             _customMappings = new Dictionary<string, Func<IUmbracoMapper, IPublishedContent, string, bool, object>>();
-            AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
         }
 
         #endregion
@@ -46,9 +44,10 @@
         /// </summary>
         /// <param name="propertyTypeFullName">Full name of the property type to map to</param>
         /// <param name="mapperFunction">Mapping function</param>
-        public void AddCustomMapping(string propertyTypeFullName, Func<IUmbracoMapper, IPublishedContent, string, bool, object> mapperFunction)
+        public IUmbracoMapper AddCustomMapping(string propertyTypeFullName, Func<IUmbracoMapper, IPublishedContent, string, bool, object> mapperFunction)
         {
             _customMappings[propertyTypeFullName] = mapperFunction;
+            return this;
         }
 
         /// <summary>

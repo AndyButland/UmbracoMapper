@@ -6,11 +6,11 @@ Umbraco Mapper has been developed to support a more pure MVC approach to buildin
 
 With MVC in Umbraco, there are broadly three approaches:
 
-1. As with 'traditional' Umbraco using WebForms, place a lot of presentation logic in the Views
+1. As with 'traditional' Umbraco using WebForms, place a lot of data access and business logic in the views
 2. Within the view used for the page template, place an @Html.Action or @Html.Partial, to call other templates or controller actions.
 3. Hijack the routes, and map the Umbraco (and other) content information to custom view models which are passed to the view.
 
-Some may find 3) requires a bit more work up front, but the advantage of this approach is that the view code is exceptionally clean, and in fact has no dependency on Umbraco at all.  It also follows a more traditional MVC route, where the controller is responsible for passing the information to the view in the particular form is requires it.
+Some may find 3) requires a bit more work up front, but the advantage of this approach is that the view code is exceptionally clean, and in fact need have no dependency on Umbraco at all.  It also follows a more traditional MVC route, where the controller is responsible for passing the information to the view in the particular form it requires it.
 
 This work up front though to map the content from Umbraco and other sources is where Umbraco Mapper comes in.
 
@@ -20,50 +20,88 @@ Umbraco Mapper provides an interface **IUmbracoMapper** and implementation **Umb
 
 The operations supported are:
 
-* Mapping of an Umbraco **IPublishedContent** to a custom view model.
-* Mapping of a **collection of IPublishedContent** items - e.g. from a node query picker - to a custom view model's collection.
-* Mapping of **XML** to a custom view model or collection.  This might be from a particular Umbraco data type (e.g. Related Links) or from a custom source of XML.
-* Mapping of **JSON** to a custom view model or collection.  This might be from a particular Umbraco data type or from a custom source of JSON.
-* Mapping of a **Dictionary** to a custom view model or collection.  
+- Mapping of an Umbraco **IPublishedContent** to a custom view model.
+- Mapping of a **collection of IPublishedContent** items - e.g. from a node query picker - to a custom view model's collection.
+- Mapping of **XML** to a custom view model or collection.  This might be from a particular Umbraco data type (e.g. Related Links) or from a custom source of XML.
+- Mapping of **JSON** to a custom view model or collection.  This might be from a particular Umbraco data type or from a custom source of JSON.
+- Mapping of a **Dictionary** to a custom view model or collection.  
 
-Conventions are used throughout.  For example it's expected when mapping document type properties to custom view model fields that they will have the same name, with the former camel-cased (e.g. 'bodyText' will map to 'BodyText').  All methods contain an optional parameter though where these conventions can be overridden.
+Conventions are used throughout the mapping process.  For example it's expected when mapping document type properties to custom view model fields that they will have the same name, with the former camel-cased (e.g. 'bodyText' will map to 'BodyText').  All methods contain an optional parameter though where these conventions can be overridden.
 
-It is possible to define custom mapping functions for property types not included in the default mapper. This could be used, for example, if you have custom Media types with properties not included in the default MediaFile class.
+A couple of base types are provided to help create the necessary view models in your application.  It's not essential to use these, but they may provide some useful properties.
 
-## Prerequisites
+- **BaseNodeViewModel** - can be used as the base type for your view models, containing fields matching for standard IPublishedContent properties like Id, Name, DocumentTypeAlias and Url.
+- **MediaFile** - a representation for an Umbraco media file, with properties including Url, Width, Height etc.
 
-To utilise Umbraco Mapper you should be following the model of Umbraco MVC application development that uses [route hijacking](http://our.umbraco.org/documentation/Reference/Mvc/custom-controllers "Hijacking Umbraco Routes within Umbraco Documentation").
+It is also possible to define custom mapping functions for property types not included in the default mapper. This could be used, for example, if you have custom Media types with properties not included in the default MediaFile class, or for mapping complex data types like the Google Maps type.
 
-You also may want to implement an IoC container such as Ninject as [described here](http://ismailmayat.wordpress.com/2013/07/25/umbraco-6-mvc-and-dependency-injection/ "Using Ninject with Umbraco").  Though this isn't necessary, if preferred you can just instantiate an instance of UmbracoMapper directly.
+## Package Contents
 
-You must install DAMP Property Editor Value Converter v1.2 for this package to work correctly as it has a dependency on that.
+The package has been provided as two separate downloads:
+
+- **Zone.UmbracoMapper.dll** - this is the core mapping package.  It has no dependencies other than on .Net and the core Umbraco binaries (6.1.6).
+- **Zone.UmbracoMapper.DampCustomMapping.dll** - is an add-on package with another dll that provides a custom mapping for [DAMP](http://our.umbraco.org/projects/backoffice-extensions/digibiz-advanced-media-picker "DAMP") models to media files, and is only required if you want to use that functionality.  It has a dependency on **DAMP Property Editor Value Converter v1.2** and the Umbraco Mapper itself.
+
+## Expected Use Cases
+
+Where we utilise and test Umbraco Mapper we are following the model of Umbraco MVC application development that uses [route hijacking](http://our.umbraco.org/documentation/Reference/Mvc/custom-controllers "Hijacking Umbraco Routes within Umbraco Documentation").
+
+We also implement an IoC container such as Ninject as [described here](http://ismailmayat.wordpress.com/2013/07/25/umbraco-6-mvc-and-dependency-injection/ "Using Ninject with Umbraco").  
+
+Neither of these steps are strictly necessary though, if preferred you can just instantiate an instance of UmbracoMapper directly.
 
 ## Examples
+
+### Mapping Operations
 
 Given an instance of UmbracoMapper you can map a the properties of a particular page to a custom view model using conventions like this:
 
     var mapper = new UmbracoMapper();
     var model = new UberDocTypeViewModel();
     mapper.Map(CurrentPage, model);
+	
+This will map all view model properties it can find an exact name match for, either from the standard IPublishedContent properties (like Id, Name etc.), or from the document type fields.
 
 To override conventions for property mapping, you can provide a Dictionary of property mappings.  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
 
     mapper.Map(CurrentPage, model,
-      new Dictionary<string, string> { { "Copy", new PropertyMapping { SourceProperty = "bodyText" } }, });
+      new Dictionary<string, string> 
+	  { 
+		{ 
+		  "Copy", new PropertyMapping 
+		    { 
+			  SourceProperty = "bodyText", 
+		    } 
+		}, 
+	  });
 
-To map a collection use the following method.  This example maps the child nodes of the current page to a custom collection called 'Comments' on the view model.
+To map a collection use the following method.  This example maps the child nodes of the current page to a custom collection called 'Comments' on the view model, again using the default name mapping conventions.
 
     mapper.MapToCollection(CurrentPage.Children, model.Comments);
 	
 You can also override here both the property names as before, and the level at which the mapping is made.  So if for example you have one property on your view model that you want to get from the parent node, you can do this:
 
     mapper.MapCollection(CurrentPage.Children, model.Comments, 
-		new Dictionary<string, string> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, });
+      new Dictionary<string, string> 
+	  { 
+		{ 
+		  "ParentPage", new PropertyMapping 
+		    { 
+			  SourceProperty = "Name",
+			  LevelsAbove = 1,
+		    } 
+		}, 
+	  });	
 
-You can also map any other collection if IPublishedContent, e.g. that built up from a node picker and query:
+You can also map any other collection of IPublishedContent, e.g. that built up from a node picker and query:
 
     var countryIds = CurrentPage.GetPropertyValue<string>("countries");
     var countryNodes = Umbraco.TypedContent(countryIds.Split(','));
+    mapper.MapCollection(countryNodes, model.Countries);
+	
+Or if you are also using the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters), more simply like this:
+
+    var countryNodes = CurrentPage.GetPropertyValue<IEnumerable<IPublishedContent>>("countries");
     mapper.MapCollection(countryNodes, model.Countries);
 
 Some Umbraco data types store XML.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
@@ -81,21 +119,58 @@ All mapping methods return an instance of the mapper itself, meaning operations 
 
     mapper.Map(CurrentPage, model)
           .MapToCollection(CurrentPage.Children, model.Comments);
+		  
+For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 		  
+		  
+### Mapping Operations		  
 
-It is possible to add custom mapping functions to the mapper, to map to custom types:
+For additional flexibiity when you want to map to a custom view model type that's been created in your project, it is possible to add custom mapping functions to the mapper, e.g.:
 
 	mapper.AddCustomMapping(typeof(Image).FullName, CustomMappings.GetImage);
     ...
-    public static object GetImage(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName) {}
+    public static object GetImage(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) {}
+	
+The add-on package provides this method, **DampMapper.MapMediaFile**, for the purposes of mapping from the DAMP model to the standard MediaFile class provided with the mapper. If you want to use this in your project you'll just need to add it to the custom mappings like this:
 
+	mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
+	
+Here's another example, this time mapping from the Google Maps data type (which stores it's data as three values (lat, long, zoom) in CSV format:
 
-For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 
+    mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, CustomMappings.MapGeoCoordinate);
+	...
+    public class GeoCoordinate
+    {
+        public decimal Longitude { get; set; }
+        public decimal Latitude { get; set; }
+        public int Zoom { get; set; }
+    }	
+	...
+	public class CustomMappings
+    {
+        public static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
+        {
+            return GetGeoCoordinate(contentToMapFrom.GetPropertyValue<string>(propName, isRecursive, null));
+        }
 
-## Mapping to Media Files
+        private static GeoCoordinate GetGeoCoordinate(string csv)
+        {
+            if (!string.IsNullOrEmpty(csv))
+            {
+                var parts = csv.Split(',');
+                if (parts != null && parts.Length == 3)
+                {
+                    return new GeoCoordinate
+                    {
+                        Latitude = decimal.Parse(parts[0]),
+                        Longitude = decimal.Parse(parts[1]),
+                        Zoom = int.Parse(parts[2]),
+                    };
+                }
+            }
 
-A representation of a media file is provided with Umbraco Mapper within the class **MediaFile**.  This can be used as a property on your custom view model.
-
-An automated mapping is provided for media properties using [DAMP](http://our.umbraco.org/projects/backoffice-extensions/digibiz-advanced-media-picker "DAMP").  This means if you have a property on your view model of type MediaFile and a document type property with a DAMP database, the media information will be automatically mapped.
+            return null;
+        }
+    }	
 
 ## Properties and Methods
 
@@ -107,7 +182,7 @@ An automated mapping is provided for media properties using [DAMP](http://our.um
 
 Full signature of mapping methods are as follows:
 
-	void AddCustomMapping(string propertyTypeFullName,
+	IUmbracoMapper AddCustomMapping(string propertyTypeFullName,
 		Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction);
 
     IUmbracoMapper Map<T>(IPublishedContent content, 
@@ -167,6 +242,8 @@ Full signature of mapping methods are as follows:
     - Added ability to define your own custom mappings for particular types.
 - 1.2.0
     - Amended the custom mapping to support recursive properties (though in fact this won't work until 6.2, due to [this issue](http://issues.umbraco.org/issue/U4-1958 "Umbraco issue u4-1958"))
+- 1.3.0 
+	- Refactored the solution to remove the dependency on DAMP for the core mapper.  A second project and dll is provided that contains the mapping to DAMP models, and the client must now link this up if they want to use it via the custom mappings.
 
 ## Credits
 

@@ -1,24 +1,15 @@
-﻿namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper.DampCustomMapping
 {
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Reflection;
-    using System.Web;
-    using System.Xml.Linq;
-    using Newtonsoft.Json.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using DampModel = DAMP.PropertyEditorValueConverter.Model;
 
     public static class DampMapper
     {
-        #region Specific type converters
-
         /// <summary>
-        /// Helper to map an IPublishedContent property to an object
+        /// Custom mapper for mapping a DAMP property
         /// </summary>
-        /// <param name="mapper">Mapper</param>
+        /// <param name="mapper">The mapper</param>
         /// <param name="contentToMapFrom">Umbraco content item to map from</param>
         /// <param name="propName">Name of the property to map</param>
         /// <param name="isRecursive">Flag to indicate if property should be retrieved recursively up the tree</param>
@@ -79,7 +70,5 @@
 
             return null;
         }
-
-        #endregion
     }
 }
