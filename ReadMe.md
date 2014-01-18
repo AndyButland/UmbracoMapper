@@ -122,9 +122,9 @@ All mapping methods return an instance of the mapper itself, meaning operations 
 		  
 For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 		  
 		  
-### Mapping Operations		  
+### Custom Mappings		  
 
-For additional flexibiity when you want to map to a custom view model type that's been created in your project, it is possible to add custom mapping functions to the mapper, e.g.:
+For additional flexibility when you want to map to a custom view model type that's been created in your project, it is possible to add custom mapping functions to the mapper, e.g.:
 
 	mapper.AddCustomMapping(typeof(Image).FullName, CustomMappings.GetImage);
     ...
@@ -134,7 +134,7 @@ The add-on package provides this method, **DampMapper.MapMediaFile**, for the pu
 
 	mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
 	
-Here's another example, this time mapping from the Google Maps data type (which stores it's data as three values (lat, long, zoom) in CSV format:
+Here's another example, this time mapping from the [Google Maps data type](http://our.umbraco.org/projects/backoffice-extensions/google-maps-datatype) (which stores it's data as three values - lat, long, zoom - in CSV format):
 
     mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, CustomMappings.MapGeoCoordinate);
 	...
