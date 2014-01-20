@@ -244,7 +244,9 @@ Full signature of mapping methods are as follows:
     - Amended the custom mapping to support recursive properties (though in fact this won't work until 6.2, due to [this issue](http://issues.umbraco.org/issue/U4-1958 "Umbraco issue u4-1958"))
 - 1.3.0 
 	- Refactored the solution to remove the dependency on DAMP for the core mapper.  A second project and dll is provided that contains the mapping to DAMP models, and the client must now link this up if they want to use it via the custom mappings.
-
+- 1.3.1
+	- Added Level property to BaseNodeViewModel
+	
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.

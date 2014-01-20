@@ -46,3 +46,9 @@
 2014-01-18 13:17:27,884 [17] INFO  umbraco.content - [Thread 6] Loading content from disk cache...
 2014-01-18 13:17:28,213 [17] INFO  Umbraco.Core.PluginManager - [Thread 6] Starting resolution types of Umbraco.Core.Persistence.Mappers.BaseMapper
 2014-01-18 13:17:28,220 [17] INFO  Umbraco.Core.PluginManager - [Thread 6] Completed resolution of types of Umbraco.Core.Persistence.Mappers.BaseMapper, found 17 (took 6ms)
+2014-01-18 13:24:57,524 [17] INFO  umbraco.BasePages.BasePage - [Thread 20] User admin (Id: 0) logged in
+2014-01-18 13:24:57,563 [17] INFO  Umbraco.Core.PluginManager - [Thread 21] Starting resolution types of umbraco.BusinessLogic.Actions.IActionHandler
+2014-01-18 13:24:57,572 [17] INFO  Umbraco.Core.PluginManager - [Thread 21] Completed resolution of types of umbraco.BusinessLogic.Actions.IActionHandler, found 1 (took 9ms)
+2014-01-18 13:24:57,719 [17] INFO  Umbraco.Core.PluginManager - [Thread 21] Starting resolution types of umbraco.interfaces.ITree
+2014-01-18 13:24:57,765 [17] INFO  Umbraco.Core.PluginManager - [Thread 21] Completed resolution of types of umbraco.interfaces.ITree, found 36 (took 46ms)
+2014-01-18 13:26:37,827 [17] INFO  umbraco.CreatedPackageTasks - [Thread 16] Xml save started
