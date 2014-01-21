@@ -55,6 +55,8 @@
         public SubModel SubModel { get; set; }
 
         public string SelectedComment { get; set; }
+
+        public int SelectedCommentId { get; set; }
     }
 
     public class SubModel

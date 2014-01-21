@@ -83,16 +83,7 @@
 
                     if (contentToMapFrom.GetType().GetProperty(propName) != null)
                     {
-                        // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
-                        if (property.PropertyType.Name == "String")
-                        {
-                            property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
-                        }
-                        else
-                        {
-                            property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom));
-                        }
-
+                        MapNativeIPublishedContentProperty<T>(model, property, contentToMapFrom, propName);
                         continue;
                     }
 
@@ -125,12 +116,22 @@
                                     var relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
                                     if (relatedContentToMapFrom != null)
                                     {
+                                        var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
                                         // Get the mapped field from the related content
-                                        value = relatedContentToMapFrom.GetPropertyValue(propertyMappings[property.Name].SourceRelatedProperty);
-                                        if (value != null)
+                                        if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
                                         {
-                                            // Map primitive types
-                                            SetTypedPropertyValue(model, property, value.ToString());
+                                            // Got a native field
+                                            MapNativeIPublishedContentProperty<T>(model, property, relatedContentToMapFrom, relatedPropName);
+                                        }
+                                        else
+                                        {
+                                            // Otherwise look at a doc type field
+                                            value = relatedContentToMapFrom.GetPropertyValue(relatedPropName);
+                                            if (value != null)
+                                            {
+                                                // Map primitive types
+                                                SetTypedPropertyValue(model, property, value.ToString());
+                                            }
                                         }
                                     }
                                 }
@@ -146,7 +147,7 @@
             }
 
             return this;
-        }
+        }        
 
         /// <summary>
         /// Maps content held in XML to the passed view model based on conventions (and/or overrides)
@@ -576,6 +577,27 @@
         private bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
         {
             return recursiveProperties != null && recursiveProperties.Contains(propertyName);
+        }
+
+        /// <summary>
+        /// Helper to map a native IPublishedContent property to a view model property
+        /// </summary>
+        /// <typeparam name="T">Type of view model to map to</typeparam>
+        /// <param name="model">View model to map to</param>
+        /// <param name="property">Property to map to</param>
+        /// <param name="contentToMapFrom">IPublishedContent instance to map from</param>
+        /// <param name="propName">Name of property to map from</param>
+        private void MapNativeIPublishedContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom, string propName)
+        {
+            // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
+            if (property.PropertyType.Name == "String")
+            {
+                property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
+            }
+            else
+            {
+                property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom));
+            }
         }
 
         /// <summary>

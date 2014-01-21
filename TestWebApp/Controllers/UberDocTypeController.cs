@@ -38,6 +38,13 @@
                                     SourceRelatedProperty = "text" 
                                 } 
                         }, 
+                        { 
+                            "SelectedCommentId", new PropertyMapping 
+                                { 
+                                    SourceProperty = "selectedComment",
+                                    SourceRelatedProperty = "Id" 
+                                } 
+                        }, 
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>
