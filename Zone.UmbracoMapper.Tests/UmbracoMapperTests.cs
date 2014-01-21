@@ -126,6 +126,22 @@
             Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromXml_MapsFromChildProperty()
+        {
+            // Arrange
+            var model = new SimpleViewModel();
+            var xml = GetXmlForSingle4();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(xml, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { SourceChildProperty = "FullName" } } });
+
+            // Assert
+            Assert.AreEqual(1, model.Id);
+            Assert.AreEqual("Test name", model.Name);
+        }
+
         #endregion
 
         #region Tests - Single Maps From Dictionary
@@ -162,7 +178,7 @@
                 { "Name", new PropertyMapping { SourceProperty = "Name2" } },
                 { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
             });
-            
+
             // Assert
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
@@ -208,7 +224,7 @@
                 { "Name", new PropertyMapping { SourceProperty = "Name2" } },
                 { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
             });
-           
+
             // Assert
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
@@ -235,6 +251,22 @@
             Assert.AreEqual(1234567890, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
             Assert.AreEqual((decimal)12.73, model.AverageScore);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJson_MapsFromChildProperty()
+        {
+            // Arrange
+            var model = new SimpleViewModel();
+            var json = GetJsonForSingle4();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(json, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { SourceChildProperty = "fullName" } } });
+
+            // Assert
+            Assert.AreEqual(1, model.Id);
+            Assert.AreEqual("Test name", model.Name);
         }
 
         #endregion
@@ -301,7 +333,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(xml, model.Comments, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn"}  } });
+            mapper.MapCollection(xml, model.Comments, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn" } } });
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -849,6 +881,15 @@
                 new XElement("averageScore", "12.73"));
         }
 
+        private XElement GetXmlForSingle4()
+        {
+            return new XElement("Item",
+                new XElement("Id", 1),
+                new XElement("Name",
+                    new XElement("Title", "Mr"),
+                    new XElement("FullName", "Test name")));
+        }
+
         private XElement GetXmlForCommentsCollection()
         {
             return new XElement("Items",
@@ -1028,7 +1069,22 @@
                     'facebookId': 1234567890,
                     'registeredOn': '2013-04-13',
                     'averageScore': 12.73
-                }";;
+                }"; ;
+        }
+
+        private string GetJsonForSingle4()
+        {
+            return @"{
+                    'id': 1,
+                    'name': {
+                        'title': 'Mr',
+                        'fullName': 'Test name',
+                    },
+                    'age': 21,
+                    'facebookId': 1234567890,
+                    'registeredOn': '2013-04-13',
+                    'averageScore': 12.73
+                }"; ;
         }
 
         private string GetJsonForCommentsCollection()
@@ -1060,7 +1116,7 @@
                     'Name': 'Sally Smith',
                     'Text': 'Sally\'s comment',
                     'RecordedOn': '2013-04-13 10:30'
-                }]}";         
+                }]}";
         }
 
         private string GetJsonForCommentsCollection3()

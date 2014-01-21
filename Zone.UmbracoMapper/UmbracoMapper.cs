@@ -149,10 +149,19 @@
 
                     // If element with mapped name found, map the value (check case insensitively)
                     var mappedElement = GetXElementCaseInsensitive(xml, propName);
+
                     if (mappedElement != null)
                     {
-                        var stringValue = mappedElement.Value;
-                        SetTypedPropertyValue<T>(model, property, stringValue);
+                        // Check if we are looking for a child mapping
+                        if (IsMappingFromChildProperty(propertyMappings, property.Name))
+                        {
+                            mappedElement = mappedElement.Element(propertyMappings[property.Name].SourceChildProperty);
+                        }
+
+                        if (mappedElement != null)
+                        {
+                            SetTypedPropertyValue<T>(model, property, mappedElement.Value);
+                        }
                     }
                     else
                     {
@@ -160,8 +169,7 @@
                         var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
                         if (mappedAttribute != null)
                         {
-                            var stringValue = mappedAttribute.Value;
-                            SetTypedPropertyValue<T>(model, property, stringValue);
+                            SetTypedPropertyValue<T>(model, property, mappedElement.Value);
                         }
                     }
                 }
@@ -236,7 +244,13 @@
                     var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
 
                     // If element with mapped name found, map the value
-                    var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName);
+                    var childPropName = string.Empty;
+                    if (IsMappingFromChildProperty(propertyMappings, property.Name))
+                    {
+                        childPropName = propertyMappings[property.Name].SourceChildProperty;
+                    }
+
+                    var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName, childPropName);
                     if (!string.IsNullOrEmpty(stringValue))
                     {
                         SetTypedPropertyValue<T>(model, property, stringValue);
@@ -465,7 +479,9 @@
             bool convertToCamelCase = false)
         {
             var mappedName = propName;
-            if (propertyMappings != null && propertyMappings.ContainsKey(propName))
+            if (propertyMappings != null && 
+                propertyMappings.ContainsKey(propName) &&
+                !string.IsNullOrEmpty(propertyMappings[propName].SourceProperty))
             {
                 mappedName = propertyMappings[propName].SourceProperty;
             }
@@ -497,6 +513,19 @@
             }
 
             return contentToMapFrom;
+        }
+
+        /// <summary>
+        /// Helper to check if particular property should be mapped from a child property
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private bool IsMappingFromChildProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings != null &&
+                propertyMappings.ContainsKey(propName) &&
+                !string.IsNullOrEmpty(propertyMappings[propName].SourceChildProperty);
         }
 
         /// <summary>
@@ -652,7 +681,12 @@
         /// <returns>Matched XElement</returns>
         private XElement GetXElementCaseInsensitive(XElement xml, string propName)
         {
-            return xml.Elements().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
+            if (xml != null)
+            {
+                return xml.Elements().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
+            }
+
+            return null;
         }
 
         /// <summary>
@@ -669,26 +703,70 @@
         /// <summary>
         /// Helper to retrieve a JSON field by name case insensitively
         /// </summary>
-        /// <param name="jsonObj"></param>
-        /// <param name="propName"></param>
-        /// <returns></returns>
-        private string GetJsonFieldCaseInsensitive(JObject jsonObj, string propName)
+        /// <param name="jsonObj">JSON object to get field value from</param>
+        /// <param name="propName">Property name to look up</param>
+        /// <param name="childPropName">Child property name to look up</param>
+        /// <returns>String value of JSON field</returns>
+        private string GetJsonFieldCaseInsensitive(JObject jsonObj, string propName, string childPropName)
         {
-            var stringValue = (string)jsonObj[propName];
+            var token = GetJToken(jsonObj, propName);
+            if (token != null)
+            {
+                if (!string.IsNullOrEmpty(childPropName))
+                {
+                    // Looking up on child object
+                    var childToken = token[childPropName];
+
+                    // If not found, try with lower case
+                    if (childToken == null)
+                    {
+                        childToken = token[childPropName.ToLowerInvariant()];
+                    }
+
+                    // If still not found, try with camel case
+                    if (childToken == null)
+                    {
+                        childToken = token[CamelCase(childPropName)];
+                    }
+
+                    if (childToken != null)
+                    {
+                        return (string)childToken;
+                    }
+                }
+                else
+                {
+                    // Looking up directly on object
+                    return (string)token;
+                }
+            }           
+
+            return string.Empty;
+        }
+
+        /// <summary>
+        /// Lookup for JSON property
+        /// </summary>
+        /// <param name="jsonObj">JSON object</param>
+        /// <param name="propName">Property to get value for</param>
+        /// <returns>JToken object, if found</returns>
+        private JToken GetJToken(JObject jsonObj, string propName)
+        {
+            var token = jsonObj[propName];
 
             // If not found, try with lower case
-            if (string.IsNullOrEmpty(stringValue))
+            if (token == null)
             {
-                stringValue = (string)jsonObj[propName.ToLowerInvariant()];
+                token = jsonObj[propName.ToLowerInvariant()];
             }
 
             // If still not found, try with camel case
-            if (string.IsNullOrEmpty(stringValue))
+            if (token == null)
             {
-                stringValue = (string)jsonObj[CamelCase(propName)];
+                token = jsonObj[CamelCase(propName)];
             }
 
-            return stringValue;
+            return token;
         }
 
         #endregion
