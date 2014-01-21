@@ -53,6 +53,8 @@
         public IList<NamedItemViewModel> CollectionFromJson { get; set; }
 
         public SubModel SubModel { get; set; }
+
+        public string SelectedComment { get; set; }
     }
 
     public class SubModel

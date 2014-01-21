@@ -24,9 +24,32 @@
 
             // Create view model and run mapping
             var model = new UberDocTypeViewModel();
-            Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "CreateDate" } }, })
+            Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "CreatedOn", new PropertyMapping 
+                                { 
+                                    SourceProperty = "CreateDate" 
+                                } 
+                        }, 
+                        { 
+                            "SelectedComment", new PropertyMapping 
+                                { 
+                                    SourceRelatedProperty = "text" 
+                                } 
+                        }, 
+                    })
                 .MapCollection(CurrentPage.Children, model.Comments,
-                    new Dictionary<string, PropertyMapping> { { "ParentPage", new PropertyMapping { SourceProperty = "Name", LevelsAbove = 1 } }, }, 
+                    new Dictionary<string, PropertyMapping>
+                        { 
+                            { 
+                                "ParentPage", new PropertyMapping 
+                                    { 
+                                        SourceProperty = "Name", 
+                                        LevelsAbove = 1 
+                                    } 
+                            }, 
+                        },
                     new string[] { "mainImage" })
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")

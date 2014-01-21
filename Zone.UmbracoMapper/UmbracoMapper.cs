@@ -109,11 +109,37 @@
                     }
                     else
                     {
-                        // Otherwise map primitive types
+                        // Otherwise map types we can handle
                         var value = contentToMapFrom.GetPropertyValue(propName, isRecursiveProperty);
                         if (value != null)
                         {
-                            SetTypedPropertyValue(model, property, value.ToString());
+                            // Check if we are mapping to a related IPublishedContent
+                            if (IsMappingFromRelatedProperty(propertyMappings, property.Name))
+                            {
+                                // The value we have should be an Id of a related IPublishedContent
+                                int relatedId;
+                                if (int.TryParse(value.ToString(), out relatedId))
+                                {
+                                    // Get the related content
+                                    var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
+                                    var relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
+                                    if (relatedContentToMapFrom != null)
+                                    {
+                                        // Get the mapped field from the related content
+                                        value = relatedContentToMapFrom.GetPropertyValue(propertyMappings[property.Name].SourceRelatedProperty);
+                                        if (value != null)
+                                        {
+                                            // Map primitive types
+                                            SetTypedPropertyValue(model, property, value.ToString());
+                                        }
+                                    }
+                                }
+                            }
+                            else
+                            {
+                                // Map primitive types
+                                SetTypedPropertyValue(model, property, value.ToString());
+                            }
                         }
                     }
                 }
@@ -169,7 +195,7 @@
                         var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
                         if (mappedAttribute != null)
                         {
-                            SetTypedPropertyValue<T>(model, property, mappedElement.Value);
+                            SetTypedPropertyValue<T>(model, property, mappedAttribute.Value);
                         }
                     }
                 }
@@ -513,6 +539,19 @@
             }
 
             return contentToMapFrom;
+        }
+
+        /// <summary>
+        /// Helper to check if particular property should be mapped from a related property
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private bool IsMappingFromRelatedProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings != null &&
+                propertyMappings.ContainsKey(propName) &&
+                !string.IsNullOrEmpty(propertyMappings[propName].SourceRelatedProperty);
         }
 
         /// <summary>

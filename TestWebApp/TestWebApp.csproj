@@ -56,6 +56,16 @@
     <Reference Include="CookComputing.XmlRpcV2">
       <HintPath>..\packages\xmlrpcnet.2.5.0\lib\net20\CookComputing.XmlRpcV2.dll</HintPath>
     </Reference>
+    <Reference Include="DAMP.PropertyEditorValueConverter, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\lib\DAMP.PropertyEditorValueConverter.dll</HintPath>
+    </Reference>
+    <Reference Include="DigibizAdvancedMediaPicker">
+      <HintPath>..\lib\DigibizAdvancedMediaPicker.dll</HintPath>
+    </Reference>
+    <Reference Include="DigibizTree">
+      <HintPath>..\lib\DigibizTree.dll</HintPath>
+    </Reference>
     <Reference Include="Examine">
       <HintPath>..\packages\UmbracoCms.Core.6.1.6\lib\Examine.dll</HintPath>
     </Reference>

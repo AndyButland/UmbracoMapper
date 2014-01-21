@@ -65,7 +65,7 @@ This will map all view model properties it can find an exact name match for, eit
 To override conventions for property mapping, you can provide a Dictionary of property mappings.  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
 
     mapper.Map(CurrentPage, model,
-      new Dictionary<string, string> 
+      new Dictionary<string, PropertyMapping> 
 	  { 
 		{ 
 		  "Copy", new PropertyMapping 
@@ -82,7 +82,7 @@ To map a collection use the following method.  This example maps the child nodes
 You can also override here both the property names as before, and the level at which the mapping is made.  So if for example you have one property on your view model that you want to get from the parent node, you can do this:
 
     mapper.MapCollection(CurrentPage.Children, model.Comments, 
-      new Dictionary<string, string> 
+      new Dictionary<string, PropertyMapping> 
 	  { 
 		{ 
 		  "ParentPage", new PropertyMapping 
@@ -92,6 +92,21 @@ You can also override here both the property names as before, and the level at w
 		    } 
 		}, 
 	  });	
+	  
+Another PropertyMapping field allows you to map the child properties.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance.  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
+
+The following example maps a string property on the view model called 'LinkToPage' to the 'Url' property of an IPublishedContent picked using a content picker for the current page.
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+	  { 
+		{ 
+		  "LinkToPage", new PropertyMapping 
+		    { 
+			  SourceRelatedProperty = "Url", 
+		    } 
+		}, 
+	  });
 
 You can also map any other collection of IPublishedContent, e.g. that built up from a node picker and query:
 
@@ -114,6 +129,8 @@ You can also map XML, JSON and Dictionaries that may have come from other source
 
     var json = @"{ 'items': [{ 'Name': 'United Kingdom' }, { 'Name': 'Italy' }]}";
     mapper.MapCollection(json, model.Countries);
+	
+Similar to the use of the PropertyMapping.SourceRelatedProperty property for IPublished content, you can pass an override to map to the immediate child of the XML or JSON, thus allowing you to flatten your view model.  The property is called SourceChildProperty.
 
 All mapping methods return an instance of the mapper itself, meaning operations can be chained in a fluent interface style.  E.g.
 
@@ -246,6 +263,9 @@ Full signature of mapping methods are as follows:
 	- Refactored the solution to remove the dependency on DAMP for the core mapper.  A second project and dll is provided that contains the mapping to DAMP models, and the client must now link this up if they want to use it via the custom mappings.
 - 1.3.1
 	- Added Level property to BaseNodeViewModel
+- 1.3.2
+	- Added SourceChildProperty to PropertyMapping class, to allow mapping to XML and JSON child elements 
+	- Added SourceRelatedProperty to PropertyMapping class, to allow mapping to related IPublishedContent selected via a content picker 	
 	
 ## Credits
 
