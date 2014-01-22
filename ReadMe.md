@@ -189,13 +189,15 @@ Here's another example, this time mapping from the [Google Maps data type](http:
         }
     }	
 
-## Properties and Methods
+## Classes, Properties and Methods
 
 ### IUmbracoMapper / UmbracoMapper
 
+The primary mapping component.
+
 #### Properties
 
-**AssetsRootUrl** - if set allows the population of mapped MediaFile's **DomainWithUrl** property with an absolute URL.  Useful only in the context where a CDN is used for distributing media files rather than them being served from the web server via relative links.
+**AssetsRootUrl** - If set allows the population of mapped MediaFile's **DomainWithUrl** property with an absolute URL.  Useful only in the context where a CDN is used for distributing media files rather than them being served from the web server via relative links.
 
 #### Methods
 
@@ -245,7 +247,29 @@ Full signature of mapping methods are as follows:
         string rootElementName = "items", 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
-        string destIdentifyingPropName = "Id") where T : new();
+        string destIdentifyingPropName = "Id") where T : new();		
+		
+### PropertyMapping
+
+Class defining the override to the mapping convention for property to a particular type.
+
+#### Properties
+
+**SourceProperty** - The name of the property on the source to map from.  If not passed, exact name match convention is used.
+
+**LevelsAbove** - Defines the number of levels above the current content to map the value from.  If not passed, 0 (the current level) is assumed.  Only for IPublishedContent mappings.
+
+**SourceRelatedProperty** - If passed, the source property is assumed to be a structure that has related content (e.g. a Content Picker that contains an integer Id for another IPublishedContent).  The mapping is then done from the named property of that child element. Only for IPublishedContent mappings.
+
+**SourceChildProperty** - If passed, the source property is assumed to be a structure that has child content.  The mapping is then done from the named field of that child element. Only for XML and JSON mappings.
+
+### BaseNodeViewModel
+
+Class representing an Umbraco node that can be used as the basis of any page view models in the client product.
+
+### MediaFile
+
+Class representing an Umbraco media item that can be used within page view models in the client product.
 		
 ## Version History
 
