@@ -93,7 +93,7 @@ You can also override here both the property names as before, and the level at w
 		}, 
 	  });	
 	  
-Another PropertyMapping field allows you to map the child properties.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance.  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
+Another PropertyMapping field allows you to map properties from related content.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance (or the IPublishedContent itself if you have the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) installed.  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
 
 The following example maps a string property on the view model called 'LinkToPage' to the 'Url' property of an IPublishedContent picked using a content picker for the current page.
 
