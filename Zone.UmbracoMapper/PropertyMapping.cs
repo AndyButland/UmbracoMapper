@@ -33,5 +33,19 @@
         /// Only for XML and JSON mappings.
         /// </summary>
         public string SourceChildProperty { get; set; }
+
+        /// <summary>
+        /// The names of the properties on the source to map from and concatenate.
+        /// If not passed, exact name match convention or single match on SourceProperty is used.
+        /// Only for IPublishedContent mappings.
+        /// </summary>
+        public string[] SourcePropertiesForConcatenation { get; set; }
+
+        /// <summary>
+        /// When SourcePropertiesForConcatenation is used, the seperator string used to concatenate the items.
+        /// If not passed, no seperator is assumed.
+        /// Only for IPublishedContent mappings.
+        /// </summary>
+        public string ConcatenationSeperator { get; set; }
     }
 }

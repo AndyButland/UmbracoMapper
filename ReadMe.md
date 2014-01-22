@@ -54,6 +54,8 @@ Neither of these steps are strictly necessary though, if preferred you can just 
 
 ### Mapping Operations
 
+#### From IPublishedContent
+
 Given an instance of UmbracoMapper you can map a the properties of a particular page to a custom view model using conventions like this:
 
     var mapper = new UmbracoMapper();
@@ -118,6 +120,22 @@ The following example maps a string property on the view model called 'LinkToPag
 		    } 
 		}, 
 	  });
+	  
+Yet another couple of PropertyMapping fields allow you to concatenate two or more source properties to a single string property on your view model.  You pass through an array of properties to map to and a separation string like this.  The following example would map the firstName ("Fred") and lastName ("Bloggs") properties to a single concatenated string ("Bloggs, Fred"):
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+	  { 
+		{ 
+		  "Name", new PropertyMapping 
+		    { 
+				SourcePropertiesForConcatenation = new string[] { "firstName", "lastName" },
+                ConcatenationSeperator = ", ",
+		    } 
+		}, 
+	  });
+	  
+#### From Other Sources	  
 
 Some Umbraco data types store XML.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
 
@@ -132,10 +150,14 @@ You can also map XML, JSON and Dictionaries that may have come from other source
 	
 Similar to the use of the PropertyMapping.SourceRelatedProperty property for IPublished content, you can pass an override to map to the immediate child of the XML or JSON, thus allowing you to flatten your view model.  The property is called SourceChildProperty.
 
+#### Chaining Mapping Operations	  
+
 All mapping methods return an instance of the mapper itself, meaning operations can be chained in a fluent interface style.  E.g.
 
     mapper.Map(CurrentPage, model)
           .MapToCollection(CurrentPage.Children, model.Comments);
+		  
+#### Further Examples		  
 		  
 For more examples, including details of how the controllers are set up, see the controller class **UberDocTypeController.cs** in the test web application.  Or the file **UmbracoMapperTests.cs** in the unit test project. 		  
 		  
@@ -197,7 +219,7 @@ The primary mapping component.
 
 #### Properties
 
-**AssetsRootUrl** - If set allows the population of mapped MediaFile's **DomainWithUrl** property with an absolute URL.  Useful only in the context where a CDN is used for distributing media files rather than them being served from the web server via relative links.
+**AssetsRootUrl** (string) - If set allows the population of mapped MediaFile's **DomainWithUrl** property with an absolute URL.  Useful only in the context where a CDN is used for distributing media files rather than them being served from the web server via relative links.
 
 #### Methods
 
@@ -255,13 +277,17 @@ Class defining the override to the mapping convention for property to a particul
 
 #### Properties
 
-**SourceProperty** - The name of the property on the source to map from.  If not passed, exact name match convention is used.
+**SourceProperty** (string) - The name of the property on the source to map from.  If not passed, exact name match convention is used.
 
-**LevelsAbove** - Defines the number of levels above the current content to map the value from.  If not passed, 0 (the current level) is assumed.  Only for IPublishedContent mappings.
+**LevelsAbove** (int) - Defines the number of levels above the current content to map the value from.  If not passed, 0 (the current level) is assumed.  Only for IPublishedContent mappings.
 
-**SourceRelatedProperty** - If passed, the source property is assumed to be a structure that has related content (e.g. a Content Picker that contains an integer Id for another IPublishedContent).  The mapping is then done from the named property of that child element. Only for IPublishedContent mappings.
+**SourceRelatedProperty** (string) - If passed, the source property is assumed to be a structure that has related content (e.g. a Content Picker that contains an integer Id for another IPublishedContent).  The mapping is then done from the named property of that child element. Only for IPublishedContent mappings.
 
-**SourceChildProperty** - If passed, the source property is assumed to be a structure that has child content.  The mapping is then done from the named field of that child element. Only for XML and JSON mappings.
+**SourceChildProperty** (string) - If passed, the source property is assumed to be a structure that has child content.  The mapping is then done from the named field of that child element. Only for XML and JSON mappings.
+
+**SourcePropertiesForConcatenation** (string[]) - This property can contain a string array of multiple source properties to map from.  If the destination property is a string the results will be concatenated.
+
+**SourceChildProperty** (string) - Used in conjunction with SourcePropertiesForConcatenation to define the separating string between the concatenated items.
 
 ### BaseNodeViewModel
 
@@ -294,6 +320,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added SourceRelatedProperty to PropertyMapping class, to allow mapping to related IPublishedContent selected via a content picker 	
 - 1.3.3
     - Amended related property mapping to handle case where the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) are installed, and we'll get back an actual IPublishedContent from related content instead of just the node Id
+- 1.3.4
+	- Added support for string concatenating two or more source properties to a single destination one
 	
 ## Credits
 

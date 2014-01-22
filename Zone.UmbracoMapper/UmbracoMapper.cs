@@ -75,88 +75,34 @@
                 // Loop through all settable properties on model
                 foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
                 {
-                    // Check if we want to map to content at a level above the currently passed node
+                    // Get content to map from (check if we want to map to content at a level above the currently passed node)
                     var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
 
-                    // Set native IPublishedContent properties (using convention that names match exactly)
-                    var propName = GetMappedPropertyName(property.Name, propertyMappings);
-
-                    if (contentToMapFrom.GetType().GetProperty(propName) != null)
+                    // Check if we are looking to concatenate more than one source property
+                    if (IsMappingFromConcatenatedProperties(propertyMappings, property.Name))
                     {
-                        MapNativeIPublishedContentProperty<T>(model, property, contentToMapFrom, propName);
-                        continue;
-                    }
-
-                    // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
-                    // properties, unless override provided)
-                    propName = GetMappedPropertyName(property.Name, propertyMappings, true);                    
-
-                    // Map properties, first checking for custom mappings
-                    var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
-                    if (_customMappings.ContainsKey(property.PropertyType.FullName))
-                    {
-                        var value = _customMappings[property.PropertyType.FullName](this, contentToMapFrom, propName, isRecursiveProperty);
-                        property.SetValue(model, value);
-                    }
-                    else
-                    {
-                        // Otherwise map types we can handle
-                        var value = contentToMapFrom.GetPropertyValue(propName, isRecursiveProperty);
-                        if (value != null)
+                        // Loop through all the source properties requested for concatenation
+                        var isFirst = true;
+                        var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
+                        foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
                         {
-                            // Check if we are mapping to a related IPublishedContent
-                            if (IsMappingFromRelatedProperty(propertyMappings, property.Name))
-                            {
-                                // The value we have will either be:
-                                //  - an Id of a related IPublishedContent
-                                //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use)
-                                var relatedContentToMapFrom = value as IPublishedContent;
-                                if (relatedContentToMapFrom == null)
-                                {
-                                    // It's not already IPublishedContent, so check using Id
-                                    int relatedId;
-                                    if (int.TryParse(value.ToString(), out relatedId))
-                                    {
-                                        // Get the related content
-                                        var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
-                                        relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
-                                    }
-                                }
-
-                                // If we have a related content item...
-                                if (relatedContentToMapFrom != null)
-                                {
-                                    var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
-                                    // Get the mapped field from the related content
-                                    if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
-                                    {
-                                        // Got a native field
-                                        MapNativeIPublishedContentProperty<T>(model, property, relatedContentToMapFrom, relatedPropName);
-                                    }
-                                    else
-                                    {
-                                        // Otherwise look at a doc type field
-                                        value = relatedContentToMapFrom.GetPropertyValue(relatedPropName);
-                                        if (value != null)
-                                        {
-                                            // Map primitive types
-                                            SetTypedPropertyValue(model, property, value.ToString());
-                                        }
-                                    }
-                                }
-                            }
-                            else
-                            {
-                                // Map primitive types
-                                SetTypedPropertyValue(model, property, value.ToString());
-                            }
+                            // Call the mapping function, passing in each source property to use, and flag to contatenate
+                            // on all but the first
+                            propertyMappings[property.Name].SourceProperty = sourceProp;
+                            MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, !isFirst, concatenationSeperator);
+                            isFirst = false;
                         }
+                     }
+                    else 
+                    {
+                        // Map the single property
+                        MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties);
                     }
                 }
             }
 
             return this;
-        }        
+        }
 
         /// <summary>
         /// Maps content held in XML to the passed view model based on conventions (and/or overrides)
@@ -552,6 +498,97 @@
         }
 
         /// <summary>
+        /// Maps a given IPublished content field (either native or from document type) to property on view model
+        /// </summary>
+        /// <typeparam name="T">Type of view model</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="property">Property of view model to map to</param>
+        /// <param name="contentToMapFrom">IPublished content to map from</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
+        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to seperate items</param>
+        private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom, 
+            Dictionary<string, PropertyMapping> propertyMappings, string[] recursiveProperties,
+            bool concatenateToExistingValue = false, string concatenationSeperator = "")
+        {
+            // Set native IPublishedContent properties (using convention that names match exactly)
+            var propName = GetMappedPropertyName(property.Name, propertyMappings);
+
+            if (contentToMapFrom.GetType().GetProperty(propName) != null)
+            {
+                MapNativeContentProperty<T>(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator);
+                return;
+            }
+
+            // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
+            // properties, unless override provided)
+            propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+
+            // Map properties, first checking for custom mappings
+            var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
+            if (_customMappings.ContainsKey(property.PropertyType.FullName))
+            {
+                var value = _customMappings[property.PropertyType.FullName](this, contentToMapFrom, propName, isRecursiveProperty);
+                property.SetValue(model, value);
+            }
+            else
+            {
+                // Otherwise map types we can handle
+                var value = contentToMapFrom.GetPropertyValue(propName, isRecursiveProperty);
+                if (value != null)
+                {
+                    // Check if we are mapping to a related IPublishedContent
+                    if (IsMappingFromRelatedProperty(propertyMappings, property.Name))
+                    {
+                        // The value we have will either be:
+                        //  - an Id of a related IPublishedContent
+                        //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use)
+                        var relatedContentToMapFrom = value as IPublishedContent;
+                        if (relatedContentToMapFrom == null)
+                        {
+                            // It's not already IPublishedContent, so check using Id
+                            int relatedId;
+                            if (int.TryParse(value.ToString(), out relatedId))
+                            {
+                                // Get the related content
+                                var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
+                                relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
+                            }
+                        }
+
+                        // If we have a related content item...
+                        if (relatedContentToMapFrom != null)
+                        {
+                            var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
+                            // Get the mapped field from the related content
+                            if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
+                            {
+                                // Got a native field
+                                MapNativeContentProperty<T>(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator);
+                            }
+                            else
+                            {
+                                // Otherwise look at a doc type field
+                                value = relatedContentToMapFrom.GetPropertyValue(relatedPropName);
+                                if (value != null)
+                                {
+                                    // Map primitive types
+                                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator);
+                                }
+                            }
+                        }
+                    }
+                    else
+                    {
+                        // Map primitive types
+                        SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator);
+                    }
+                }
+            }
+        }    
+
+        /// <summary>
         /// Helper to check if particular property should be mapped from a related property
         /// </summary>
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
@@ -578,6 +615,20 @@
         }
 
         /// <summary>
+        /// Helper to check if particular property should be mapped from the concatenation of more than one source property
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private bool IsMappingFromConcatenatedProperties(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings != null &&
+                propertyMappings.ContainsKey(propName) &&
+                propertyMappings[propName].SourcePropertiesForConcatenation != null &&
+                propertyMappings[propName].SourcePropertiesForConcatenation.Any();
+        }
+
+        /// <summary>
         /// Helper to check whether given property is defined as recursive
         /// </summary>
         /// <param name="recursiveProperties">Array of recursive property names</param>
@@ -596,12 +647,23 @@
         /// <param name="property">Property to map to</param>
         /// <param name="contentToMapFrom">IPublishedContent instance to map from</param>
         /// <param name="propName">Name of property to map from</param>
-        private void MapNativeIPublishedContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom, string propName)
-        {
+        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to seperate items</param>
+        private void MapNativeContentProperty<T>(T model, PropertyInfo property, 
+            IPublishedContent contentToMapFrom, string propName,
+            bool concatenateToExistingValue = false, string concatenationSeperator = "")
+        {            
             // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
+            // Obviously concatenation can only be used in this case too.
             if (property.PropertyType.Name == "String")
             {
-                property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
+                var prefixValueWith = string.Empty;
+                if (concatenateToExistingValue)
+                {
+                    prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                }
+
+                property.SetValue(model, prefixValueWith + contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
             }
             else
             {
@@ -616,7 +678,10 @@
         /// <param name="model">View model to map to</param>
         /// <param name="property">Property to map to</param>
         /// <param name="stringValue">String representation of property value</param>
-        private void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue)
+        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to seperate items</param>
+        private void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue,
+            bool concatenateToExistingValue = false, string concatenationSeperator = "")
         {
             switch (property.PropertyType.Name)
             {
@@ -697,7 +762,15 @@
                     property.SetValue(model, htmlString);
                     break;
                 case "String":                
-                    property.SetValue(model, stringValue);
+
+                    // Only makes sense to allow concatenation for String type
+                    var prefixValueWith = string.Empty;
+                    if (concatenateToExistingValue)
+                    {
+                        prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                    }
+
+                    property.SetValue(model, prefixValueWith + stringValue);
                     break;
             }
         }

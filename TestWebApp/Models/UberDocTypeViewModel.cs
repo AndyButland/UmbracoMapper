@@ -57,6 +57,8 @@
         public string SelectedComment { get; set; }
 
         public int SelectedCommentId { get; set; }
+
+        public string ConcatenatedValue { get; set; }
     }
 
     public class SubModel

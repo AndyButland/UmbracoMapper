@@ -10,6 +10,7 @@
 <p>Rating: @Model.StarRating stars</p>
 <p>Approved: @(Model.IsApproved ? "Yes" : "No")</p>
 <p>Average Score: @Model.AverageScore</p>
+<p>Concatenated value (heading, star rating, Id and URL): @Model.ConcatenatedValue</p>
 
 @if (Model.MainImage != null)
 {

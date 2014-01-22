@@ -45,6 +45,13 @@
                                     SourceRelatedProperty = "Id" 
                                 } 
                         }, 
+                        { 
+                            "ConcatenatedValue", new PropertyMapping 
+                                { 
+                                    SourcePropertiesForConcatenation = new string[] { "heading", "starRating", "Id", "Url" },
+                                    ConcatenationSeperator = ", ",
+                                } 
+                        }, 
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>
