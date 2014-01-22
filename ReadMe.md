@@ -322,6 +322,8 @@ Class representing an Umbraco media item that can be used within page view model
     - Amended related property mapping to handle case where the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) are installed, and we'll get back an actual IPublishedContent from related content instead of just the node Id
 - 1.3.4
 	- Added support for string concatenating two or more source properties to a single destination one
+- 1.3.5
+	- Further fix to related property mapping to handle case where Umbraco Core Property Editor Converters are installed and a multi-node tree picker is used
 	
 ## Credits
 

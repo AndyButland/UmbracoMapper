@@ -543,11 +543,27 @@
                     {
                         // The value we have will either be:
                         //  - an Id of a related IPublishedContent
-                        //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use)
+                        //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use
+                        //    and we have used a standard content picker)
+                        //  - or a list of related content (if the Umbraco Core Property Editor Converters are in use
+                        //    and we have used a multi-node picker with a single value)
+
+                        // So, try single IPublishedContent first
                         var relatedContentToMapFrom = value as IPublishedContent;
+
+                        // If not, try a list and take the first if it exists
                         if (relatedContentToMapFrom == null)
                         {
-                            // It's not already IPublishedContent, so check using Id
+                            var listOfRelatedContent = value as IEnumerable<IPublishedContent>;
+                            if (listOfRelatedContent != null && listOfRelatedContent.Any())
+                            {
+                                relatedContentToMapFrom = listOfRelatedContent.First();
+                            }
+                        }
+
+                        // If it's not already IPublishedContent, now check using Id
+                        if (relatedContentToMapFrom == null)
+                        {
                             int relatedId;
                             if (int.TryParse(value.ToString(), out relatedId))
                             {
