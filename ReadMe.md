@@ -93,7 +93,18 @@ You can also override here both the property names as before, and the level at w
 		}, 
 	  });	
 	  
-Another PropertyMapping field allows you to map properties from related content.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance (or the IPublishedContent itself if you have the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) installed.  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
+You can also map any other collection of IPublishedContent, e.g. that built up from a node picker and query:
+
+    var countryIds = CurrentPage.GetPropertyValue<string>("countries");
+    var countryNodes = Umbraco.TypedContent(countryIds.Split(','));
+    mapper.MapCollection(countryNodes, model.Countries);
+	
+Or if you are also using the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters), more simply like this:
+
+    var countryNodes = CurrentPage.GetPropertyValue<IEnumerable<IPublishedContent>>("countries");
+    mapper.MapCollection(countryNodes, model.Countries);	  
+	  
+Another PropertyMapping field allows you to map properties from related content.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance (or the IPublishedContent itself if you have the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) installed).  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
 
 The following example maps a string property on the view model called 'LinkToPage' to the 'Url' property of an IPublishedContent picked using a content picker for the current page.
 
@@ -107,17 +118,6 @@ The following example maps a string property on the view model called 'LinkToPag
 		    } 
 		}, 
 	  });
-
-You can also map any other collection of IPublishedContent, e.g. that built up from a node picker and query:
-
-    var countryIds = CurrentPage.GetPropertyValue<string>("countries");
-    var countryNodes = Umbraco.TypedContent(countryIds.Split(','));
-    mapper.MapCollection(countryNodes, model.Countries);
-	
-Or if you are also using the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters), more simply like this:
-
-    var countryNodes = CurrentPage.GetPropertyValue<IEnumerable<IPublishedContent>>("countries");
-    mapper.MapCollection(countryNodes, model.Countries);
 
 Some Umbraco data types store XML.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
 
@@ -191,11 +191,13 @@ Here's another example, this time mapping from the [Google Maps data type](http:
 
 ## Properties and Methods
 
-### Properties
+### IUmbracoMapper / UmbracoMapper
+
+#### Properties
 
 **AssetsRootUrl** - if set allows the population of mapped MediaFile's **DomainWithUrl** property with an absolute URL.  Useful only in the context where a CDN is used for distributing media files rather than them being served from the web server via relative links.
 
-### Methods
+#### Methods
 
 Full signature of mapping methods are as follows:
 
@@ -244,7 +246,7 @@ Full signature of mapping methods are as follows:
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
         string destIdentifyingPropName = "Id") where T : new();
-
+		
 ## Version History
 
 - 1.0.2 - First public release
