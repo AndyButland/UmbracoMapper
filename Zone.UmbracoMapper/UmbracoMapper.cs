@@ -107,31 +107,40 @@
                             // Check if we are mapping to a related IPublishedContent
                             if (IsMappingFromRelatedProperty(propertyMappings, property.Name))
                             {
-                                // The value we have should be an Id of a related IPublishedContent
-                                int relatedId;
-                                if (int.TryParse(value.ToString(), out relatedId))
+                                // The value we have will either be:
+                                //  - an Id of a related IPublishedContent
+                                //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use)
+                                var relatedContentToMapFrom = value as IPublishedContent;
+                                if (relatedContentToMapFrom == null)
                                 {
-                                    // Get the related content
-                                    var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
-                                    var relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
-                                    if (relatedContentToMapFrom != null)
+                                    // It's not already IPublishedContent, so check using Id
+                                    int relatedId;
+                                    if (int.TryParse(value.ToString(), out relatedId))
                                     {
-                                        var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
-                                        // Get the mapped field from the related content
-                                        if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
+                                        // Get the related content
+                                        var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
+                                        relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
+                                    }
+                                }
+
+                                // If we have a related content item...
+                                if (relatedContentToMapFrom != null)
+                                {
+                                    var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
+                                    // Get the mapped field from the related content
+                                    if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
+                                    {
+                                        // Got a native field
+                                        MapNativeIPublishedContentProperty<T>(model, property, relatedContentToMapFrom, relatedPropName);
+                                    }
+                                    else
+                                    {
+                                        // Otherwise look at a doc type field
+                                        value = relatedContentToMapFrom.GetPropertyValue(relatedPropName);
+                                        if (value != null)
                                         {
-                                            // Got a native field
-                                            MapNativeIPublishedContentProperty<T>(model, property, relatedContentToMapFrom, relatedPropName);
-                                        }
-                                        else
-                                        {
-                                            // Otherwise look at a doc type field
-                                            value = relatedContentToMapFrom.GetPropertyValue(relatedPropName);
-                                            if (value != null)
-                                            {
-                                                // Map primitive types
-                                                SetTypedPropertyValue(model, property, value.ToString());
-                                            }
+                                            // Map primitive types
+                                            SetTypedPropertyValue(model, property, value.ToString());
                                         }
                                     }
                                 }

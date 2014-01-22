@@ -266,6 +266,8 @@ Full signature of mapping methods are as follows:
 - 1.3.2
 	- Added SourceChildProperty to PropertyMapping class, to allow mapping to XML and JSON child elements 
 	- Added SourceRelatedProperty to PropertyMapping class, to allow mapping to related IPublishedContent selected via a content picker 	
+- 1.3.3
+    - Amended related property mapping to handle case where the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) are installed, and we'll get back an actual IPublishedContent from related content instead of just the node Id
 	
 ## Credits
 
