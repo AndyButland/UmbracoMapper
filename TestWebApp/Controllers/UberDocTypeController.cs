@@ -54,6 +54,12 @@
                                     { 
                                         SourceProperty = "Name", 
                                         LevelsAbove = 1 
+                                    }
+                            },
+                            {
+                                "Country", new PropertyMapping 
+                                    { 
+                                        SourceRelatedProperty = "Name", 
                                     } 
                             }, 
                         },

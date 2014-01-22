@@ -24,7 +24,7 @@
 {
     foreach (var comment in Model.Comments)
     {
-        <p>@comment.Text | <em>@comment.Author on @comment.CreatedOn.ToString("d-MMM-yyyy HH:mm")</em></p>
+        <p>@comment.Text | <em>@comment.Author from @comment.Country on @comment.CreatedOn.ToString("d-MMM-yyyy HH:mm")</em></p>
         <p>Parent page: @comment.ParentPage</p>
         <p>
             Image from parent page: 
