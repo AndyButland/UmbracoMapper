@@ -512,6 +512,15 @@
             Dictionary<string, PropertyMapping> propertyMappings, string[] recursiveProperties,
             bool concatenateToExistingValue = false, string concatenationSeperator = "")
         {
+            // First check to see if there's a condition that might mean we don't carry out the mapping
+            if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingFromRelatedProperty(propertyMappings, property.Name))
+            {
+                if (!IsMappingConditionMet(contentToMapFrom, propertyMappings[property.Name].MapIfPropertyMatches))
+                {
+                    return;
+                }
+            }
+
             // Set native IPublishedContent properties (using convention that names match exactly)
             var propName = GetMappedPropertyName(property.Name, propertyMappings);
 
@@ -576,6 +585,15 @@
                         // If we have a related content item...
                         if (relatedContentToMapFrom != null)
                         {
+                            // Check to see if there's a condition that might mean we don't carry out the mapping (on the related content)
+                            if (IsMappingConditional(propertyMappings, property.Name))
+                            {
+                                if (!IsMappingConditionMet(relatedContentToMapFrom, propertyMappings[property.Name].MapIfPropertyMatches))
+                                {
+                                    return;
+                                }
+                            }
+
                             var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
                             // Get the mapped field from the related content
                             if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
@@ -602,7 +620,33 @@
                     }
                 }
             }
-        }    
+        }
+
+        /// <summary>
+        /// Helper to check if a mapping conditional applies
+        /// </summary>
+        /// <param name="contentToMapFrom">IPublished content to map from</param>
+        /// <param name="propertyMappings"></param>
+        /// <returns></returns>
+        private bool IsMappingConditionMet(IPublishedContent contentToMapFrom, KeyValuePair<string, string> mapIfPropertyMatches)
+        {
+            var conditionalPropertyAlias = mapIfPropertyMatches.Key;
+            var conditionalPropertyValue = contentToMapFrom.GetPropertyValue<string>(conditionalPropertyAlias);
+            return conditionalPropertyValue != null && conditionalPropertyValue.ToLowerInvariant() == mapIfPropertyMatches.Value.ToLowerInvariant();
+        }
+
+        /// <summary>
+        /// Helper to check if particular property has a conditional mapping
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private bool IsMappingConditional(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings != null &&
+                propertyMappings.ContainsKey(propName) &&
+                !string.IsNullOrEmpty(propertyMappings[propName].MapIfPropertyMatches.Key);
+        }
 
         /// <summary>
         /// Helper to check if particular property should be mapped from a related property

@@ -1,4 +1,5 @@
-﻿namespace Zone.UmbracoMapper
+﻿using System.Collections.Generic;
+namespace Zone.UmbracoMapper
 {
     /// <summary>
     /// Class defining the override to the mapping convention for a particular type.
@@ -47,5 +48,10 @@
         /// Only for IPublishedContent mappings.
         /// </summary>
         public string ConcatenationSeperator { get; set; }
+
+        /// <summary>
+        /// If provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
+        /// </summary>
+        public KeyValuePair<string, string> MapIfPropertyMatches { get; set; }
     }
 }

@@ -135,6 +135,21 @@ Yet another couple of PropertyMapping fields allow you to concatenate two or mor
 		}, 
 	  });
 	  
+The MapIfPropertyMatches field allows you to define a condition for when the mapping operation occurs.  In this example, we want to map a string containing a URL to a related page, only if the page is intended to be linked to:
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+	  {
+		{
+			"LinkToPage", new PropertyMapping
+				{
+					SourceProperty = "relatedPage",
+					SourceRelatedProperty = "Url",
+					MapIfPropertyMatches = new KeyValuePair<string, string>("allowPageLink", "1"),
+				}
+		},	  	  
+	  });	  
+ 	  
 #### From Other Sources	  
 
 Some Umbraco data types store XML.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
@@ -289,6 +304,8 @@ Class defining the override to the mapping convention for property to a particul
 
 **SourceChildProperty** (string) - Used in conjunction with SourcePropertiesForConcatenation to define the separating string between the concatenated items.
 
+**MapIfPropertyMatches** (KeyValuePair<string, string>) - if provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
+
 ### BaseNodeViewModel
 
 Class representing an Umbraco node that can be used as the basis of any page view models in the client product.
@@ -324,6 +341,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added support for string concatenating two or more source properties to a single destination one
 - 1.3.5
 	- Further fix to related property mapping to handle case where Umbraco Core Property Editor Converters are installed and a multi-node tree picker is used
+- 1.3.6
+	- Added MapIfPropertyMatches to PropertyMapping
 	
 ## Credits
 

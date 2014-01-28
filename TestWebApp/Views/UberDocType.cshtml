@@ -11,6 +11,8 @@
 <p>Approved: @(Model.IsApproved ? "Yes" : "No")</p>
 <p>Average Score: @Model.AverageScore</p>
 <p>Concatenated value (heading, star rating, Id and URL): @Model.ConcatenatedValue</p>
+<p>Conditional value (met, should display): @Model.ConditionalValueMet</p>
+<p>Conditional value (not met, should not display): @Model.ConditionalValueNotMet</p>
 
 @if (Model.MainImage != null)
 {

@@ -52,6 +52,20 @@
                                     ConcatenationSeperator = ", ",
                                 } 
                         }, 
+                        { 
+                            "ConditionalValueMet", new PropertyMapping 
+                                { 
+                                    SourceProperty = "heading",
+                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "true"),
+                                } 
+                        }, 
+                        { 
+                            "ConditionalValueNotMet", new PropertyMapping 
+                                { 
+                                    SourceProperty = "heading",
+                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "0"),
+                                } 
+                        },
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>
