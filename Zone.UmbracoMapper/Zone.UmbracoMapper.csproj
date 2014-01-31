@@ -220,6 +220,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="BaseDestinationTypes\BaseNodeViewModel.cs" />
+    <Compile Include="CustomMapping.cs" />
     <Compile Include="IUmbracoMapper.cs" />
     <Compile Include="BaseDestinationTypes\MediaFile.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

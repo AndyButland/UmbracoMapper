@@ -201,9 +201,9 @@ Here's another example, this time mapping from the [Google Maps data type](http:
 	...
 	public class CustomMappings
     {
-        public static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
+        public static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propertyName, bool recursive) 
         {
-            return GetGeoCoordinate(contentToMapFrom.GetPropertyValue<string>(propName, isRecursive, null));
+            return GetGeoCoordinate(contentToMapFrom.GetPropertyValue<string>(propertyName, recursive, null));
         }
 
         private static GeoCoordinate GetGeoCoordinate(string csv)
@@ -226,6 +226,8 @@ Here's another example, this time mapping from the [Google Maps data type](http:
         }
     }	
 
+A custom mapping method can be restricted to a single property, rather than all properties of the given type, by passing the **propertyName** parameter to the **AddCustomMapping** method.
+
 ## Classes, Properties and Methods
 
 ### IUmbracoMapper / UmbracoMapper
@@ -238,10 +240,18 @@ The primary mapping component.
 
 #### Methods
 
+Full signature of delegates are as follows:
+
+    object CustomMapping(IUmbracoMapper mapper,
+                         IPublishedContent content,
+                         string propertyName,
+                         bool recursive)
+
 Full signature of mapping methods are as follows:
 
 	IUmbracoMapper AddCustomMapping(string propertyTypeFullName,
-		Func<IUmbracoMapper, IPublishedContent, string, object> mapperFunction);
+                                    CustomMapping mapping,
+                                    string propertyName = null);
 
     IUmbracoMapper Map<T>(IPublishedContent content, 
         T model, 
@@ -343,7 +353,11 @@ Class representing an Umbraco media item that can be used within page view model
 	- Further fix to related property mapping to handle case where Umbraco Core Property Editor Converters are installed and a multi-node tree picker is used
 - 1.3.6
 	- Added MapIfPropertyMatches to PropertyMapping
-	
+- 1.4.0
+    - Refactored the custom mapping function into a declared delegate
+    - Added optional property name when adding a custom mapping
+    - Restricted the generic type parameter on all mapping functions to be a class
+
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.
