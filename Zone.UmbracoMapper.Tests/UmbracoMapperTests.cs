@@ -4,7 +4,8 @@
     using System.Collections.Generic;
     using System.Xml.Linq;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Zone.UmbracoMapper.Tests.Stubs;
+    using Moq;
+    using Umbraco.Core.Models;
 
     [TestClass]
     public class UmbracoMapperTests
@@ -16,7 +17,7 @@
         {
             // Arrange
             var model = new SimpleViewModel();
-            var content = new StubPublishedContent();
+            var content = MockIPublishedContent();
             var mapper = GetMapper();
 
             // Act
@@ -24,7 +25,7 @@
 
             // Assert
             Assert.AreEqual(1000, model.Id);
-            Assert.AreEqual("Test Content", model.Name);
+            Assert.AreEqual("Test content", model.Name);
         }
 
         [TestMethod]
@@ -32,7 +33,7 @@
         {
             // Arrange
             var model = new SimpleViewModel2();
-            var content = new StubPublishedContent();
+            var content = MockIPublishedContent();
             var mapper = GetMapper();
 
             // Act
@@ -40,17 +41,25 @@
 
             // Assert
             Assert.AreEqual(1000, model.Id);
-            Assert.AreEqual("Test Content", model.Name);
+            Assert.AreEqual("Test content", model.Name);
             Assert.AreEqual("A.N. Editor", model.Author);
         }
 
-        // TODO: get this failing test working (requires mock or stub of IPublishedContent and dependencies)
-        // [TestMethod]
+        // TODO: get this unit test (and others with IPublishedContent) working.
+        // Currently runs into this error:
+        //  Message=Object reference not set to an instance of an object.
+        //  Source=Umbraco.Core
+        //  StackTrace:
+        //     at Umbraco.Core.PublishedContentHelper.<>c__DisplayClass3.<GetDataType>b__0(Tuple`2 tuple)
+        //     at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
+        //     at Umbraco.Core.PublishedContentHelper.GetDataType(ApplicationContext applicationContext, String docTypeAlias, String propertyAlias)
+        //     at Umbraco.Web.PublishedContentExtensions.GetPropertyValue(IPublishedContent doc, String alias, Boolean recursive)
+        //[TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
         {
             // Arrange
             var model = new SimpleViewModel3();
-            var content = new StubPublishedContent();
+            var content = MockIPublishedContent();
             var mapper = GetMapper();
 
             // Act
@@ -844,12 +853,12 @@
 
         #region Test helpers
 
-        private IUmbracoMapper GetMapper()
+        private static IUmbracoMapper GetMapper()
         {
             return new UmbracoMapper();
         }
 
-        private XElement GetXmlForSingle()
+        private static XElement GetXmlForSingle()
         {
             return new XElement("Item",
                 new XElement("Id", 1),
@@ -860,7 +869,7 @@
                 new XElement("AverageScore", "12.73"));
         }
 
-        private XElement GetXmlForSingle2()
+        private static XElement GetXmlForSingle2()
         {
             return new XElement("Item",
                 new XElement("Id", 1),
@@ -870,7 +879,7 @@
                 new XElement("RegistrationDate", "2013-04-13"));
         }
 
-        private XElement GetXmlForSingle3()
+        private static XElement GetXmlForSingle3()
         {
             return new XElement("item",
                 new XElement("id", 1),
@@ -881,7 +890,7 @@
                 new XElement("averageScore", "12.73"));
         }
 
-        private XElement GetXmlForSingle4()
+        private static XElement GetXmlForSingle4()
         {
             return new XElement("Item",
                 new XElement("Id", 1),
@@ -890,7 +899,7 @@
                     new XElement("FullName", "Test name")));
         }
 
-        private XElement GetXmlForCommentsCollection()
+        private static XElement GetXmlForCommentsCollection()
         {
             return new XElement("Items",
                 new XElement("Item",
@@ -905,7 +914,7 @@
                     new XElement("CreatedOn", "2013-04-13 10:30")));
         }
 
-        private XElement GetXmlForCommentsCollection2()
+        private static XElement GetXmlForCommentsCollection2()
         {
             return new XElement("Items",
                 new XElement("Item",
@@ -920,7 +929,7 @@
                     new XElement("RecordedOn", "2013-04-13 10:30")));
         }
 
-        private XElement GetXmlForCommentsCollection3()
+        private static XElement GetXmlForCommentsCollection3()
         {
             return new XElement("Items",
                 new XElement("Item",
@@ -935,7 +944,7 @@
                     new XElement("CreatedOn", "2013-04-13 10:30")));
         }
 
-        private XElement GetXmlForCommentsCollection4()
+        private static XElement GetXmlForCommentsCollection4()
         {
             return new XElement("Entries",
                 new XElement("Entry",
@@ -950,7 +959,7 @@
                     new XElement("CreatedOn", "2013-04-13 10:30")));
         }
 
-        private Dictionary<string, object> GetDictionaryForSingle()
+        private static Dictionary<string, object> GetDictionaryForSingle()
         {
             return new Dictionary<string, object> 
             { 
@@ -962,7 +971,7 @@
             };
         }
 
-        private Dictionary<string, object> GetDictionaryForSingle2()
+        private static Dictionary<string, object> GetDictionaryForSingle2()
         {
             return new Dictionary<string, object> 
             { 
@@ -974,7 +983,7 @@
             };
         }
 
-        private IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection()
+        private static IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection()
         {
             return new List<Dictionary<string, object>> 
             { 
@@ -995,7 +1004,7 @@
             };
         }
 
-        private IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection2()
+        private static IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection2()
         {
             return new List<Dictionary<string, object>>
             { 
@@ -1016,7 +1025,7 @@
             };
         }
 
-        private IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection3()
+        private static IEnumerable<Dictionary<string, object>> GetDictionaryForCommentsCollection3()
         {
             return new List<Dictionary<string, object>> 
             { 
@@ -1037,7 +1046,7 @@
             };
         }
 
-        private string GetJsonForSingle()
+        private static string GetJsonForSingle()
         {
             return @"{
                     'Id': 1,
@@ -1049,7 +1058,7 @@
                 }";
         }
 
-        private string GetJsonForSingle2()
+        private static string GetJsonForSingle2()
         {
             return @"{
                     'Id': 1,
@@ -1060,7 +1069,7 @@
                 }";
         }
 
-        private string GetJsonForSingle3()
+        private static string GetJsonForSingle3()
         {
             return @"{
                     'id': 1,
@@ -1072,7 +1081,7 @@
                 }"; ;
         }
 
-        private string GetJsonForSingle4()
+        private static string GetJsonForSingle4()
         {
             return @"{
                     'id': 1,
@@ -1087,7 +1096,7 @@
                 }"; ;
         }
 
-        private string GetJsonForCommentsCollection()
+        private static string GetJsonForCommentsCollection()
         {
             return @"{ 'items': [{
                     'Id': 1,
@@ -1103,7 +1112,7 @@
                 }]}";
         }
 
-        private string GetJsonForCommentsCollection2()
+        private static string GetJsonForCommentsCollection2()
         {
             return @"{ 'items': [{
                     'Id': 1,
@@ -1119,7 +1128,7 @@
                 }]}";
         }
 
-        private string GetJsonForCommentsCollection3()
+        private static string GetJsonForCommentsCollection3()
         {
             return @"{ 'items': [{
                     'Identifier': 1,
@@ -1135,7 +1144,7 @@
                 }]}";
         }
 
-        private string GetJsonForCommentsCollection4()
+        private static string GetJsonForCommentsCollection4()
         {
             return @"{ 'entries': [{
                     'Id': 1,
@@ -1149,6 +1158,39 @@
                     'Text': 'Sally\'s comment',
                     'CreatedOn': '2013-04-13 10:30'
                 }]}";
+        }
+
+        #endregion
+
+        #region Mocks
+
+        private static IPublishedContent MockIPublishedContent()
+        {
+            var mock = new Mock<IPublishedContent>();
+            mock.Setup(x => x.Id).Returns(1000);
+            mock.Setup(x => x.Name).Returns("Test content");
+            mock.Setup(x => x.CreatorName).Returns("A.N. Editor");
+            mock.Setup(x => x.GetProperty(It.IsAny<string>()))
+                .Returns((string alias) => MockIPublishedContentProperty(alias));
+            return mock.Object;
+        }
+
+        private static IPublishedContentProperty MockIPublishedContentProperty(string alias)
+        {
+            var mock = new Mock<IPublishedContentProperty>();
+            mock.Setup(x => x.Value).Returns(GetMockIPublishedContentPropertyValue(alias));
+            return mock.Object;
+        }
+
+        private static string GetMockIPublishedContentPropertyValue(string alias)
+        {
+            switch (alias)
+            {
+                case "bodyText":
+                    return "This is the body text";
+            }
+
+            return string.Empty;
         }
 
         #endregion
