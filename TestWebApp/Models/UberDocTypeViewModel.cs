@@ -63,6 +63,8 @@
         public string ConditionalValueMet { get; set; }
 
         public string ConditionalValueNotMet { get; set; }
+
+        public string CoalescedValue { get; set; }
     }
 
     public class SubModel

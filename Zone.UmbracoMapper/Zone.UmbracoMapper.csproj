@@ -223,6 +223,7 @@
     <Compile Include="CustomMapping.cs" />
     <Compile Include="IUmbracoMapper.cs" />
     <Compile Include="BaseDestinationTypes\MediaFile.cs" />
+    <Compile Include="Enums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyMapping.cs" />
     <Compile Include="UmbracoMapper.cs" />

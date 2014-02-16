@@ -81,25 +81,42 @@
                     // Get content to map from (check if we want to map to content at a level above the currently passed node)
                     var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
 
-                    // Check if we are looking to concatenate more than one source property
-                    if (IsMappingFromConcatenatedProperties(propertyMappings, property.Name))
+                    // Check if we are looking to concatenate or coalesce more than one source property
+                    var multipleMappingOperation = GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
+                    switch (multipleMappingOperation)
                     {
-                        // Loop through all the source properties requested for concatenation
-                        var isFirst = true;
-                        var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
-                        foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
-                        {
-                            // Call the mapping function, passing in each source property to use, and flag to contatenate
-                            // on all but the first
-                            propertyMappings[property.Name].SourceProperty = sourceProp;
-                            MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, !isFirst, concatenationSeperator);
-                            isFirst = false;
-                        }
-                    }
-                    else
-                    {
-                        // Map the single property
-                        MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties);
+                        case MultiplePropertyMappingOperation.Concatenate:
+                            // Loop through all the source properties requested for concatenation
+                            var isFirst = true;
+                            var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
+                            foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
+                            {
+                                // Call the mapping function, passing in each source property to use, and flag to contatenate
+                                // on all but the first
+                                propertyMappings[property.Name].SourceProperty = sourceProp;
+                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
+                                    concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator);
+                                isFirst = false;
+                            }
+
+                            break;
+                        case MultiplePropertyMappingOperation.Coalesce:
+                            // Loop through all the source properties requested for coalescing
+                            foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForCoalescing)
+                            {
+                                // Call the mapping function, passing in each source property to use, and flag to coalesce
+                                // on all but the first
+                                propertyMappings[property.Name].SourceProperty = sourceProp;
+                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
+                                    coalesceWithExistingValue: true);
+                                isFirst = false;
+                            }
+
+                            break;
+                        default:
+                            // Map the single property
+                            MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties);
+                            break;
                     }
                 }
             }
@@ -348,8 +365,8 @@
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
-        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries,
                                                IList<T> modelCollection,
@@ -517,10 +534,12 @@
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
-        /// <param name="concatenationSeperator">If using concatenation, use this string to seperate items</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
+        /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
                                            Dictionary<string, PropertyMapping> propertyMappings, string[] recursiveProperties,
-                                           bool concatenateToExistingValue = false, string concatenationSeperator = "")
+                                           bool concatenateToExistingValue = false, string concatenationSeperator = "",
+                                           bool coalesceWithExistingValue = false)
         {
             // First check to see if there's a condition that might mean we don't carry out the mapping
             if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingFromRelatedProperty(propertyMappings, property.Name))
@@ -536,7 +555,7 @@
 
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
             {
-                MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator);
+                MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                 return;
             }
 
@@ -618,11 +637,12 @@
                             }
 
                             var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
+
                             // Get the mapped field from the related content
                             if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
                             {
                                 // Got a native field
-                                MapNativeContentProperty(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator);
+                                MapNativeContentProperty(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                             }
                             else
                             {
@@ -631,7 +651,7 @@
                                 if (value != null)
                                 {
                                     // Map primitive types
-                                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator);
+                                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                                 }
                             }
                         }
@@ -650,7 +670,7 @@
         /// </summary>
         /// <param name="contentToMapFrom">IPublished content to map from</param>
         /// <param name="mapIfPropertyMatches">Property alias and value to match</param>
-        /// <returns></returns>
+        /// <returns>True if mapping condition is met</returns>
         private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, KeyValuePair<string, string> mapIfPropertyMatches)
         {
             var conditionalPropertyAlias = mapIfPropertyMatches.Key;
@@ -698,17 +718,32 @@
         }
 
         /// <summary>
-        /// Helper to check if particular property should be mapped from the concatenation of more than one source property
+        /// Helper to check if particular property should be mapped from the concatenation or coalescing of more than one 
+        /// source property
         /// </summary>
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
-        /// <returns>True if mapping should be from child property</returns>
-        private static bool IsMappingFromConcatenatedProperties(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        /// <returns>Type of multiple mapping operation</returns>
+        private static MultiplePropertyMappingOperation GetMultiplePropertyMappingOperation(Dictionary<string, PropertyMapping> propertyMappings,
+            string propName)
         {
-            return propertyMappings != null &&
-                   propertyMappings.ContainsKey(propName) &&
-                   propertyMappings[propName].SourcePropertiesForConcatenation != null &&
-                   propertyMappings[propName].SourcePropertiesForConcatenation.Any();
+            var result = MultiplePropertyMappingOperation.None;
+
+            if (propertyMappings != null && propertyMappings.ContainsKey(propName))
+            {
+                if (propertyMappings[propName].SourcePropertiesForConcatenation != null &&
+                   propertyMappings[propName].SourcePropertiesForConcatenation.Any())
+                {
+                    result = MultiplePropertyMappingOperation.Concatenate;
+                }
+                else if (propertyMappings[propName].SourcePropertiesForCoalescing != null &&
+                   propertyMappings[propName].SourcePropertiesForCoalescing.Any())
+                {
+                    result = MultiplePropertyMappingOperation.Coalesce;
+                }
+            }
+
+            return result;
         }
 
         /// <summary>
@@ -731,26 +766,42 @@
         /// <param name="contentToMapFrom">IPublishedContent instance to map from</param>
         /// <param name="propName">Name of property to map from</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
-        /// <param name="concatenationSeperator">If using concatenation, use this string to seperate items</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
+        /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         private static void MapNativeContentProperty<T>(T model, PropertyInfo property,
                                                         IPublishedContent contentToMapFrom, string propName,
-                                                        bool concatenateToExistingValue = false, string concatenationSeperator = "")
+                                                        bool concatenateToExistingValue = false, string concatenationSeperator = "",
+                                                        bool coalesceWithExistingValue = false)
         {
+            var value = contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom);
+
             // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
-            // Obviously concatenation can only be used in this case too.
+            // Concatenation and coalescing only supported/makes sense in this case too.
             if (property.PropertyType.Name == "String")
             {
-                var prefixValueWith = string.Empty;
+                var stringValue = value.ToString();
                 if (concatenateToExistingValue)
                 {
-                    prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                    var prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                    property.SetValue(model, prefixValueWith + stringValue);
                 }
-
-                property.SetValue(model, prefixValueWith + contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom).ToString());
+                else if (coalesceWithExistingValue)
+                {
+                    // Check is existing value and only set if it's null, empty or whitespace
+                    var existingValue = property.GetValue(model);
+                    if (existingValue == null || string.IsNullOrWhiteSpace(existingValue.ToString()))
+                    {
+                        property.SetValue(model, stringValue);
+                    }
+                }
+                else 
+                {
+                    property.SetValue(model, stringValue);
+                }                
             }
             else
             {
-                property.SetValue(model, contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom));
+                property.SetValue(model, value);
             }
         }
 
@@ -762,9 +813,11 @@
         /// <param name="property">Property to map to</param>
         /// <param name="stringValue">String representation of property value</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
-        /// <param name="concatenationSeperator">If using concatenation, use this string to seperate items</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
+        /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         private static void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue,
-                                                     bool concatenateToExistingValue = false, string concatenationSeperator = "")
+                                                     bool concatenateToExistingValue = false, string concatenationSeperator = "",
+                                                     bool coalesceWithExistingValue = false)
         {
             switch (property.PropertyType.Name)
             {
@@ -846,14 +899,25 @@
                     break;
                 case "String":
 
-                    // Only makes sense to allow concatenation for String type
-                    var prefixValueWith = string.Empty;
+                    // Only supporting/makes sense to allow concatenation and coalescing for String type
                     if (concatenateToExistingValue)
                     {
-                        prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                        var prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                        property.SetValue(model, prefixValueWith + stringValue);
                     }
-
-                    property.SetValue(model, prefixValueWith + stringValue);
+                    else if (coalesceWithExistingValue)
+                    {
+                        // Check is existing value and only set if it's null, empty or whitespace
+                        if (string.IsNullOrWhiteSpace(property.GetValue(model).ToString()))
+                        {
+                            property.SetValue(model, stringValue);
+                        }
+                    }
+                    else 
+                    {
+                        property.SetValue(model, stringValue);
+                    }
+                    
                     break;
             }
         }
@@ -918,7 +982,7 @@
         /// </summary>
         /// <param name="xml">Xml fragment to search in</param>
         /// <param name="propName">Element name to look up</param>
-        /// <returns>Matched XAttribue</returns>
+        /// <returns>Matched XAttribute</returns>
         private static XAttribute GetXAttributeCaseInsensitive(XElement xml, string propName)
         {
             return xml.Attributes().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);

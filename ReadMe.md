@@ -104,7 +104,9 @@ You can also map any other collection of IPublishedContent, e.g. that built up f
 Or if you are also using the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters), more simply like this:
 
     var countryNodes = CurrentPage.GetPropertyValue<IEnumerable<IPublishedContent>>("countries");
-    mapper.MapCollection(countryNodes, model.Countries);	  
+    mapper.MapCollection(countryNodes, model.Countries);	
+
+#### Further Property Mapping Overrides	
 	  
 Another PropertyMapping field allows you to map properties from related content.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance (or the IPublishedContent itself if you have the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters) installed).  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
 
@@ -134,6 +136,19 @@ Yet another couple of PropertyMapping fields allow you to concatenate two or mor
 		    } 
 		}, 
 	  });
+	  
+Similarly you can coalesce (take the first non null, empty or whitespace) source property from a list:	
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+	  { 
+		{ 
+		  "Title", new PropertyMapping 
+		    { 
+				SourcePropertiesForCoalescing = new string[] { "heading", "Name" },
+		    } 
+		}, 
+	  });  
 	  
 The MapIfPropertyMatches field allows you to define a condition for when the mapping operation occurs.  In this example, we want to map a string containing a URL to a related page, only if the page is intended to be linked to:
 
@@ -310,9 +325,11 @@ Class defining the override to the mapping convention for property to a particul
 
 **SourceChildProperty** (string) - If passed, the source property is assumed to be a structure that has child content.  The mapping is then done from the named field of that child element. Only for XML and JSON mappings.
 
-**SourcePropertiesForConcatenation** (string[]) - This property can contain a string array of multiple source properties to map from.  If the destination property is a string the results will be concatenated.
+**SourcePropertiesForConcatenation** (string\[\]) - This property can contain a string array of multiple source properties to map from.  If the destination property is a string the results will be concatenated.
 
 **SourceChildProperty** (string) - Used in conjunction with SourcePropertiesForConcatenation to define the separating string between the concatenated items.
+
+**SourcePropertiesForCoalescing** (string\[\]) - This property can contain a string array of multiple source properties to map from.  If the destination property is a string the result will be the first non null, empty or whitespace property found..
 
 **MapIfPropertyMatches** (KeyValuePair<string, string>) - if provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
 
@@ -357,6 +374,8 @@ Class representing an Umbraco media item that can be used within page view model
     - Refactored the custom mapping function into a declared delegate
     - Added optional property name when adding a custom mapping
     - Restricted the generic type parameter on all mapping functions to be a class
+- 1.4.1
+    - Added support for string coalescing two or more source properties to a single destination one
 
 ## Credits
 

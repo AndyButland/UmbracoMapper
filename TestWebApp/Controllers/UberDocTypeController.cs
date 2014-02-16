@@ -66,6 +66,12 @@
                                     MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "0"),
                                 } 
                         },
+                        { 
+                            "CoalescedValue", new PropertyMapping 
+                                { 
+                                    SourcePropertiesForCoalescing = new string[] { "emptyField", "Name" },
+                                } 
+                        }, 
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>

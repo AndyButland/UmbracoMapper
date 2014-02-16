@@ -43,11 +43,18 @@ namespace Zone.UmbracoMapper
         public string[] SourcePropertiesForConcatenation { get; set; }
 
         /// <summary>
-        /// When SourcePropertiesForConcatenation is used, the seperator string used to concatenate the items.
-        /// If not passed, no seperator is assumed.
+        /// When SourcePropertiesForConcatenation is used, the separator string used to concatenate the items.
+        /// If not passed, no separator is assumed.
         /// Only for IPublishedContent mappings.
         /// </summary>
         public string ConcatenationSeperator { get; set; }
+
+        /// <summary>
+        /// The names of the properties on the source to map from and coalesce (take the take the first non null, empty or whitespace property)
+        /// If not passed, exact name match convention or single match on SourceProperty is used.
+        /// Only for IPublishedContent mappings.
+        /// </summary>
+        public string[] SourcePropertiesForCoalescing { get; set; }
 
         /// <summary>
         /// If provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
