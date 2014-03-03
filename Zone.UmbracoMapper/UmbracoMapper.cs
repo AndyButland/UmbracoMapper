@@ -819,7 +819,13 @@
                                                      bool concatenateToExistingValue = false, string concatenationSeperator = "",
                                                      bool coalesceWithExistingValue = false)
         {
-            switch (property.PropertyType.Name)
+            var propertyTypeName = property.PropertyType.Name;
+            if (propertyTypeName == "Nullable`1" && property.PropertyType.GenericTypeArguments.Length == 1)
+            {
+                propertyTypeName = property.PropertyType.GenericTypeArguments[0].Name;
+            }
+
+            switch (propertyTypeName)
             {
                 case "Boolean":
                     bool boolValue;

@@ -376,6 +376,8 @@ Class representing an Umbraco media item that can be used within page view model
     - Restricted the generic type parameter on all mapping functions to be a class
 - 1.4.1
     - Added support for string coalescing two or more source properties to a single destination one
+- 1.4.2
+	- Added support for nullable properties
 
 ## Credits
 
