@@ -1166,8 +1166,10 @@
             mock.Setup(x => x.Id).Returns(1000);
             mock.Setup(x => x.Name).Returns("Test content");
             mock.Setup(x => x.CreatorName).Returns("A.N. Editor");
-            mock.Setup(x => x.GetPropertyValue(It.IsAny<string>()))
-                .Returns((string alias) => MockIPublishedContentProperty(alias));
+
+            // This doesn't work, as it's an extension method
+            // mock.Setup(x => x.GetPropertyValue(It.IsAny<string>()))
+            //    .Returns((string alias) => MockIPublishedContentProperty(alias));
             return mock.Object;
         }
 
