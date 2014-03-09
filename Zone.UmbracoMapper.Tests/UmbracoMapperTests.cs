@@ -6,6 +6,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using Umbraco.Core.Models;
+    using Umbraco.Web;
 
     [TestClass]
     public class UmbracoMapperTests
@@ -46,14 +47,9 @@
         }
 
         // TODO: get this unit test (and others with IPublishedContent) working.
-        // Currently runs into this error:
-        //  Message=Object reference not set to an instance of an object.
-        //  Source=Umbraco.Core
-        //  StackTrace:
-        //     at Umbraco.Core.PublishedContentHelper.<>c__DisplayClass3.<GetDataType>b__0(Tuple`2 tuple)
-        //     at System.Collections.Concurrent.ConcurrentDictionary`2.GetOrAdd(TKey key, Func`2 valueFactory)
-        //     at Umbraco.Core.PublishedContentHelper.GetDataType(ApplicationContext applicationContext, String docTypeAlias, String propertyAlias)
-        //     at Umbraco.Web.PublishedContentExtensions.GetPropertyValue(IPublishedContent doc, String alias, Boolean recursive)
+        // Currently fails with the call to GetPropertyValue, as in the Umbraco source this is an extension method
+        // that can't be mocked.
+        // Maybe use a Shim from the Microsoft Fakes Framework?  http://msdn.microsoft.com/en-us/library/hh549176(v=vs.110).aspx
         //[TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
         {
@@ -1170,7 +1166,7 @@
             mock.Setup(x => x.Id).Returns(1000);
             mock.Setup(x => x.Name).Returns("Test content");
             mock.Setup(x => x.CreatorName).Returns("A.N. Editor");
-            mock.Setup(x => x.GetProperty(It.IsAny<string>()))
+            mock.Setup(x => x.GetPropertyValue(It.IsAny<string>()))
                 .Returns((string alias) => MockIPublishedContentProperty(alias));
             return mock.Object;
         }
@@ -1178,6 +1174,7 @@
         private static IPublishedContentProperty MockIPublishedContentProperty(string alias)
         {
             var mock = new Mock<IPublishedContentProperty>();
+            mock.Setup(x => x.Alias).Returns(alias);
             mock.Setup(x => x.Value).Returns(GetMockIPublishedContentPropertyValue(alias));
             return mock.Object;
         }
