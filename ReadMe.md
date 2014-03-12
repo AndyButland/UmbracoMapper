@@ -327,7 +327,7 @@ Class defining the override to the mapping convention for property to a particul
 
 **SourcePropertiesForConcatenation** (string\[\]) - This property can contain a string array of multiple source properties to map from.  If the destination property is a string the results will be concatenated.
 
-**SourceChildProperty** (string) - Used in conjunction with SourcePropertiesForConcatenation to define the separating string between the concatenated items.
+**ConcatenationSeperator** (string) - Used in conjunction with SourcePropertiesForConcatenation to define the separating string between the concatenated items.
 
 **SourcePropertiesForCoalescing** (string\[\]) - This property can contain a string array of multiple source properties to map from.  If the destination property is a string the result will be the first non null, empty or whitespace property found..
 
