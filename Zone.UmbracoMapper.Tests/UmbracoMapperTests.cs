@@ -3,10 +3,10 @@
     using System;
     using System.Collections.Generic;
     using System.Xml.Linq;
+    using Microsoft.QualityTools.Testing.Fakes;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
-    using Moq;
     using Umbraco.Core.Models;
-    using Umbraco.Web;
+    using Zone.UmbracoMapper.Tests.Stubs;
 
     [TestClass]
     public class UmbracoMapperTests
@@ -18,7 +18,7 @@
         {
             // Arrange
             var model = new SimpleViewModel();
-            var content = MockIPublishedContent();
+            var content = new StubPublishedContent();
             var mapper = GetMapper();
 
             // Act
@@ -34,7 +34,7 @@
         {
             // Arrange
             var model = new SimpleViewModel2();
-            var content = MockIPublishedContent();
+            var content = new StubPublishedContent();
             var mapper = GetMapper();
 
             // Act
@@ -46,23 +46,38 @@
             Assert.AreEqual("A.N. Editor", model.Author);
         }
 
-        // TODO: get this unit test (and others with IPublishedContent) working.
-        // Currently fails with the call to GetPropertyValue, as in the Umbraco source this is an extension method
-        // that can't be mocked.
-        // Maybe use a Shim from the Microsoft Fakes Framework?  http://msdn.microsoft.com/en-us/library/hh549176(v=vs.110).aspx
-        //[TestMethod]
+        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
         {
-            // Arrange
-            var model = new SimpleViewModel3();
-            var content = MockIPublishedContent();
-            var mapper = GetMapper();
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
 
-            // Act
-            mapper.Map(content, model);
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }                        
+                    };
 
-            // Assert
-            Assert.AreEqual("This is the body text", model.BodyText);
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual("Test content", model.Name);
+                Assert.AreEqual("This is the body text", model.BodyText);
+            }
         }
 
         #endregion
@@ -1154,42 +1169,6 @@
                     'Text': 'Sally\'s comment',
                     'CreatedOn': '2013-04-13 10:30'
                 }]}";
-        }
-
-        #endregion
-
-        #region Mocks
-
-        private static IPublishedContent MockIPublishedContent()
-        {
-            var mock = new Mock<IPublishedContent>();
-            mock.Setup(x => x.Id).Returns(1000);
-            mock.Setup(x => x.Name).Returns("Test content");
-            mock.Setup(x => x.CreatorName).Returns("A.N. Editor");
-
-            // This doesn't work, as it's an extension method
-            // mock.Setup(x => x.GetPropertyValue(It.IsAny<string>()))
-            //    .Returns((string alias) => MockIPublishedContentProperty(alias));
-            return mock.Object;
-        }
-
-        private static IPublishedContentProperty MockIPublishedContentProperty(string alias)
-        {
-            var mock = new Mock<IPublishedContentProperty>();
-            mock.Setup(x => x.Alias).Returns(alias);
-            mock.Setup(x => x.Value).Returns(GetMockIPublishedContentPropertyValue(alias));
-            return mock.Object;
-        }
-
-        private static string GetMockIPublishedContentPropertyValue(string alias)
-        {
-            switch (alias)
-            {
-                case "bodyText":
-                    return "This is the body text";
-            }
-
-            return string.Empty;
         }
 
         #endregion
