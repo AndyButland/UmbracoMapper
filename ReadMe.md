@@ -378,6 +378,8 @@ Class representing an Umbraco media item that can be used within page view model
     - Added support for string coalescing two or more source properties to a single destination one
 - 1.4.2
 	- Added support for nullable properties
+- 1.4.3
+	- Fixed bug with coalescing of property values
 
 ## Credits
 

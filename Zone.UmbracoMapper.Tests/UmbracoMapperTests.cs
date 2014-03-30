@@ -80,6 +80,168 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithDifferentNames()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel4();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "BodyCopy", new PropertyMapping { SourceProperty = "bodyText", } } });
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual("Test content", model.Name);
+                Assert.AreEqual("This is the body text", model.BodyCopy);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithConcatenation()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel5();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "HeadingAndBodyText", 
+                            new PropertyMapping 
+                            { 
+                                SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, 
+                                ConcatenationSeperator = ",",
+                            } 
+                        } 
+                    });
+
+                // Assert
+                Assert.AreEqual("Test content,This is the body text", model.HeadingAndBodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithCoalescingAndFirstItemAvailable()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel5();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "summaryText":
+                                return "This is the summary text";
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "SummaryText", 
+                            new PropertyMapping 
+                            { 
+                                SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
+                            } 
+                        } 
+                    });
+
+                // Assert
+                Assert.AreEqual("This is the summary text", model.SummaryText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithCoalescingAndFirstItemNotAvailable()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel5();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "summaryText":
+                                return string.Empty;
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "SummaryText", 
+                            new PropertyMapping 
+                            { 
+                                SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
+                            } 
+                        } 
+                    });
+
+                // Assert
+                Assert.AreEqual("This is the body text", model.SummaryText);
+            }
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -88,7 +250,7 @@
         public void UmbracoMapper_MapFromXml_MapsPropertiesWithMatchingNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var xml = GetXmlForSingle();
             var mapper = GetMapper();
 
@@ -108,7 +270,7 @@
         public void UmbracoMapper_MapFromXml_MapsPropertiesWithDifferentNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var xml = GetXmlForSingle2();
             var mapper = GetMapper();
 
@@ -130,7 +292,7 @@
         public void UmbracoMapper_MapFromXml_MapsPropertiesWithCaseInsensitiveMatchOnElementNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var xml = GetXmlForSingle3();
             var mapper = GetMapper();
 
@@ -170,7 +332,7 @@
         public void UmbracoMapper_MapFromDictionary_MapsPropertiesWithMatchingNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var dictionary = GetDictionaryForSingle();
             var mapper = GetMapper();
 
@@ -189,7 +351,7 @@
         public void UmbracoMapper_MapFromDictionary_MapsPropertiesWithDifferentNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var dictionary = GetDictionaryForSingle2();
             var mapper = GetMapper();
 
@@ -215,7 +377,7 @@
         public void UmbracoMapper_MapFromJson_MapsPropertiesWithMatchingNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var json = GetJsonForSingle();
             var mapper = GetMapper();
 
@@ -235,7 +397,7 @@
         public void UmbracoMapper_MapFromJson_MapsPropertiesWithDifferentNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var json = GetJsonForSingle2();
             var mapper = GetMapper();
 
@@ -257,7 +419,7 @@
         public void UmbracoMapper_MapFromJson_MapsPropertiesWithCaseInsensitiveMatchOnElementNames()
         {
             // Arrange
-            var model = new SimpleViewModel4();
+            var model = new SimpleViewModel6();
             var json = GetJsonForSingle3();
             var mapper = GetMapper();
 
@@ -1192,7 +1354,19 @@
             public string BodyText { get; set; }
         }
 
-        private class SimpleViewModel4 : SimpleViewModel
+        private class SimpleViewModel4 : SimpleViewModel2
+        {
+            public string BodyCopy { get; set; }
+        }
+
+        private class SimpleViewModel5 : SimpleViewModel2
+        {
+            public string HeadingAndBodyText { get; set; }
+
+            public string SummaryText { get; set; }
+        }
+        
+        private class SimpleViewModel6 : SimpleViewModel
         {
             public byte Age { get; set; }
 

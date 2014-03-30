@@ -659,7 +659,7 @@
                     else
                     {
                         // Map primitive types
-                        SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator);
+                        SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                     }
                 }
             }
@@ -914,7 +914,7 @@
                     else if (coalesceWithExistingValue)
                     {
                         // Check is existing value and only set if it's null, empty or whitespace
-                        if (string.IsNullOrWhiteSpace(property.GetValue(model).ToString()))
+                        if (property.GetValue(model) == null || string.IsNullOrWhiteSpace(property.GetValue(model).ToString()))
                         {
                             property.SetValue(model, stringValue);
                         }
