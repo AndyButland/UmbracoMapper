@@ -6,13 +6,25 @@
 
     public class StubPublishedContent : IPublishedContent
     {
+        private int _id;
+
+        public StubPublishedContent()
+        {
+            _id = 1000;
+        }
+
+        public StubPublishedContent(int id)
+        {
+            _id = id;
+        }
+
         #region Stubbed properties and methods
 
-        public int Id
-        {
-            get 
+        public int Id 
+        { 
+            get
             {
-                return 1000;
+                return _id;
             }
         }
 
@@ -38,6 +50,11 @@
             {
                 return "TestContent";
             }
+        }
+
+        public IPublishedContent Parent
+        {
+            get { return new StubPublishedContent(1001); }
         }
 
         public IPublishedContentProperty GetProperty(string alias)
@@ -75,11 +92,6 @@
         }
 
         public int Level
-        {
-            get { throw new System.NotImplementedException(); }
-        }
-
-        public IPublishedContent Parent
         {
             get { throw new System.NotImplementedException(); }
         }

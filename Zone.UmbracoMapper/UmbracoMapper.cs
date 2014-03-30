@@ -674,8 +674,8 @@
         private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, KeyValuePair<string, string> mapIfPropertyMatches)
         {
             var conditionalPropertyAlias = mapIfPropertyMatches.Key;
-            var conditionalPropertyValue = contentToMapFrom.GetPropertyValue<string>(conditionalPropertyAlias);
-            return conditionalPropertyValue != null && conditionalPropertyValue.ToLowerInvariant() == mapIfPropertyMatches.Value.ToLowerInvariant();
+            var conditionalPropertyValue = contentToMapFrom.GetPropertyValue(conditionalPropertyAlias, false);
+            return conditionalPropertyValue != null && conditionalPropertyValue.ToString().ToLowerInvariant() == mapIfPropertyMatches.Value.ToLowerInvariant();
         }
 
         /// <summary>

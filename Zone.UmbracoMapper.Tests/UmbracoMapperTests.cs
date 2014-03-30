@@ -242,6 +242,118 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingCondition()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "summaryText":
+                                return "Test value";
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "BodyText", 
+                            new PropertyMapping 
+                            { 
+                                MapIfPropertyMatches = new KeyValuePair<string, string>("summaryText", "Test value")
+                            } 
+                        } 
+                    });
+
+                // Assert
+                Assert.AreEqual("This is the body text", model.BodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithNonMatchingCondition()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "summaryText":
+                                return "Another value";
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "BodyText", 
+                            new PropertyMapping 
+                            { 
+                                MapIfPropertyMatches = new KeyValuePair<string, string>("summaryText", "Test value")
+                            } 
+                        } 
+                    });
+
+                // Assert
+                Assert.IsNull(model.BodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesFromParentNode()
+        {
+            // Arrange
+            var model = new SimpleViewModel7();
+            var content = new StubPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                { 
+                    { 
+                        "ParentId", 
+                        new PropertyMapping 
+                        { 
+                            SourceProperty = "Id",
+                            LevelsAbove = 1
+                        } 
+                    } 
+                });
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual(1001, model.ParentId);
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -453,6 +565,45 @@
 
         #endregion
 
+        #region Tests - Collection Maps From IPublishedContent
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContentToCollection_MapsCustomPropertiesWithMatchingNames()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new List<SimpleViewModel3>();
+                var mapper = GetMapper();
+                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.MapCollection(content, model);
+
+                // Assert
+                Assert.AreEqual(2, model.Count);
+                Assert.AreEqual(1000, model[0].Id);
+                Assert.AreEqual("This is the body text", model[0].BodyText);
+                Assert.AreEqual(1001, model[1].Id);
+            }
+        }
+
+        #endregion
+        
         #region Tests - Collection Maps From XML
 
         [TestMethod]
@@ -1377,8 +1528,18 @@
             public DateTime RegisteredOn { get; set; }
         }
 
+        private class SimpleViewModel7 : SimpleViewModel
+        {
+            public int ParentId { get; set; }
+        }
+
         private class SimpleViewModelWithCollection : SimpleViewModel
         {
+            public SimpleViewModelWithCollection()
+            {
+                Comments = new List<Comment>();
+            }
+
             public IList<Comment> Comments { get; set; }
         }
 
