@@ -6,6 +6,7 @@
     using Microsoft.QualityTools.Testing.Fakes;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Umbraco.Core.Models;
+    using Umbraco.Web;
     using Zone.UmbracoMapper.Tests.Stubs;
 
     [TestClass]
@@ -352,6 +353,111 @@
             // Assert
             Assert.AreEqual(1000, model.Id);
             Assert.AreEqual(1001, model.ParentId);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMapping()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel8();
+                var content = new StubPublishedContent();
+                var mapper = GetMapper();
+                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "geoCoordinate":
+                                return "5.5,10.5,7";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.IsNotNull(model.GeoCoordinate);
+                Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude); 
+                Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);                
+                Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingWithMatchingPropertyCondition()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel8();
+                var content = new StubPublishedContent();
+                var mapper = GetMapper();
+                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "GeoCoordinate");
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "geoCoordinate":
+                                return "5.5,10.5,7";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.IsNotNull(model.GeoCoordinate);
+                Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+                Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+                Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingWithNonMatchingPropertyCondition()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel8();
+                var content = new StubPublishedContent();
+                var mapper = GetMapper();
+                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "AnotherProperty");
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "geoCoordinate":
+                                return "5.5,10.5,7";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.IsNull(model.GeoCoordinate);
+            }
         }
 
         #endregion
@@ -1533,6 +1639,11 @@
             public int ParentId { get; set; }
         }
 
+        private class SimpleViewModel8 : SimpleViewModel
+        {
+            public GeoCoordinate GeoCoordinate { get; set; }
+        }
+
         private class SimpleViewModelWithCollection : SimpleViewModel
         {
             public SimpleViewModelWithCollection()
@@ -1553,6 +1664,48 @@
 
             public DateTime CreatedOn { get; set; }
         }
+
+        private class GeoCoordinate
+        {
+            public decimal Longitude { get; set; }
+
+            public decimal Latitude { get; set; }
+
+            public int Zoom { get; set; }
+        }
+
+        #endregion
+
+        #region Custom mappings
+
+        private static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
+        {
+            return GetGeoCoordinate(contentToMapFrom.GetPropertyValue(propName, isRecursive).ToString());
+        }        
+
+        /// <summary>
+        /// Helper to map the Google Maps data type raw value to a GeoCoordinate instance
+        /// </summary>
+        /// <param name="csv">Raw value in CSV format (latitude,longitude,zoom)</param>
+        /// <returns>Instance of GeoCoordinate</returns>
+        private static GeoCoordinate GetGeoCoordinate(string csv)
+        {
+            if (!string.IsNullOrEmpty(csv))
+            {
+                var parts = csv.Split(',');
+                if (parts != null && parts.Length == 3)
+                {
+                    return new GeoCoordinate
+                    {
+                        Latitude = decimal.Parse(parts[0]),
+                        Longitude = decimal.Parse(parts[1]),
+                        Zoom = int.Parse(parts[2]),
+                    };
+                }
+            }
+
+            return null;
+        } 
 
         #endregion
     }
