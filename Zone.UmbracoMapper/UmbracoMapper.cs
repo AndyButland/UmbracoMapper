@@ -94,7 +94,7 @@
                                 // Call the mapping function, passing in each source property to use, and flag to contatenate
                                 // on all but the first
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
+                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
                                     concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator);
                                 isFirst = false;
                             }
@@ -107,7 +107,7 @@
                                 // Call the mapping function, passing in each source property to use, and flag to coalesce
                                 // on all but the first
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
+                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
                                     coalesceWithExistingValue: true);
                                 isFirst = false;
                             }
@@ -565,6 +565,11 @@
 
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
+
+            // Find if it is a recursive property with a [Recursive] attribute
+            var hasRecursiveAttribute = Attribute.GetCustomAttribute(property, typeof(RecursiveAttribute)) as RecursiveAttribute;
+            isRecursiveProperty = isRecursiveProperty || hasRecursiveAttribute != null && hasRecursiveAttribute.Recursive;
+
             var namedCustomMappingKey = string.Concat(property.PropertyType.FullName, ".", property.Name);
             var unnamedCustomMappingKey = property.PropertyType.FullName;
             if (_customMappings.ContainsKey(namedCustomMappingKey))
@@ -794,10 +799,10 @@
                         property.SetValue(model, stringValue);
                     }
                 }
-                else 
+                else
                 {
                     property.SetValue(model, stringValue);
-                }                
+                }
             }
             else
             {
@@ -919,11 +924,11 @@
                             property.SetValue(model, stringValue);
                         }
                     }
-                    else 
+                    else
                     {
                         property.SetValue(model, stringValue);
                     }
-                    
+
                     break;
             }
         }

@@ -19,5 +19,8 @@
         public string Country { get; set; }
 
         public MediaFile MainImage { get; set; }
+
+        [Recursive]
+        public string Heading { get; set; }
     }
 }
