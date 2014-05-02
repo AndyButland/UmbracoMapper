@@ -1,7 +1,7 @@
 ﻿namespace TestWebApp.Models
 {
     using System;
-    using System.Web;
+
     using Zone.UmbracoMapper;
     
     public class CommentViewModel
@@ -19,5 +19,8 @@
         public string Country { get; set; }
 
         public MediaFile MainImage { get; set; }
+
+        [Recursive]
+        public string Heading { get; set; }
     }
 }

@@ -565,6 +565,11 @@
 
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
+
+            // Find if it is a recursive property with a [Recursive] attribute
+            var hasRecursiveAttribute = Attribute.GetCustomAttribute(property, typeof(RecursiveAttribute)) as RecursiveAttribute;
+            isRecursiveProperty = isRecursiveProperty || hasRecursiveAttribute != null && hasRecursiveAttribute.Recursive;
+
             var namedCustomMappingKey = string.Concat(property.PropertyType.FullName, ".", property.Name);
             var unnamedCustomMappingKey = property.PropertyType.FullName;
             if (_customMappings.ContainsKey(namedCustomMappingKey))
