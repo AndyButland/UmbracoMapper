@@ -10,19 +10,24 @@
     using Umbraco.Core.Models;
     using Umbraco.Web;
 
+    using Zone.UmbracoMapper.Attributes;
+
     public class UmbracoMapper : IUmbracoMapper
     {
         #region Fields
 
         private readonly Dictionary<string, CustomMapping> _customMappings;
 
+        private readonly bool _useAttributeForPropertyMapping;
+
         #endregion
 
         #region Constructor
 
-        public UmbracoMapper()
+        public UmbracoMapper(bool useAttributeForPropertyMapping = true)
         {
             _customMappings = new Dictionary<string, CustomMapping>();
+            _useAttributeForPropertyMapping = useAttributeForPropertyMapping;
         }
 
         #endregion
@@ -78,8 +83,17 @@
                 // Loop through all settable properties on model
                 foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
                 {
+                    IPublishedContent contentToMapFrom;
+
                     // Get content to map from (check if we want to map to content at a level above the currently passed node)
-                    var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
+                    if (_useAttributeForPropertyMapping)
+                    {
+                        contentToMapFrom = GetContentToMapFromByAttribute(content, property);
+                    }
+                    else
+                    {
+                        contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);    
+                    }
 
                     // Check if we are looking to concatenate or coalesce more than one source property
                     var multipleMappingOperation = GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
@@ -503,6 +517,24 @@
             return mappedName;
         }
 
+        private string GetMappedPropertyNameByAttribute(string propName, PropertyInfo property)
+        {
+            var result = propName;
+
+            if (string.Equals(propName, property.Name, StringComparison.OrdinalIgnoreCase))
+            {
+                var propertyMappingAttribute =
+                    GetPropertyMappingAttribute(property);
+
+                if (propertyMappingAttribute != null && !string.IsNullOrEmpty(propertyMappingAttribute.SourceProperty))
+                {
+                    result = propertyMappingAttribute.SourceProperty;
+                }
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Gets the IPublishedContent to map from.  Normally this will be the one passed but it's possible to map at a level above the current node.
         /// </summary>
@@ -516,6 +548,23 @@
             if (propertyMappings != null && propertyMappings.ContainsKey(propName))
             {
                 for (int i = 0; i < propertyMappings[propName].LevelsAbove; i++)
+                {
+                    contentToMapFrom = contentToMapFrom.Parent;
+                }
+            }
+
+            return contentToMapFrom;
+        }
+
+        private IPublishedContent GetContentToMapFromByAttribute(IPublishedContent content, PropertyInfo property)
+        {
+            var contentToMapFrom = content;
+
+            var propertyMappingAttribute = GetPropertyMappingAttribute(property);
+
+            if (propertyMappingAttribute != null && propertyMappingAttribute.LevelsAbove > 0)
+            {
+                for (int i = 0; i < propertyMappingAttribute.LevelsAbove; i++)
                 {
                     contentToMapFrom = contentToMapFrom.Parent;
                 }
@@ -551,7 +600,9 @@
             }
 
             // Set native IPublishedContent properties (using convention that names match exactly)
-            var propName = GetMappedPropertyName(property.Name, propertyMappings);
+            var propName = _useAttributeForPropertyMapping
+                           ? GetMappedPropertyNameByAttribute(property.Name, property)
+                           : GetMappedPropertyName(property.Name, propertyMappings);
 
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
             {
@@ -561,14 +612,14 @@
 
             // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
             // properties, unless override provided)
-            propName = GetMappedPropertyName(property.Name, propertyMappings, true);
-
+            propName = _useAttributeForPropertyMapping
+                           ? GetMappedPropertyNameByAttribute(propName, property)
+                           : GetMappedPropertyName(property.Name, propertyMappings, true);
+            
             // Map properties, first checking for custom mappings
-            var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
-
-            // Find if it is a recursive property with a [Recursive] attribute
-            var hasRecursiveAttribute = Attribute.GetCustomAttribute(property, typeof(RecursiveAttribute)) as RecursiveAttribute;
-            isRecursiveProperty = isRecursiveProperty || hasRecursiveAttribute != null && hasRecursiveAttribute.Recursive;
+            var isRecursiveProperty = _useAttributeForPropertyMapping
+                                          ? IsRecursivePropertyByAttribute(property)
+                                          : IsRecursiveProperty(recursiveProperties, propName);
 
             var namedCustomMappingKey = string.Concat(property.PropertyType.FullName, ".", property.Name);
             var unnamedCustomMappingKey = property.PropertyType.FullName;
@@ -760,6 +811,13 @@
         private static bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
         {
             return recursiveProperties != null && recursiveProperties.Contains(propertyName);
+        }
+
+        private static bool IsRecursivePropertyByAttribute(PropertyInfo property)
+        {
+            // Find if it is a recursive property with a [Recursive] attribute
+            var hasRecursiveAttribute = Attribute.GetCustomAttribute(property, typeof(RecursiveAttribute)) as RecursiveAttribute;
+            return  hasRecursiveAttribute != null && hasRecursiveAttribute.Recursive;
         }
 
         /// <summary>
@@ -1066,6 +1124,11 @@
             }
 
             return token;
+        }
+
+        private static PropertyMappingAttribute GetPropertyMappingAttribute(PropertyInfo property)
+        {
+            return Attribute.GetCustomAttribute(property, typeof(PropertyMappingAttribute)) as PropertyMappingAttribute;
         }
 
         #endregion

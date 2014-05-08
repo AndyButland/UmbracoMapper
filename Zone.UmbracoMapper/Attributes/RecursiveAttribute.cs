@@ -1,6 +1,8 @@
 ﻿﻿namespace Zone.UmbracoMapper
  {
-     public class RecursiveAttribute : System.Attribute
+     using System;
+
+     public class RecursiveAttribute : Attribute
      {
          public bool Recursive { get; private set; }
 
