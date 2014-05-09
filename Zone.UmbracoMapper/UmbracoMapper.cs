@@ -24,7 +24,7 @@
 
         #region Constructor
 
-        public UmbracoMapper(bool useAttributeForPropertyMapping = true)
+        public UmbracoMapper(bool useAttributeForPropertyMapping = false)
         {
             _customMappings = new Dictionary<string, CustomMapping>();
             _useAttributeForPropertyMapping = useAttributeForPropertyMapping;
