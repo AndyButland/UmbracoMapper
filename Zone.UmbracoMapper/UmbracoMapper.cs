@@ -83,49 +83,81 @@
                 // Loop through all settable properties on model
                 foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
                 {
-                    IPublishedContent contentToMapFrom;
-
                     // Get content to map from (check if we want to map to content at a level above the currently passed node)
-                    if (_useAttributeForPropertyMapping)
-                    {
-                        contentToMapFrom = GetContentToMapFromByAttribute(content, property);
-                    }
-                    else
-                    {
-                        contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);    
-                    }
+                    var contentToMapFrom = _useAttributeForPropertyMapping
+                                               ? GetContentToMapFromByAttribute(content, property)
+                                               : GetContentToMapFrom(content, propertyMappings, property.Name);
 
                     // Check if we are looking to concatenate or coalesce more than one source property
-                    var multipleMappingOperation = GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
+                    var multipleMappingOperation = _useAttributeForPropertyMapping
+                                                       ? GetMultiplePropertyMappingOperationByAttribute(property)
+                                                       : GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
+
                     switch (multipleMappingOperation)
                     {
                         case MultiplePropertyMappingOperation.Concatenate:
-                            // Loop through all the source properties requested for concatenation
                             var isFirst = true;
-                            var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
-                            foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
+
+                            if (_useAttributeForPropertyMapping)
                             {
-                                // Call the mapping function, passing in each source property to use, and flag to contatenate
-                                // on all but the first
-                                propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
-                                    concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator);
-                                isFirst = false;
+                                var propertyMappingAttr = GetPropertyMappingAttribute(property);
+                                var concatenationSeperator = propertyMappingAttr.ConcatenationSeperator;
+
+                                // Loop through all the source properties requested for concatenation
+                                foreach (var sourceProp in propertyMappingAttr.SourcePropertiesForConcatenation)
+                                {
+                                    var tempPm = GetPropertyMappingAttributeAsPropertyMapping(propertyMappingAttr);
+                                    tempPm.SourceProperty = sourceProp;
+
+                                    var pm = new Dictionary<string, PropertyMapping> { { property.Name, tempPm } };
+
+                                    MapContentProperty<T>(model, property, contentToMapFrom, pm, null, !isFirst, concatenationSeperator);
+                                    isFirst = false;
+                                }
+                            }
+                            else
+                            {
+                                var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
+
+                                // Loop through all the source properties requested for concatenation
+                                foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
+                                {
+                                    // Call the mapping function, passing in each source property to use, and flag to contatenate
+                                    // on all but the first
+                                    propertyMappings[property.Name].SourceProperty = sourceProp;
+                                    MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, !isFirst, concatenationSeperator);
+                                    isFirst = false;
+                                }
                             }
 
                             break;
                         case MultiplePropertyMappingOperation.Coalesce:
-                            // Loop through all the source properties requested for coalescing
-                            foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForCoalescing)
-                            {
-                                // Call the mapping function, passing in each source property to use, and flag to coalesce
-                                // on all but the first
-                                propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
-                                    coalesceWithExistingValue: true);
-                                isFirst = false;
-                            }
 
+                            if (_useAttributeForPropertyMapping)
+                            {
+                                var propertyMappingAttr = GetPropertyMappingAttribute(property);
+
+                                foreach (var sourceProp in propertyMappingAttr.SourcePropertiesForCoalescing)
+                                {
+                                    var tempPm = GetPropertyMappingAttributeAsPropertyMapping(propertyMappingAttr);
+                                    tempPm.SourceProperty = sourceProp;
+
+                                    var pm = new Dictionary<string, PropertyMapping> { { property.Name, tempPm } };
+
+                                    MapContentProperty(model, property, contentToMapFrom, pm, null, coalesceWithExistingValue: true);
+                                }
+                            }
+                            else
+                            {
+                                // Loop through all the source properties requested for coalescing
+                                foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForCoalescing)
+                                {
+                                    // Call the mapping function, passing in each source property to use, and flag to coalesce
+                                    // on all but the first
+                                    propertyMappings[property.Name].SourceProperty = sourceProp;
+                                    MapContentProperty(model, property, contentToMapFrom, propertyMappings, recursiveProperties, coalesceWithExistingValue: true);
+                                }
+                            }
                             break;
                         default:
                             // Map the single property
@@ -517,22 +549,32 @@
             return mappedName;
         }
 
-        private string GetMappedPropertyNameByAttribute(string propName, PropertyInfo property)
+        private string GetMappedPropertyNameByAttribute(string propName, PropertyInfo property, Dictionary<string, PropertyMapping> propertyMappings, bool convertToCamelCase = false)
         {
-            var result = propName;
+            var mappedName = propName;
 
-            if (string.Equals(propName, property.Name, StringComparison.OrdinalIgnoreCase))
+            if (propertyMappings != null &&
+                propertyMappings.ContainsKey(propName) &&
+                !string.IsNullOrEmpty(propertyMappings[propName].SourceProperty))
             {
-                var propertyMappingAttribute =
-                    GetPropertyMappingAttribute(property);
+                mappedName = propertyMappings[propName].SourceProperty;
+            }
+            else
+            {
+                var propertyMappingAttribute = GetPropertyMappingAttribute(property);
 
                 if (propertyMappingAttribute != null && !string.IsNullOrEmpty(propertyMappingAttribute.SourceProperty))
                 {
-                    result = propertyMappingAttribute.SourceProperty;
+                    mappedName = propertyMappingAttribute.SourceProperty;
                 }
             }
 
-            return result;
+            if (convertToCamelCase)
+            {
+                mappedName = CamelCase(mappedName);
+            }
+
+            return mappedName;
         }
 
         /// <summary>
@@ -601,7 +643,7 @@
 
             // Set native IPublishedContent properties (using convention that names match exactly)
             var propName = _useAttributeForPropertyMapping
-                           ? GetMappedPropertyNameByAttribute(property.Name, property)
+                           ? GetMappedPropertyNameByAttribute(property.Name, property, propertyMappings)
                            : GetMappedPropertyName(property.Name, propertyMappings);
 
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
@@ -613,9 +655,9 @@
             // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
             // properties, unless override provided)
             propName = _useAttributeForPropertyMapping
-                           ? GetMappedPropertyNameByAttribute(propName, property)
+                           ? GetMappedPropertyNameByAttribute(propName, property, propertyMappings, true)
                            : GetMappedPropertyName(property.Name, propertyMappings, true);
-            
+
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = _useAttributeForPropertyMapping
                                           ? IsRecursivePropertyByAttribute(property)
@@ -802,6 +844,28 @@
             return result;
         }
 
+
+        private static MultiplePropertyMappingOperation GetMultiplePropertyMappingOperationByAttribute(
+            PropertyInfo property)
+        {
+            var result = MultiplePropertyMappingOperation.None;
+
+            var propertyMappingAttr = GetPropertyMappingAttribute(property);
+
+            if (propertyMappingAttr != null && propertyMappingAttr.SourcePropertiesForConcatenation != null
+                && propertyMappingAttr.SourcePropertiesForConcatenation.Any())
+            {
+                result = MultiplePropertyMappingOperation.Concatenate;
+            }
+            else if (propertyMappingAttr != null && propertyMappingAttr.SourcePropertiesForCoalescing != null
+                     && propertyMappingAttr.SourcePropertiesForCoalescing.Any())
+            {
+                result = MultiplePropertyMappingOperation.Coalesce;
+            }
+
+            return result;
+        }
+
         /// <summary>
         /// Helper to check whether given property is defined as recursive
         /// </summary>
@@ -817,7 +881,7 @@
         {
             // Find if it is a recursive property with a [Recursive] attribute
             var hasRecursiveAttribute = Attribute.GetCustomAttribute(property, typeof(RecursiveAttribute)) as RecursiveAttribute;
-            return  hasRecursiveAttribute != null && hasRecursiveAttribute.Recursive;
+            return hasRecursiveAttribute != null && hasRecursiveAttribute.Recursive;
         }
 
         /// <summary>
@@ -857,10 +921,10 @@
                         property.SetValue(model, stringValue);
                     }
                 }
-                else 
+                else
                 {
                     property.SetValue(model, stringValue);
-                }                
+                }
             }
             else
             {
@@ -982,11 +1046,11 @@
                             property.SetValue(model, stringValue);
                         }
                     }
-                    else 
+                    else
                     {
                         property.SetValue(model, stringValue);
                     }
-                    
+
                     break;
             }
         }
@@ -1129,6 +1193,18 @@
         private static PropertyMappingAttribute GetPropertyMappingAttribute(PropertyInfo property)
         {
             return Attribute.GetCustomAttribute(property, typeof(PropertyMappingAttribute)) as PropertyMappingAttribute;
+        }
+
+        private static PropertyMapping GetPropertyMappingAttributeAsPropertyMapping(PropertyMappingAttribute propertyMappingAttr)
+        {
+            return new PropertyMapping
+                        {
+                            SourceProperty = propertyMappingAttr.SourceProperty,
+                            LevelsAbove = propertyMappingAttr.LevelsAbove,
+                            ConcatenationSeperator = propertyMappingAttr.ConcatenationSeperator,
+                            SourcePropertiesForCoalescing = propertyMappingAttr.SourcePropertiesForCoalescing,
+                            SourcePropertiesForConcatenation = propertyMappingAttr.SourcePropertiesForConcatenation
+                        };
         }
 
         #endregion

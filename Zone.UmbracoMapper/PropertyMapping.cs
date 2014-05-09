@@ -6,7 +6,7 @@ namespace Zone.UmbracoMapper
     /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: 
     ///     Dictionary<string, PropertyMapping>
     /// </summary>
-    public class PropertyMapping
+    public class PropertyMapping : IPropertyMapping
     {
         /// <summary>
         /// The name of the property on the source to map from.  If not passed, exact name match convention is used.
