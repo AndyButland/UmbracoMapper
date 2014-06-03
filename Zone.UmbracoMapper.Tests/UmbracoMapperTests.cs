@@ -460,6 +460,74 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsOnlyNativeProperties()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, propertySet: PropertySet.Native);
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual("Test content", model.Name);
+                Assert.IsNull(model.BodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsOnlyCustomProperties()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, propertySet: PropertySet.Custom);
+
+                // Assert
+                Assert.AreEqual(0, model.Id);
+                Assert.IsNull(model.Name);
+                Assert.AreEqual("This is the body text", model.BodyText);
+            }
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -1676,7 +1744,7 @@
 
         #endregion
 
-        #region Custom mappings
+        #region Native mappings
 
         private static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
         {

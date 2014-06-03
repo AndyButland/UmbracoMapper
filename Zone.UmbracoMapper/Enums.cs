@@ -6,4 +6,11 @@
         Concatenate,
         Coalesce
     }
+
+    public enum PropertySet
+    {
+        All,
+        Native,
+        Custom,
+    }
 }

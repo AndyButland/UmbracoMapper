@@ -60,11 +60,13 @@
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
+        /// <param name="propertySet">Set of properties to map</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(IPublishedContent content,
                                      T model,
                                      Dictionary<string, PropertyMapping> propertyMappings = null,
-                                     string[] recursiveProperties = null)
+                                     string[] recursiveProperties = null,
+                                     PropertySet propertySet = PropertySet.All)
             where T : class
         {
             if (content != null)
@@ -94,8 +96,8 @@
                                 // Call the mapping function, passing in each source property to use, and flag to contatenate
                                 // on all but the first
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
-                                    concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator);
+                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
+                                    concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator, propertySet: propertySet);
                                 isFirst = false;
                             }
 
@@ -107,15 +109,15 @@
                                 // Call the mapping function, passing in each source property to use, and flag to coalesce
                                 // on all but the first
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, 
-                                    coalesceWithExistingValue: true);
+                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
+                                    coalesceWithExistingValue: true, propertySet: propertySet);
                                 isFirst = false;
                             }
 
                             break;
                         default:
                             // Map the single property
-                            MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties);
+                            MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, propertySet: propertySet);
                             break;
                     }
                 }
@@ -278,7 +280,8 @@
         public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection,
                                                IList<T> modelCollection,
                                                Dictionary<string, PropertyMapping> propertyMappings = null,
-                                               string[] recursiveProperties = null)
+                                               string[] recursiveProperties = null,
+                                               PropertySet propertySet = PropertySet.All)
             where T : class, new()
         {
             if (contentCollection != null)
@@ -291,7 +294,7 @@
                 foreach (var item in contentCollection)
                 {
                     var itemToCreate = new T();
-                    Map<T>(item, itemToCreate, propertyMappings, recursiveProperties);
+                    Map<T>(item, itemToCreate, propertyMappings, recursiveProperties, propertySet);
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -539,7 +542,7 @@
         private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
                                            Dictionary<string, PropertyMapping> propertyMappings, string[] recursiveProperties,
                                            bool concatenateToExistingValue = false, string concatenationSeperator = "",
-                                           bool coalesceWithExistingValue = false)
+                                           bool coalesceWithExistingValue = false, PropertySet propertySet = PropertySet.All)
         {
             // First check to see if there's a condition that might mean we don't carry out the mapping
             if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingFromRelatedProperty(propertyMappings, property.Name))
@@ -555,7 +558,7 @@
 
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
             {
-                MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
+                MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, propertySet: propertySet);
                 return;
             }
 
@@ -641,8 +644,8 @@
                             // Get the mapped field from the related content
                             if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
                             {
-                                // Got a native field
-                                MapNativeContentProperty(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
+                                    // Got a native field
+                                MapNativeContentProperty(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, propertySet: propertySet);
                             }
                             else
                             {
@@ -651,7 +654,7 @@
                                 if (value != null)
                                 {
                                     // Map primitive types
-                                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
+                                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, propertySet: propertySet);
                                 }
                             }
                         }
@@ -659,7 +662,7 @@
                     else
                     {
                         // Map primitive types
-                        SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
+                        SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, propertySet: propertySet);
                     }
                 }
             }
@@ -768,11 +771,18 @@
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
+        /// <param name="propertySet">Set of properties to map. This function will only run for All and Native</param>
         private static void MapNativeContentProperty<T>(T model, PropertyInfo property,
                                                         IPublishedContent contentToMapFrom, string propName,
                                                         bool concatenateToExistingValue = false, string concatenationSeperator = "",
-                                                        bool coalesceWithExistingValue = false)
+                                                        bool coalesceWithExistingValue = false,
+                                                        PropertySet propertySet = PropertySet.All)
         {
+            if (propertySet != PropertySet.All && propertySet != PropertySet.Native)
+            {
+                return;
+            }
+
             var value = contentToMapFrom.GetType().GetProperty(propName).GetValue(contentToMapFrom);
 
             // If we are mapping to a string, make sure to call ToString().  That way even if the source property is numeric, it'll be mapped.
@@ -815,10 +825,17 @@
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
+        /// <param name="propertySet">Set of properties to map. This function will only run for All and Custom</param>
         private static void SetTypedPropertyValue<T>(T model, PropertyInfo property, string stringValue,
                                                      bool concatenateToExistingValue = false, string concatenationSeperator = "",
-                                                     bool coalesceWithExistingValue = false)
+                                                     bool coalesceWithExistingValue = false,
+                                                     PropertySet propertySet = PropertySet.All)
         {
+            if (propertySet != PropertySet.All && propertySet != PropertySet.Custom)
+            {
+                return;
+            }
+
             var propertyTypeName = property.PropertyType.Name;
             if (propertyTypeName == "Nullable`1" && property.PropertyType.GenericTypeArguments.Length == 1)
             {

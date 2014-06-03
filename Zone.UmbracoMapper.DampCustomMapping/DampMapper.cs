@@ -7,7 +7,7 @@
     public static class DampMapper
     {
         /// <summary>
-        /// Custom mapper for mapping a DAMP property
+        /// Native mapper for mapping a DAMP property
         /// </summary>
         /// <param name="mapper">The mapper</param>
         /// <param name="contentToMapFrom">Umbraco content item to map from</param>

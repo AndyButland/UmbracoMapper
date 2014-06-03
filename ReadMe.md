@@ -271,7 +271,8 @@ Full signature of mapping methods are as follows:
     IUmbracoMapper Map<T>(IPublishedContent content, 
         T model, 
         Dictionary<string, PropertyMapping> propertyNameMappings = null,
-        string[] recursiveProperties = null);
+        string[] recursiveProperties = null,
+		PropertySet propertySet = PropertySet.All);
 
     IUmbracoMapper Map<T>(XElement xml, 
         T model,
@@ -288,7 +289,8 @@ Full signature of mapping methods are as follows:
     IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
         IList<T> modelCollection,
         Dictionary<string, PropertyMapping> propertyNameMappings = null,
-        string[] recursiveProperties = null) where T : new();
+        string[] recursiveProperties = null,
+		PropertySet propertySet = PropertySet.All) where T : new();
 
     IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
         Dictionary<string, PropertyMapping> propertyNameMappings = null, 
@@ -380,6 +382,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added support for nullable properties
 - 1.4.3
 	- Fixed bug with coalescing of property values
+- 1.4.4
+	- Added option to map only custom or only native properties
 
 ## Credits
 
