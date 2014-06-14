@@ -6,7 +6,7 @@
 
 <h1>@Model.Heading</h1>
 <p>Upper-cased heading: @Model.UpperCaseHeading</p>
-<p>Created on: @Model.CreatedOn</p>
+<p>Created on: @Model.CreatedOn, formatted date: @Model.FormattedCreatedOnDate</p>
 @Html.Raw(Model.BodyText)
 <p>Rating: @Model.StarRating stars</p>
 <p>Approved: @(Model.IsApproved ? "Yes" : "No")</p>

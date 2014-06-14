@@ -65,6 +65,6 @@ namespace Zone.UmbracoMapper
         /// <summary>
         /// If provided, carries out the transformation provided in the function on the mapped value
         /// </summary>
-        public Func<string, string> Modifier { get; set; }
+        public Func<string, string> StringValueFormatter { get; set; }
     }
 }

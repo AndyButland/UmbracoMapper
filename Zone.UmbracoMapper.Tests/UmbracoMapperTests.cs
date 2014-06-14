@@ -48,6 +48,21 @@
         }
 
         [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesWithStringFormatter()
+        {
+            // Arrange
+            var model = new SimpleViewModel();
+            var content = new StubPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); }, } } });
+
+            // Assert
+            Assert.AreEqual("TEST CONTENT", model.Name);
+        }
+
+        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
         {
             // Using a shim of umbraco.dll
@@ -112,6 +127,38 @@
                 Assert.AreEqual(1000, model.Id);
                 Assert.AreEqual("Test content", model.Name);
                 Assert.AreEqual("This is the body text", model.BodyCopy);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithStringFormatter()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
+
+                // Assert
+                Assert.AreEqual("THIS IS THE BODY TEXT", model.BodyText);
             }
         }
 

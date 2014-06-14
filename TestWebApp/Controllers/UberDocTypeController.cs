@@ -1,5 +1,6 @@
 ﻿namespace TestWebApp.Controllers
 {
+    using System;
     using System.Collections.Generic;
     using System.IO;
     using System.Web.Mvc;
@@ -76,8 +77,17 @@
                             "UpperCaseHeading", new PropertyMapping 
                                 { 
                                     SourceProperty = "heading",
-                                    Modifier = x => {
+                                    StringValueFormatter = x => {
                                         return x.ToUpper();
+                                    }
+                                } 
+                        }, 
+                        { 
+                            "FormattedCreatedOnDate", new PropertyMapping 
+                                { 
+                                    SourceProperty = "CreateDate",
+                                    StringValueFormatter = x => {
+                                        return DateTime.Parse(x).ToString("dd MMMM, yyyy");
                                     }
                                 } 
                         }, 

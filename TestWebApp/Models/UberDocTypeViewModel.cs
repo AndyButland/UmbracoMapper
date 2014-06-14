@@ -26,6 +26,8 @@
 
         public DateTime CreatedOn { get; set; }
 
+        public string FormattedCreatedOnDate { get; set; }
+
         public IHtmlString BodyText { get; set; }
         
         public int StarRating { get; set; }
