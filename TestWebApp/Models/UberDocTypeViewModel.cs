@@ -22,6 +22,8 @@
 
         public string Heading { get; set; }
 
+        public string UpperCaseHeading { get; set; }
+
         public DateTime CreatedOn { get; set; }
 
         public IHtmlString BodyText { get; set; }

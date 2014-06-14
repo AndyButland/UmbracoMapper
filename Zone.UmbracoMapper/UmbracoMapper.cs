@@ -120,6 +120,16 @@
                             MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, propertySet: propertySet);
                             break;
                     }
+
+                    // Transform mapped property value using function if provided
+                    if (property.GetValue(model) != null &&
+                        propertyMappings != null && 
+                        propertyMappings.ContainsKey(property.Name) &&
+                        propertyMappings[property.Name].Modifier != null)
+                    {
+                        var transformedValue = propertyMappings[property.Name].Modifier(property.GetValue(model).ToString());
+                        property.SetValue(model, transformedValue);
+                    }
                 }
             }
 

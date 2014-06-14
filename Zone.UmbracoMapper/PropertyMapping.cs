@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 namespace Zone.UmbracoMapper
 {
     /// <summary>
@@ -60,5 +61,10 @@ namespace Zone.UmbracoMapper
         /// If provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
         /// </summary>
         public KeyValuePair<string, string> MapIfPropertyMatches { get; set; }
+
+        /// <summary>
+        /// If provided, carries out the transformation provided in the function on the mapped value
+        /// </summary>
+        public Func<string, string> Modifier { get; set; }
     }
 }

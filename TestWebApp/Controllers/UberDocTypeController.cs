@@ -72,6 +72,15 @@
                                     SourcePropertiesForCoalescing = new string[] { "emptyField", "Name" },
                                 } 
                         }, 
+                        { 
+                            "UpperCaseHeading", new PropertyMapping 
+                                { 
+                                    SourceProperty = "heading",
+                                    Modifier = x => {
+                                        return x.ToUpper();
+                                    }
+                                } 
+                        }, 
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>
