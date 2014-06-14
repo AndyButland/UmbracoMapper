@@ -164,10 +164,25 @@ The MapIfPropertyMatches field allows you to define a condition for when the map
 				}
 		},	  	  
 	  });	  
+	  
+The StringValueFormatter is a field that can be set to a function to transform the mapped value.  For example, you could use this to format a date field to a string with a particular date format.  This simple example shows how to apply a transformation function that converts the mapped value to upper case:
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+	  {
+		{
+			"Heading", new PropertyMapping 
+				{ 
+					StringValueFormatter = x => {
+						return x.ToUpper();
+					}
+				} 
+		},	  	  
+	  });	
  	  
 #### From Other Sources	  
 
-Some Umbraco data types store XML.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
+Some Umbraco 6 data types store XML and Umbraco 7 ones JSON.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type from version 6.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
 
     var sr = new StringReader(CurrentPage.GetPropertyValue<string>("relatedLinks"));
     var relatedLinksXml = XElement.Load(sr);
@@ -335,6 +350,8 @@ Class defining the override to the mapping convention for property to a particul
 
 **MapIfPropertyMatches** (KeyValuePair<string, string>) - if provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
 
+**StringValueFormatter** (Func<string, string>) - If provided, carries out the formatting transformation provided in the function on the mapped value.
+
 ### BaseNodeViewModel
 
 Class representing an Umbraco node that can be used as the basis of any page view models in the client product.
@@ -384,7 +401,9 @@ Class representing an Umbraco media item that can be used within page view model
 	- Fixed bug with coalescing of property values
 - 1.4.4
 	- Added option to map only custom or only native properties
-
+- 1.4.5
+	- Added ability to provide a StringValueFormatter function to a property mapping, to transform the mapped value
+	
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.
