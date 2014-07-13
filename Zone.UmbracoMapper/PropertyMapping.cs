@@ -63,7 +63,7 @@ namespace Zone.UmbracoMapper
         public KeyValuePair<string, string> MapIfPropertyMatches { get; set; }
 
         /// <summary>
-        /// If provided, carries out the transformation provided in the function on the mapped value
+        /// If provided, carries out the formatting transformation provided in the function on the mapped value
         /// </summary>
         public Func<string, string> StringValueFormatter { get; set; }
     }
