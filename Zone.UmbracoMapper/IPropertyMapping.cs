@@ -17,6 +17,21 @@
         int LevelsAbove { get; set; }
 
         /// <summary>
+        /// If passed, the source property is assumed to be a structure that has related content (e.g. a Content Picker that
+        /// contains an integer Id for another IPublishedContent).  The mapping is then done from the named property of 
+        /// that child element.
+        /// Only for IPublishedContent mappings.
+        /// </summary>
+        string SourceRelatedProperty { get; set; }
+
+        /// <summary>
+        /// If passed, the source property is assumed to be a structure that has child content.  The mapping is then done 
+        /// from the named field of that child element.
+        /// Only for XML and JSON mappings.
+        /// </summary>
+        string SourceChildProperty { get; set; }
+
+        /// <summary>
         /// The names of the properties on the source to map from and concatenate.
         /// If not passed, exact name match convention or single match on SourceProperty is used.
         /// Only for IPublishedContent mappings.

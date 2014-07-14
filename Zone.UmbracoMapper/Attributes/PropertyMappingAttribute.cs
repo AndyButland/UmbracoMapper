@@ -1,12 +1,17 @@
-﻿namespace Zone.UmbracoMapper.Attributes
+﻿namespace Zone.UmbracoMapper
 {
     using System;
+    using System.Collections.Generic;
 
     public class PropertyMappingAttribute : Attribute, IPropertyMapping
     {
         public string SourceProperty { get; set; }
 
         public int LevelsAbove { get; set; }
+
+        public string SourceRelatedProperty { get; set; }
+
+        public string SourceChildProperty { get; set; }
 
         public string[] SourcePropertiesForConcatenation { get; set; }
 
