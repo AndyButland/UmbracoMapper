@@ -18,5 +18,7 @@
         public string ConcatenationSeperator { get; set; }
 
         public string[] SourcePropertiesForCoalescing { get; set; }
+
+        public bool MapRecursively { get; set; }
     }
 }

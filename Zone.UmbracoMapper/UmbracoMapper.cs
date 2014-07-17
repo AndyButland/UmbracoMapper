@@ -79,6 +79,9 @@
                 // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
                 // and update the dictionary to include keys provided via the attributes.
                 propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties);
+
+                // Similarly, the recursive properties can be passed via string array or attribute
 
                 // Loop through all settable properties on model
                 foreach (var property in SettableProperties(model))
@@ -569,11 +572,39 @@
                         // Property mapping not found on dictionary, so add it
                         propertyMappings.Add(property.Name, propertyMapping);
                     }
-
                 }
             }
 
             return propertyMappings;
+        }
+
+        /// <summary>
+        /// Helper to recursive properties are not null even if not provided via the string array.
+        /// Also to populate from attributes on the view model if that method is used for configuration of the mapping
+        /// operation.
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
+        /// <returns>String array of recursive properties</returns>
+        private static string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties) where T : class
+        {
+            var recursivePropertiesAsList = new List<string>();
+            if (recursiveProperties != null)
+            {
+                recursivePropertiesAsList.AddRange(recursiveProperties);
+            }
+
+            foreach (var property in SettableProperties(model))
+            {
+                var attribute = GetPropertyMappingAttribute(property);
+                if (attribute != null && attribute.MapRecursively && !recursivePropertiesAsList.Contains(property.Name))
+                {
+                    recursivePropertiesAsList.Add(property.Name);
+                }
+            }
+
+            return recursivePropertiesAsList.ToArray();
         }
 
         /// <summary>
@@ -599,7 +630,7 @@
                 LevelsAbove = attribute.LevelsAbove,
                 ConcatenationSeperator = attribute.ConcatenationSeperator,
                 SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
-                SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation
+                SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
             };
         }
 
@@ -888,7 +919,7 @@
         /// <returns>True if in list of recursive properties</returns>
         private static bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
         {
-            return recursiveProperties != null && recursiveProperties.Contains(propertyName);
+            return recursiveProperties.Contains(propertyName);
         }
 
         /// <summary>

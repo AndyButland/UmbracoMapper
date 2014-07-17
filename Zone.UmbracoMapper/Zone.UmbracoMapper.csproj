@@ -221,7 +221,6 @@
   <ItemGroup>
     <Compile Include="IPropertyMapping.cs" />
     <Compile Include="Attributes\PropertyMappingAttribute.cs" />
-    <Compile Include="Attributes\RecursiveAttribute.cs" />
     <Compile Include="BaseDestinationTypes\BaseNodeViewModel.cs" />
     <Compile Include="CustomMapping.cs" />
     <Compile Include="IUmbracoMapper.cs" />
