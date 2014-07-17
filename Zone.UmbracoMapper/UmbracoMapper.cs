@@ -78,10 +78,10 @@
                 // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
                 // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
                 // and update the dictionary to include keys provided via the attributes.
-                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
-                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties);
+                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);                
 
                 // Similarly, the recursive properties can be passed via string array or attribute
+                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties);
 
                 // Loop through all settable properties on model
                 foreach (var property in SettableProperties(model))
@@ -98,6 +98,11 @@
 
                             // Loop through all the source properties requested for concatenation
                             var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
+                            if (concatenationSeperator == null)
+                            {
+                                concatenationSeperator = string.Empty;
+                            }
+
                             var isFirst = true;
                             foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
                             {

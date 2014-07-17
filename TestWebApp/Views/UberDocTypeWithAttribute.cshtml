@@ -1,10 +1,10 @@
-﻿@inherits Umbraco.Web.Mvc.UmbracoViewPage<TestWebApp.Models.UberDocTypeViewModel>
+﻿@inherits Umbraco.Web.Mvc.UmbracoViewPage<TestWebApp.Models.UberDocTypeViewModelWithAttribute>
 
 @{
     Layout = null;
 }
 
-<div><em>Using Property Mapping Dictionary</em></div>
+<div><em>Using Property Mapping Attribute</em></div>
 <h1>@Model.Heading</h1>
 <p>Created on: @Model.CreatedOn</p>
 @Html.Raw(Model.BodyText)

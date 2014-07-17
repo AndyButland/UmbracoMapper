@@ -104,6 +104,52 @@
             return CurrentTemplate(model);
         }
 
+        public ActionResult UberDocTypeWithAttribute()
+        {
+            // Get related content
+            var countryNodes = GetRelatedNodes();
+            var relatedLinksXml = GetRelatedLinks();
+
+            // Create view model and run mapping
+            var model = new UberDocTypeViewModelWithAttribute();
+            Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> 
+                    { 
+                        { 
+                            "ConditionalValueMet", new PropertyMapping 
+                                { 
+                                    SourceProperty = "heading",
+                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "true"),
+                                } 
+                        }, 
+                        { 
+                            "ConditionalValueNotMet", new PropertyMapping 
+                                { 
+                                    SourceProperty = "heading",
+                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "0"),
+                                } 
+                        },
+                        { 
+                            "CoalescedValue", new PropertyMapping 
+                                { 
+                                    SourcePropertiesForCoalescing = new string[] { "emptyField", "Name" },
+                                } 
+                        }, 
+                    })
+                .MapCollection(CurrentPage.Children, model.Comments,
+                    recursiveProperties: new string[] { "mainImage" })
+                .MapCollection(countryNodes, model.Countries)
+                .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
+                .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
+                .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")
+                .Map(GetSingleDictionary(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
+                .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
+                .Map(GetSingleJson(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromJson", new PropertyMapping { SourceProperty = "Name" } }, })
+                .MapCollection(GetCollectionJson(), model.CollectionFromJson)
+                .Map(CurrentPage, model.SubModel);
+
+            return CurrentTemplate(model);
+        }
+
         private IEnumerable<IPublishedContent> GetRelatedNodes()
         {
             IEnumerable<IPublishedContent> countryNodes = null;
