@@ -90,7 +90,7 @@
                                     } 
                             }, 
                         },
-                    new string[] { "mainImage" })
+                    new string[] { "mainImage", "starRating" })
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
@@ -135,8 +135,7 @@
                                 } 
                         }, 
                     })
-                .MapCollection(CurrentPage.Children, model.Comments,
-                    recursiveProperties: new string[] { "mainImage" })
+                .MapCollection(CurrentPage.Children, model.Comments)
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })

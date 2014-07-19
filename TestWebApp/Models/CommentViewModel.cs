@@ -21,5 +21,7 @@
         public MediaFile MainImage { get; set; }
 
         public string Heading { get; set; }
+
+        public int StarRating { get; set; }
     }
 }

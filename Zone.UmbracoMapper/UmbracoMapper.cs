@@ -605,7 +605,7 @@
                 var attribute = GetPropertyMappingAttribute(property);
                 if (attribute != null && attribute.MapRecursively && !recursivePropertiesAsList.Contains(property.Name))
                 {
-                    recursivePropertiesAsList.Add(property.Name);
+                    recursivePropertiesAsList.Add(CamelCase(property.Name));
                 }
             }
 
@@ -633,6 +633,8 @@
             {
                 SourceProperty = attribute.SourceProperty,
                 LevelsAbove = attribute.LevelsAbove,
+                SourceChildProperty = attribute.SourceChildProperty,
+                SourceRelatedProperty = attribute.SourceRelatedProperty,
                 ConcatenationSeperator = attribute.ConcatenationSeperator,
                 SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
                 SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
@@ -1132,7 +1134,7 @@
         /// </summary>
         /// <param name="input">Input string</param>
         /// <returns>Camel cased string</returns>
-        private string CamelCase(string input)
+        private static string CamelCase(string input)
         {
             return char.ToLowerInvariant(input[0]) + input.Substring(1);
         }

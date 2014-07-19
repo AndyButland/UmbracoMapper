@@ -23,5 +23,8 @@
         public MediaFile MainImage { get; set; }
 
         public string Heading { get; set; }
+
+        [PropertyMapping(MapRecursively = true)]
+        public int StarRating { get; set; }
     }
 }
