@@ -95,9 +95,7 @@
             Assert.AreEqual("Test content", model.Name);
             Assert.AreEqual("A.N. Editor", model.Author);
         }
-
-
-
+        
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesWithDifferentNamesUsingAttributeAndExistingDictionary()
         {
@@ -249,8 +247,6 @@
             }
         }
         
-
-
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithConcatenation()
         {
@@ -1828,7 +1824,7 @@
                     'facebookId': 1234567890,
                     'registeredOn': '2013-04-13',
                     'averageScore': 12.73
-                }"; ;
+                }";
         }
 
         private static string GetJsonForSingle4()
@@ -1843,7 +1839,7 @@
                     'facebookId': 1234567890,
                     'registeredOn': '2013-04-13',
                     'averageScore': 12.73
-                }"; ;
+                }";
         }
 
         private static string GetJsonForCommentsCollection()

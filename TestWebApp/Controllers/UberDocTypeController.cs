@@ -9,7 +9,7 @@
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using Zone.UmbracoMapper;
-    
+
     public class UberDocTypeController : BaseController
     {
         public UberDocTypeController(IUmbracoMapper mapper)
@@ -57,14 +57,14 @@
                             "ConditionalValueMet", new PropertyMapping 
                                 { 
                                     SourceProperty = "heading",
-                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "true"),
+                                    MapIfPropertyMatches = new KeyValuePair<string, string>("isApproved", "true"),
                                 } 
                         }, 
                         { 
                             "ConditionalValueNotMet", new PropertyMapping 
                                 { 
                                     SourceProperty = "heading",
-                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "0"),
+                                    MapIfPropertyMatches = new KeyValuePair<string, string>("isApproved", "0"),
                                 } 
                         },
                         { 
@@ -77,7 +77,8 @@
                             "UpperCaseHeading", new PropertyMapping 
                                 { 
                                     SourceProperty = "heading",
-                                    StringValueFormatter = x => {
+                                    StringValueFormatter = x => 
+                                    {
                                         return x.ToUpper();
                                     }
                                 } 
@@ -86,7 +87,8 @@
                             "FormattedCreatedOnDate", new PropertyMapping 
                                 { 
                                     SourceProperty = "CreateDate",
-                                    StringValueFormatter = x => {
+                                    StringValueFormatter = x => 
+                                    {
                                         return DateTime.Parse(x).ToString("dd MMMM, yyyy");
                                     }
                                 } 
@@ -137,14 +139,14 @@
                             "ConditionalValueMet", new PropertyMapping 
                                 { 
                                     SourceProperty = "heading",
-                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "true"),
+                                    MapIfPropertyMatches = new KeyValuePair<string, string>("isApproved", "true"),
                                 } 
                         }, 
                         { 
                             "ConditionalValueNotMet", new PropertyMapping 
                                 { 
                                     SourceProperty = "heading",
-                                    MapIfPropertyMatches = new KeyValuePair<string,string>("isApproved", "0"),
+                                    MapIfPropertyMatches = new KeyValuePair<string, string>("isApproved", "0"),
                                 } 
                         },
                         { 

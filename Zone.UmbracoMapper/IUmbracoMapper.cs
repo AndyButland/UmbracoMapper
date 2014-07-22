@@ -103,8 +103,8 @@
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="groupElementName">Name of the element grouping each item in the XML (defaults to "Item")</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
-        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this XML element is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
+        /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection,
                                         Dictionary<string, PropertyMapping> propertyMappings = null,

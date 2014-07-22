@@ -44,7 +44,7 @@
 
         public string SingleValueFromJson { get; set; }
 
-        public IList<CommentViewModel> Comments  { get; set; }
+        public IList<CommentViewModel> Comments { get; set; }
 
         public IList<CountryViewModel> Countries { get; set; }
 

@@ -1,11 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper
 {
+    using System;
+    using System.Collections.Generic;
+
     /// <summary>
     /// Class defining the override to the mapping convention for a particular type.
-    /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: 
-    ///     Dictionary<string, PropertyMapping>
+    /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: Dictionary<string, PropertyMapping>
     /// </summary>
     public class PropertyMapping : IPropertyMapping
     {

@@ -649,7 +649,6 @@
             };
         }
 
-
         /// <summary>
         /// Helper to get the settable properties from a model for mapping
         /// </summary>
