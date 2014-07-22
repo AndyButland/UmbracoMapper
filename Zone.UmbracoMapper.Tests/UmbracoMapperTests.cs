@@ -97,23 +97,6 @@
         }
         
         [TestMethod]
-        public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesWithDifferentNamesUsingAttributeAndExistingDictionary()
-        {
-            // Arrange
-            var model = new SimpleViewModel2WithAttribute();
-            var content = new StubPublishedContent();
-            var mapper = GetMapper();
-
-            // Act
-            mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "SomeOtherProperty", new PropertyMapping { SourceProperty = "SomeOtherSourceProperty", } } });
-
-            // Assert
-            Assert.AreEqual(1000, model.Id);
-            Assert.AreEqual("Test content", model.Name);
-            Assert.AreEqual("A.N. Editor", model.Author);
-        }
-
-        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
         {
             // Using a shim of umbraco.dll
