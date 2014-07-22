@@ -3,8 +3,8 @@
     using System;
 
     using Zone.UmbracoMapper;
-    
-    public class CommentViewModel
+
+    public class CommentViewModelWithAttribute
     {
         public int Id { get; set; }
 
@@ -14,14 +14,17 @@
 
         public string Author { get; set; }
 
+        [PropertyMapping(SourceProperty = "Name", LevelsAbove = 1)]
         public string ParentPage { get; set; }
 
+        [PropertyMapping(SourceRelatedProperty = "Name")]
         public string Country { get; set; }
 
         public MediaFile MainImage { get; set; }
 
         public string Heading { get; set; }
 
+        [PropertyMapping(MapRecursively = true)]
         public int StarRating { get; set; }
     }
 }

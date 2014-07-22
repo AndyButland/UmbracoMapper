@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper
 {
-    /// <summary>
-    /// Class defining the override to the mapping convention for a particular type.
-    /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: 
-    ///     Dictionary<string, PropertyMapping>
-    /// </summary>
-    public class PropertyMapping : IPropertyMapping
+    using System;
+    using System.Collections.Generic;
+
+    public class PropertyMappingAttribute : Attribute, IPropertyMapping
     {
         /// <summary>
         /// The name of the property on the source to map from.  If not passed, exact name match convention is used.
@@ -58,13 +54,11 @@ namespace Zone.UmbracoMapper
         public string[] SourcePropertiesForCoalescing { get; set; }
 
         /// <summary>
-        /// If provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
+        /// If assigned to a property it will be mapped recursively (provides an alternative to passing via the 
+        /// string array to the Map method).
+        /// It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 
+        /// 'StarRating', it'll look for an Umbraco property called 'starRating')
         /// </summary>
-        public KeyValuePair<string, string> MapIfPropertyMatches { get; set; }
-
-        /// <summary>
-        /// If provided, carries out the formatting transformation provided in the function on the mapped value
-        /// </summary>
-        public Func<string, string> StringValueFormatter { get; set; }
+        public bool MapRecursively { get; set; }
     }
 }

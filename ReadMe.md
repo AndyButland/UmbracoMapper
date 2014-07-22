@@ -64,7 +64,7 @@ Given an instance of UmbracoMapper you can map a the properties of a particular 
 	
 This will map all view model properties it can find an exact name match for, either from the standard IPublishedContent properties (like Id, Name etc.), or from the document type fields.
 
-To override conventions for property mapping, you can provide a Dictionary of property mappings.  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
+To override conventions for property mapping, you can provide a Dictionary of property mappings (or with more recent versions, use attributes - see 'Mapping Using Attributes' below).  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
 
     mapper.Map(CurrentPage, model,
       new Dictionary<string, PropertyMapping> 
@@ -179,6 +179,42 @@ The StringValueFormatter is a field that can be set to a function to transform t
 				} 
 		},	  	  
 	  });	
+
+#### Mapping Using Attributes
+
+A newer feature that has been added to the package is the ability to configure your mappings using attributes on the view model, instead of passing in these overrides to the default mapping behaviour via the Dictionary parameter of the Map() method.		  
+
+There's a single attribute called **PropertyMapping** that has properties that can be set to configure most of the property mappings described above.
+
+So for example instead of configuring a mapping like this:
+
+    mapper.MapCollection(CurrentPage.Children, model.Comments, 
+      new Dictionary<string, PropertyMapping> 
+	  { 
+		{ 
+		  "ParentPage", new PropertyMapping 
+		    { 
+			  SourceProperty = "Name", 	  
+			  LevelsAbove = 1,
+		    } 
+		}, 
+	  });	
+	  
+You can do this on your view model:
+
+	[PropertyMapping(SourceProperty = "Name", LevelsAbove = 1)]
+	public string ParentPage { get; set; }	
+
+Simplifying the mapping call to:
+
+    mapper.MapCollection(CurrentPage.Children, model.Comments);	  
+	
+In addition to the use of this attribute to replace the Dictionary parameter, it can also be used instead of the recursiveProperties string array that is used to pass a list of Umbraco document type aliases that should be mapped recursively.  It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 'StarRating', it'll look for an Umbraco property called 'starRating').
+
+It's used like this:
+
+	[PropertyMapping(MapRecursively = true)]
+	public int StarRating { get; set; }
  	  
 #### From Other Sources	  
 
@@ -403,6 +439,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added option to map only custom or only native properties
 - 1.4.5
 	- Added ability to provide a StringValueFormatter function to a property mapping, to transform the mapped value
+- 1.4.6
+	- Added ability to configure mappings using attributes
 	
 ## Credits
 

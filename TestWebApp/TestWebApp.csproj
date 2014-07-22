@@ -259,10 +259,12 @@
     <Compile Include="App_Start\NinjectWebCommon.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\UberDocTypeController.cs" />
+    <Compile Include="Models\CommentViewModelWithAttribute.cs" />
     <Compile Include="Models\CommentViewModel.cs" />
     <Compile Include="Models\NamedItemViewModel.cs" />
     <Compile Include="Models\LinkViewModel.cs" />
     <Compile Include="Models\CountryViewModel.cs" />
+    <Compile Include="Models\UberDocTypeViewModelWithAttribute.cs" />
     <Compile Include="Models\UberDocTypeViewModel.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
@@ -294,6 +296,7 @@
     <Content Include="Views\UberDocType.cshtml">
       <SubType>Code</SubType>
     </Content>
+    <Content Include="Views\UberDocTypeWithAttribute.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

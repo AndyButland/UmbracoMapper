@@ -77,8 +77,16 @@
                     throw new ArgumentNullException("model", "Object to map to cannot be null");
                 }
 
+                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+                // and update the dictionary to include keys provided via the attributes.
+                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);                
+
+                // Similarly, the recursive properties can be passed via string array or attribute
+                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties);
+
                 // Loop through all settable properties on model
-                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+                foreach (var property in SettableProperties(model))
                 {
                     // Get content to map from (check if we want to map to content at a level above the currently passed node)
                     var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
@@ -88,12 +96,19 @@
 
                     // Check if we are looking to concatenate or coalesce more than one source property
                     var multipleMappingOperation = GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
+
                     switch (multipleMappingOperation)
                     {
                         case MultiplePropertyMappingOperation.Concatenate:
+
                             // Loop through all the source properties requested for concatenation
-                            var isFirst = true;
                             var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
+                            if (concatenationSeperator == null)
+                            {
+                                concatenationSeperator = string.Empty;
+                            }
+
+                            var isFirst = true;
                             foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
                             {
                                 // Call the mapping function, passing in each source property to use, and flag to contatenate
@@ -106,6 +121,7 @@
 
                             break;
                         case MultiplePropertyMappingOperation.Coalesce:
+
                             // Loop through all the source properties requested for coalescing
                             foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForCoalescing)
                             {
@@ -114,11 +130,11 @@
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
                                 MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
                                     coalesceWithExistingValue: true, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
-                                isFirst = false;
                             }
 
                             break;
                         default:
+
                             // Map the single property
                             MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                             break;
@@ -150,8 +166,13 @@
                     throw new ArgumentNullException("model", "Object to map to cannot be null");
                 }
 
+                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+                // and update the dictionary to include keys provided via the attributes.
+                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+
                 // Loop through all settable properties on model
-                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+                foreach (var property in SettableProperties(model))
                 {
                     var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
 
@@ -207,8 +228,13 @@
                     throw new ArgumentNullException("model", "Object to map to cannot be null");
                 }
 
+                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+                // and update the dictionary to include keys provided via the attributes.
+                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+
                 // Loop through all settable properties on model
-                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+                foreach (var property in SettableProperties(model))
                 {
                     var propName = GetMappedPropertyName(property.Name, propertyMappings);
 
@@ -245,11 +271,16 @@
                     throw new ArgumentNullException("model", "Object to map to cannot be null");
                 }
 
+                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+                // and update the dictionary to include keys provided via the attributes.
+                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+
                 // Parse JSON string to queryable object
                 var jsonObj = JObject.Parse(json);
 
                 // Loop through all settable properties on model
-                foreach (var property in model.GetType().GetProperties().Where(p => p.GetSetMethod() != null))
+                foreach (var property in SettableProperties(model))
                 {
                     var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
 
@@ -484,6 +515,153 @@
         #region Helpers
 
         /// <summary>
+        /// Helper to ensure property mappings are not null even if not provided via the dictionary.
+        /// Also to populate from attributes on the view model if that method is used for configuration of the mapping
+        /// operation.
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <returns>Set of property mappings</returns>
+        private static Dictionary<string, PropertyMapping> EnsurePropertyMappingsAndUpdateFromModel<T>(T model, Dictionary<string, PropertyMapping> propertyMappings) where T : class
+        {
+            if (propertyMappings == null)
+            {
+                propertyMappings = new Dictionary<string, PropertyMapping>();
+            }
+
+            foreach (var property in SettableProperties(model))
+            {
+                var attribute = GetPropertyMappingAttribute(property);
+                if (attribute != null)
+                {
+                    var propertyMapping = GetPropertyMappingAttributeAsPropertyMapping(attribute);
+                    if (propertyMappings.ContainsKey(property.Name))
+                    {
+                        // Property mapping already exists on dictionary, so update the values not already set
+                        // (if for some reason on both, dictionary takes priority)
+                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceProperty))
+                        {
+                            propertyMappings[property.Name].SourceProperty = propertyMapping.SourceProperty;
+                        }
+
+                        if (propertyMappings[property.Name].LevelsAbove == 0)
+                        {
+                            propertyMappings[property.Name].LevelsAbove = propertyMapping.LevelsAbove;
+                        }
+
+                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceRelatedProperty))
+                        {
+                            propertyMappings[property.Name].SourceRelatedProperty = propertyMapping.SourceRelatedProperty;
+                        }
+
+                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceChildProperty))
+                        {
+                            propertyMappings[property.Name].SourceChildProperty = propertyMapping.SourceChildProperty;
+                        }
+
+                        if (propertyMappings[property.Name].SourcePropertiesForConcatenation == null)
+                        {
+                            propertyMappings[property.Name].SourcePropertiesForConcatenation = propertyMapping.SourcePropertiesForConcatenation;
+                        }
+
+                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].ConcatenationSeperator))
+                        {
+                            propertyMappings[property.Name].ConcatenationSeperator = propertyMapping.ConcatenationSeperator;
+                        }
+
+                        if (propertyMappings[property.Name].SourcePropertiesForCoalescing == null)
+                        {
+                            propertyMappings[property.Name].SourcePropertiesForCoalescing = propertyMapping.SourcePropertiesForCoalescing;
+                        }
+
+                        if (propertyMappings[property.Name].MapIfPropertyMatches.Equals(default(KeyValuePair<string, string>)))
+                        {
+                            propertyMappings[property.Name].MapIfPropertyMatches = propertyMapping.MapIfPropertyMatches;
+                        }
+                    }
+                    else
+                    {
+                        // Property mapping not found on dictionary, so add it
+                        propertyMappings.Add(property.Name, propertyMapping);
+                    }
+                }
+            }
+
+            return propertyMappings;
+        }
+
+        /// <summary>
+        /// Helper to recursive properties are not null even if not provided via the string array.
+        /// Also to populate from attributes on the view model if that method is used for configuration of the mapping
+        /// operation.
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
+        /// <returns>String array of recursive properties</returns>
+        private static string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties) where T : class
+        {
+            var recursivePropertiesAsList = new List<string>();
+            if (recursiveProperties != null)
+            {
+                recursivePropertiesAsList.AddRange(recursiveProperties);
+            }
+
+            foreach (var property in SettableProperties(model))
+            {
+                var attribute = GetPropertyMappingAttribute(property);
+                if (attribute != null && attribute.MapRecursively && !recursivePropertiesAsList.Contains(property.Name))
+                {
+                    recursivePropertiesAsList.Add(CamelCase(property.Name));
+                }
+            }
+
+            return recursivePropertiesAsList.ToArray();
+        }
+
+        /// <summary>
+        /// Helper to extract the PropertyMappingAttribute from a property of the model
+        /// </summary>
+        /// <param name="property">Property to check for attribute on</param>
+        /// <returns>Instance of attribute if found, otherwise null</returns>
+        private static PropertyMappingAttribute GetPropertyMappingAttribute(PropertyInfo property)
+        {
+            return Attribute.GetCustomAttribute(property, typeof(PropertyMappingAttribute)) as PropertyMappingAttribute;
+        }
+
+        /// <summary>
+        /// Helper to convert the values of a property mapping attribute to an instance of PropertyMapping
+        /// </summary>
+        /// <param name="attribute">Attribute added to a view model property</param>
+        /// <returns>PropertyMapping instance</returns>
+        private static PropertyMapping GetPropertyMappingAttributeAsPropertyMapping(PropertyMappingAttribute attribute)
+        {
+            return new PropertyMapping
+            {
+                SourceProperty = attribute.SourceProperty,
+                LevelsAbove = attribute.LevelsAbove,
+                SourceChildProperty = attribute.SourceChildProperty,
+                SourceRelatedProperty = attribute.SourceRelatedProperty,
+                ConcatenationSeperator = attribute.ConcatenationSeperator,
+                SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
+                SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
+            };
+        }
+
+
+        /// <summary>
+        /// Helper to get the settable properties from a model for mapping
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <returns>Enumerable of settable properties from the model</returns>
+        private static IEnumerable<PropertyInfo> SettableProperties<T>(T model) where T : class
+        {
+            return model.GetType().GetProperties().Where(p => p.GetSetMethod() != null);
+        }
+
+        /// <summary>
         /// Helper method to find the property name to map to based on conventions (and/or overrides)
         /// </summary>
         /// <param name="propName">Name of property to map to</param>
@@ -494,8 +672,7 @@
                                              bool convertToCamelCase = false)
         {
             var mappedName = propName;
-            if (propertyMappings != null &&
-                propertyMappings.ContainsKey(propName) &&
+            if (propertyMappings.ContainsKey(propName) &&
                 !string.IsNullOrEmpty(propertyMappings[propName].SourceProperty))
             {
                 mappedName = propertyMappings[propName].SourceProperty;
@@ -519,7 +696,7 @@
         private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             var contentToMapFrom = content;
-            if (propertyMappings != null && propertyMappings.ContainsKey(propName))
+            if (propertyMappings.ContainsKey(propName))
             {
                 for (int i = 0; i < propertyMappings[propName].LevelsAbove; i++)
                 {
@@ -528,7 +705,7 @@
             }
 
             return contentToMapFrom;
-        }
+        }        
 
         /// <summary>
         /// Maps a given IPublished content field (either native or from document type) to property on view model
@@ -562,7 +739,6 @@
 
             // Set native IPublishedContent properties (using convention that names match exactly)
             var propName = GetMappedPropertyName(property.Name, propertyMappings);
-
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
             {
                 MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
@@ -575,6 +751,7 @@
 
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
+
             var namedCustomMappingKey = string.Concat(property.PropertyType.FullName, ".", property.Name);
             var unnamedCustomMappingKey = property.PropertyType.FullName;
             if (_customMappings.ContainsKey(namedCustomMappingKey))
@@ -696,8 +873,7 @@
         /// <returns>True if mapping should be from child property</returns>
         private static bool IsMappingConditional(Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
-            return propertyMappings != null &&
-                   propertyMappings.ContainsKey(propName) &&
+            return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].MapIfPropertyMatches.Key);
         }
 
@@ -709,8 +885,7 @@
         /// <returns>True if mapping should be from child property</returns>
         private static bool IsMappingFromRelatedProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
-            return propertyMappings != null &&
-                   propertyMappings.ContainsKey(propName) &&
+            return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceRelatedProperty);
         }
 
@@ -722,8 +897,7 @@
         /// <returns>True if mapping should be from child property</returns>
         private static bool IsMappingFromChildProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
-            return propertyMappings != null &&
-                   propertyMappings.ContainsKey(propName) &&
+            return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceChildProperty);
         }
 
@@ -757,7 +931,7 @@
         {
             var result = MultiplePropertyMappingOperation.None;
 
-            if (propertyMappings != null && propertyMappings.ContainsKey(propName))
+            if (propertyMappings.ContainsKey(propName))
             {
                 if (propertyMappings[propName].SourcePropertiesForConcatenation != null &&
                    propertyMappings[propName].SourcePropertiesForConcatenation.Any())
@@ -772,7 +946,7 @@
             }
 
             return result;
-        }
+        }        
 
         /// <summary>
         /// Helper to check whether given property is defined as recursive
@@ -782,7 +956,7 @@
         /// <returns>True if in list of recursive properties</returns>
         private static bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
         {
-            return recursiveProperties != null && recursiveProperties.Contains(propertyName);
+            return recursiveProperties.Contains(propertyName);
         }
 
         /// <summary>
@@ -835,10 +1009,10 @@
                 {
                     property.SetValue(model, stringValueFormatter(stringValue));
                 }
-                else 
+                else
                 {
                     property.SetValue(model, stringValue);
-                }                
+                }
             }
             else
             {
@@ -977,7 +1151,7 @@
                     {
                         property.SetValue(model, stringValue);
                     }
-                    
+
                     break;
             }
         }
@@ -1016,7 +1190,7 @@
         /// </summary>
         /// <param name="input">Input string</param>
         /// <returns>Camel cased string</returns>
-        private string CamelCase(string input)
+        private static string CamelCase(string input)
         {
             return char.ToLowerInvariant(input[0]) + input.Substring(1);
         }
