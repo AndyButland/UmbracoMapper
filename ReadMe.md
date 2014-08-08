@@ -441,6 +441,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added ability to provide a StringValueFormatter function to a property mapping, to transform the mapped value
 - 1.4.6
 	- Added ability to configure mappings using attributes
+- 1.4.7
+	- Added support for Archetype mapping of picked items, by checking for instances of IPublishedContent or IEnumerable<IPublishedContent> when mapping dictionary based collections
 	
 ## Credits
 

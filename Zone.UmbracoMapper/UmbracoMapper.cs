@@ -237,12 +237,32 @@
                 foreach (var property in SettableProperties(model))
                 {
                     var propName = GetMappedPropertyName(property.Name, propertyMappings);
-
+                    
                     // If element with mapped name found, map the value
                     if (dictionary.ContainsKey(propName))
                     {
-                        var stringValue = dictionary[propName].ToString();
-                        SetTypedPropertyValue(model, property, stringValue);
+                        // Handle cases where the value object passed in the dictionary is actually an IPublished content
+                        // (or IEnumerable of IPublishedContent) - if so, we'll fully map from that
+                        if (dictionary[propName] is IPublishedContent)
+                        {
+                            Map((IPublishedContent)dictionary[propName], property.GetValue(model), propertyMappings);
+                        }
+                        else if (dictionary[propName] is IEnumerable<IPublishedContent>)
+                        {
+                            // Have to make this call using reflection as we don't know the type of the generic collection at compile time
+                            var propertyValue = property.GetValue(model);
+                            var collectionPropertyType = propertyValue.GetType().GetProperty("Item").PropertyType;
+                            typeof(UmbracoMapper)
+                                .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                                .MakeGenericMethod(collectionPropertyType)
+                                .Invoke(this, new object[] { (IEnumerable<IPublishedContent>)dictionary[propName], propertyValue, propertyMappings });
+                        }
+                        else 
+                        { 
+                            // Otherwise we just map the object as a simple type
+                            var stringValue = dictionary[propName].ToString();
+                            SetTypedPropertyValue(model, property, stringValue);
+                        }
                     }
                 }
             }
@@ -421,19 +441,19 @@
                 }
 
                 // Loop through each of the items defined in the dictionary
-                foreach (var customDataItem in dictionaries)
+                foreach (var dictionary in dictionaries)
                 {
                     // Check if item is already in the list by looking up provided unique key
                     T itemToUpdate = default(T);
                     if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                     {
-                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, customDataItem[sourceIdentifyingPropName].ToString());
+                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, dictionary[sourceIdentifyingPropName].ToString());
                     }
 
                     if (itemToUpdate != null)
                     {
                         // Item found, so map it
-                        Map<T>(customDataItem, itemToUpdate, propertyMappings);
+                        Map<T>(dictionary, itemToUpdate, propertyMappings);
                     }
                     else
                     {
@@ -441,7 +461,7 @@
                         if (createItemsIfNotAlreadyInList)
                         {
                             var itemToCreate = new T();
-                            Map<T>(customDataItem, itemToCreate, propertyMappings);
+                            Map<T>(dictionary, itemToCreate, propertyMappings);
                             modelCollection.Add(itemToCreate);
                         }
                     }
@@ -721,7 +741,7 @@
         /// <param name="stringValueFormatter">A function for transformation of the string value, if passed</param>
         /// <param name="propertySet">Set of properties to map</param>
         private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
-                                           Dictionary<string, PropertyMapping> propertyMappings, string[] recursiveProperties,
+                                           Dictionary<string, PropertyMapping> propertyMappings, string[] recursiveProperties = null,
                                            bool concatenateToExistingValue = false, string concatenationSeperator = "",
                                            bool coalesceWithExistingValue = false, 
                                            Func<string, string> stringValueFormatter = null, 
@@ -955,7 +975,7 @@
         /// <returns>True if in list of recursive properties</returns>
         private static bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
         {
-            return recursiveProperties.Contains(propertyName);
+            return recursiveProperties != null && recursiveProperties.Contains(propertyName);
         }
 
         /// <summary>
@@ -1288,6 +1308,25 @@
             }
 
             return token;
+        }
+
+        /// <summary>
+        /// Maps a collection of IPublishedContent to the passed view model
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="contentCollection">Collection of IPublishedContent</param>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        /// <remarks>
+        /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
+        /// by having multiple overloads.
+        /// </remarks>
+        private IUmbracoMapper MapCollectionOfIPublishedContent<T>(IEnumerable<IPublishedContent> contentCollection,
+            IList<T> modelCollection,
+            Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
+        {
+            return MapCollection<T>(contentCollection, modelCollection, propertyMappings);
         }
 
         #endregion
