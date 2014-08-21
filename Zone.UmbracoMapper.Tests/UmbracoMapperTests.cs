@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Linq;
     using System.Xml.Linq;
     using Microsoft.QualityTools.Testing.Fakes;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -778,7 +779,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
             Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
@@ -801,7 +802,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
         }
 
@@ -820,7 +821,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
             Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
@@ -860,7 +861,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
         }
 
@@ -882,9 +883,28 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
         }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromDictionaryWithCustomMapping_MapsPropertiesWithMatchingNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var dictionary = GetDictionaryForSingle();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateFromObject);
+
+            // Act
+            mapper.Map(dictionary, model);
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }        
 
         #endregion
 
@@ -905,7 +925,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
             Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
@@ -928,7 +948,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
         }
 
@@ -947,7 +967,7 @@
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
             Assert.AreEqual(21, model.Age);
-            Assert.AreEqual(1234567890, model.FacebookId);
+            Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
             Assert.AreEqual((decimal)12.73, model.AverageScore);
         }
@@ -1593,7 +1613,7 @@
                 new XElement("Id", 1),
                 new XElement("Name", "Test name"),
                 new XElement("Age", "21"),
-                new XElement("FacebookId", "1234567890"),
+                new XElement("FacebookId", "123456789"),
                 new XElement("RegisteredOn", "2013-04-13"),
                 new XElement("AverageScore", "12.73"));
         }
@@ -1604,7 +1624,7 @@
                 new XElement("Id", 1),
                 new XElement("Name2", "Test name"),
                 new XElement("Age", "21"),
-                new XElement("FacebookId", "1234567890"),
+                new XElement("FacebookId", "123456789"),
                 new XElement("RegistrationDate", "2013-04-13"));
         }
 
@@ -1614,7 +1634,7 @@
                 new XElement("id", 1),
                 new XElement("name", "Test name"),
                 new XElement("age", "21"),
-                new XElement("facebookId", "1234567890"),
+                new XElement("facebookId", "123456789"),
                 new XElement("registeredOn", "2013-04-13"),
                 new XElement("averageScore", "12.73"));
         }
@@ -1695,8 +1715,9 @@
                 { "Id", 1 }, 
                 { "Name", "Test name" },
                 { "Age", 21 },
-                { "FacebookId", 1234567890 },
+                { "FacebookId", 123456789 },
                 { "RegisteredOn", new DateTime(2013, 4, 13) },
+                { "GeoCoordinate", "5.5,10.5,7" }
             };
         }
 
@@ -1707,7 +1728,7 @@
                 { "Id", 1 }, 
                 { "Name2", "Test name" },
                 { "Age", 21 },
-                { "FacebookId", 1234567890 },
+                { "FacebookId", 123456789 },
                 { "RegistrationDate", new DateTime(2013, 4, 13) },
             };
         }
@@ -1781,7 +1802,7 @@
                     'Id': 1,
                     'Name': 'Test name',
                     'Age': 21,
-                    'FacebookId': 1234567890,
+                    'FacebookId': 123456789,
                     'RegisteredOn': '2013-04-13',
                     'AverageScore': 12.73
                 }";
@@ -1793,7 +1814,7 @@
                     'Id': 1,
                     'Name2': 'Test name',
                     'Age': 21,
-                    'FacebookId': 1234567890,
+                    'FacebookId': 123456789,
                     'RegistrationDate': '2013-04-13',
                 }";
         }
@@ -1804,7 +1825,7 @@
                     'id': 1,
                     'name': 'Test name',
                     'age': 21,
-                    'facebookId': 1234567890,
+                    'facebookId': 123456789,
                     'registeredOn': '2013-04-13',
                     'averageScore': 12.73
                 }";
@@ -1819,7 +1840,7 @@
                         'fullName': 'Test name',
                     },
                     'age': 21,
-                    'facebookId': 1234567890,
+                    'facebookId': 123456789,
                     'registeredOn': '2013-04-13',
                     'averageScore': 12.73
                 }";
@@ -2002,12 +2023,17 @@
 
         #endregion
 
-        #region Native mappings
+        #region Custom mappings
 
         private static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
         {
             return GetGeoCoordinate(contentToMapFrom.GetPropertyValue(propName, isRecursive).ToString());
-        }        
+        }
+
+        private static object MapGeoCoordinateFromObject(IUmbracoMapper mapper, object value)
+        {
+            return GetGeoCoordinate(value.ToString());
+        }   
 
         /// <summary>
         /// Helper to map the Google Maps data type raw value to a GeoCoordinate instance
@@ -2031,7 +2057,7 @@
             }
 
             return null;
-        } 
+        }
 
         #endregion
     }

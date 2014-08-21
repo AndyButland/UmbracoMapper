@@ -13,13 +13,23 @@
         string AssetsRootUrl { get; set; }
 
         /// <summary>
-        /// Allows the mapper to use a custom mapping for a specified type
+        /// Allows the mapper to use a custom mapping for a specified type from IPublishedContent
         /// </summary>
         /// <param name="propertyTypeFullName">Full name of the property type to map to</param>
         /// <param name="mapping">Mapping function</param>
         /// <param name="propertyName">Restricts this custom mapping to properties of this name</param>
         IUmbracoMapper AddCustomMapping(string propertyTypeFullName,
                                         CustomMapping mapping,
+                                        string propertyName = null);
+
+        /// <summary>
+        /// Allows the mapper to use a custom mapping for a specified type from an object
+        /// </summary>
+        /// <param name="propertyTypeFullName">Full name of the property type to map to</param>
+        /// <param name="mapping">Mapping function</param>
+        /// <param name="propertyName">Restricts this custom mapping to properties of this name</param>
+        IUmbracoMapper AddCustomMapping(string propertyTypeFullName,
+                                        CustomObjectMapping mapping,
                                         string propertyName = null);
 
         /// <summary>

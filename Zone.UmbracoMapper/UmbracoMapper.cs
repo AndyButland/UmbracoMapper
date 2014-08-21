@@ -15,6 +15,7 @@
         #region Fields
 
         private readonly Dictionary<string, CustomMapping> _customMappings;
+        private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
 
         #endregion
 
@@ -23,6 +24,7 @@
         public UmbracoMapper()
         {
             _customMappings = new Dictionary<string, CustomMapping>();
+            _customObjectMappings = new Dictionary<string, CustomObjectMapping>();
         }
 
         #endregion
@@ -40,7 +42,7 @@
         #region Interface methods
 
         /// <summary>
-        /// Allows the mapper to use a custom mapping for a specified type
+        /// Allows the mapper to use a custom mapping for a specified type from IPublishedContent
         /// </summary>
         /// <param name="propertyTypeFullName">Full name of the property type to map to</param>
         /// <param name="mapping">Mapping function</param>
@@ -49,6 +51,19 @@
         {
             var key = propertyName == null ? propertyTypeFullName : string.Concat(propertyTypeFullName, ".", propertyName);
             _customMappings[key] = mapping;
+            return this;
+        }
+
+        /// <summary>
+        /// Allows the mapper to use a custom mapping for a specified type from an object
+        /// </summary>
+        /// <param name="propertyTypeFullName">Full name of the property type to map to</param>
+        /// <param name="mapping">Mapping function</param>
+        /// <param name="propertyName">Restricts this custom mapping to properties of this name</param>
+        public IUmbracoMapper AddCustomMapping(string propertyTypeFullName, CustomObjectMapping mapping, string propertyName = null)
+        {
+            var key = propertyName == null ? propertyTypeFullName : string.Concat(propertyTypeFullName, ".", propertyName);
+            _customObjectMappings[key] = mapping;
             return this;
         }
 
@@ -96,7 +111,6 @@
 
                     // Check if we are looking to concatenate or coalesce more than one source property
                     var multipleMappingOperation = GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
-
                     switch (multipleMappingOperation)
                     {
                         case MultiplePropertyMappingOperation.Concatenate:
@@ -241,14 +255,35 @@
                     // If element with mapped name found, map the value
                     if (dictionary.ContainsKey(propName))
                     {
-                        // Handle cases where the value object passed in the dictionary is actually an IPublished content
-                        // (or IEnumerable of IPublishedContent) - if so, we'll fully map from that
-                        if (dictionary[propName] is IPublishedContent)
+                        // First check to see if we have a custom dictionary mapping defined
+                        var namedCustomMappingKey = GetNamedCustomMappingKey(property);
+                        var unnamedCustomMappingKey = property.PropertyType.FullName;
+                        if (_customObjectMappings.ContainsKey(namedCustomMappingKey))
                         {
+                            var value = _customObjectMappings[namedCustomMappingKey](this, dictionary[propName]);
+                            if (value != null)
+                            {
+                                property.SetValue(model, value);
+                            }
+                        }
+                        else if (_customObjectMappings.ContainsKey(unnamedCustomMappingKey))
+                        {
+                            var value = _customObjectMappings[unnamedCustomMappingKey](this, dictionary[propName]);
+                            if (value != null)
+                            {
+                                property.SetValue(model, value);
+                            }
+                        }
+                        else if (dictionary[propName] is IPublishedContent)
+                        {
+                            // Handle cases where the value object passed in the dictionary is actually an IPublishedContent
+                            // - if so, we'll fully map from that
                             Map((IPublishedContent)dictionary[propName], property.GetValue(model), propertyMappings);
                         }
                         else if (dictionary[propName] is IEnumerable<IPublishedContent>)
                         {
+                            // Handle cases where the value object passed in the dictionary is actually an IEnumerable<IPublishedContent> content
+                            // - if so, we'll fully map from that
                             // Have to make this call using reflection as we don't know the type of the generic collection at compile time
                             var propertyValue = property.GetValue(model);
                             var collectionPropertyType = propertyValue.GetType().GetProperty("Item").PropertyType;
@@ -257,8 +292,8 @@
                                 .MakeGenericMethod(collectionPropertyType)
                                 .Invoke(this, new object[] { (IEnumerable<IPublishedContent>)dictionary[propName], propertyValue, propertyMappings });
                         }
-                        else 
-                        { 
+                        else
+                        {
                             // Otherwise we just map the object as a simple type
                             var stringValue = dictionary[propName].ToString();
                             SetTypedPropertyValue(model, property, stringValue);
@@ -681,6 +716,26 @@
         }
 
         /// <summary>
+        /// Helper to get the named custom mapping key (based on type and name)
+        /// </summary>
+        /// <param name="property">PropertyInfo to map to</param>
+        /// <returns>Name of custom mapping key</returns>
+        private static string GetNamedCustomMappingKey(PropertyInfo property)
+        {
+            return string.Concat(property.PropertyType.FullName, ".", property.Name);
+        }
+
+        /// <summary>
+        /// Helper to get the unnamed custom mapping key (based on type only)
+        /// </summary>
+        /// <param name="property">PropertyInfo to map to</param>
+        /// <returns>Name of custom mapping key</returns>
+        private static string GetUnnamedCustomMappingKey(PropertyInfo property)
+        {
+            return property.PropertyType.FullName;
+        }
+
+        /// <summary>
         /// Helper method to find the property name to map to based on conventions (and/or overrides)
         /// </summary>
         /// <param name="propName">Name of property to map to</param>
@@ -770,8 +825,7 @@
 
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
-
-            var namedCustomMappingKey = string.Concat(property.PropertyType.FullName, ".", property.Name);
+            var namedCustomMappingKey = GetNamedCustomMappingKey(property);
             var unnamedCustomMappingKey = property.PropertyType.FullName;
             if (_customMappings.ContainsKey(namedCustomMappingKey))
             {
