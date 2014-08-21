@@ -250,6 +250,16 @@ For additional flexibility when you want to map to a custom view model type that
     ...
     public static object GetImage(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) {}
 	
+The custom mapping method you pass must be a delegate that matches one of the following two signatures.
+
+Firstly for mapping from IPublishedContent:
+
+    delegate object CustomMapping(IUmbracoMapper mapper, IPublishedContent content, string propertyName, bool recursive);
+
+And secondly when mapping from a dictionary object value:
+
+	delegate object CustomObjectMapping(IUmbracoMapper mapper, object value);
+	
 The add-on package provides this method, **DampMapper.MapMediaFile**, for the purposes of mapping from the DAMP model to the standard MediaFile class provided with the mapper. If you want to use this in your project you'll just need to add it to the custom mappings like this:
 
 	mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
@@ -443,6 +453,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added ability to configure mappings using attributes
 - 1.4.7
 	- Added support for Archetype mapping of picked items, by checking for instances of IPublishedContent or IEnumerable<IPublishedContent> when mapping dictionary based collections
+- 1.4.8
+	- Added support for custom mappings on dictionary mapping operations
 	
 ## Credits
 
