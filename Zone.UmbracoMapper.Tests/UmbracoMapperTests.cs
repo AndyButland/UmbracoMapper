@@ -1027,6 +1027,47 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContentToCollection_MapsUsingCustomMapping()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new List<SimpleViewModel8>();
+                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+                var mapper = GetMapper();
+                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "geoCoordinate":
+                                return "5.5,10.5,7";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.MapCollection(content, model);
+
+                // Assert
+                Assert.AreEqual(2, model.Count);
+                Assert.IsNotNull(model[0].GeoCoordinate);
+                Assert.AreEqual((decimal)5.5, model[0].GeoCoordinate.Latitude);
+                Assert.AreEqual((decimal)10.5, model[0].GeoCoordinate.Longitude);
+                Assert.AreEqual(7, model[0].GeoCoordinate.Zoom);
+                Assert.IsNotNull(model[1].GeoCoordinate);
+                Assert.AreEqual((decimal)5.5, model[1].GeoCoordinate.Latitude);
+                Assert.AreEqual((decimal)10.5, model[1].GeoCoordinate.Longitude);
+                Assert.AreEqual(7, model[1].GeoCoordinate.Zoom);
+            }
+        }
+
         #endregion
         
         #region Tests - Collection Maps From XML
