@@ -257,7 +257,7 @@
                     {
                         // First check to see if we have a custom dictionary mapping defined
                         var namedCustomMappingKey = GetNamedCustomMappingKey(property);
-                        var unnamedCustomMappingKey = property.PropertyType.FullName;
+                        var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property); 
                         if (_customObjectMappings.ContainsKey(namedCustomMappingKey))
                         {
                             var value = _customObjectMappings[namedCustomMappingKey](this, dictionary[propName]);
@@ -380,10 +380,22 @@
                     throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
                 }
 
-                foreach (var item in contentCollection)
+                foreach (var content in contentCollection)
                 {
                     var itemToCreate = new T();
-                    Map<T>(item, itemToCreate, propertyMappings, recursiveProperties, propertySet);
+
+                    // Check for custom mappings for the type itself (in the Map() method we'll check for custom mappings on each property)
+                    var customMappingKey = itemToCreate.GetType().FullName;
+                    if (_customMappings.ContainsKey(customMappingKey))
+                    {
+                        itemToCreate = _customMappings[customMappingKey](this, content, string.Empty, false) as T;
+                    }
+                    else 
+                    {
+                        // Otherwise map the single content item as normal
+                        Map<T>(content, itemToCreate, propertyMappings, recursiveProperties, propertySet);
+                    }
+                    
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -826,7 +838,7 @@
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
             var namedCustomMappingKey = GetNamedCustomMappingKey(property);
-            var unnamedCustomMappingKey = property.PropertyType.FullName;
+            var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property);
             if (_customMappings.ContainsKey(namedCustomMappingKey))
             {
                 var value = _customMappings[namedCustomMappingKey](this, contentToMapFrom, propName, isRecursiveProperty);
