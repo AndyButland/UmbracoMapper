@@ -155,10 +155,7 @@
                     }
 
                     // If property value not set, and default value passed, use it
-                    if (HasDefaultValue(propertyMappings, property.Name) && IsNullOrDefault(property.GetValue(model)))
-                    {
-                        property.SetValue(model, propertyMappings[property.Name].DefaultValue);
-                    }
+                    SetDefaultValueIfProvided(model, propertyMappings, property);
                 }
             }
 
@@ -221,6 +218,9 @@
                             SetTypedPropertyValue(model, property, mappedAttribute.Value);
                         }
                     }
+
+                    // If property value not set, and default value passed, use it
+                    SetDefaultValueIfProvided(model, propertyMappings, property);
                 }
             }
 
@@ -305,6 +305,9 @@
                             SetTypedPropertyValue(model, property, stringValue);
                         }
                     }
+
+                    // If property value not set, and default value passed, use it
+                    SetDefaultValueIfProvided(model, propertyMappings, property);
                 }
             }
 
@@ -357,6 +360,9 @@
                     {
                         SetTypedPropertyValue(model, property, stringValue);
                     }
+
+                    // If property value not set, and default value passed, use it
+                    SetDefaultValueIfProvided(model, propertyMappings, property);
                 }
             }
 
@@ -1418,6 +1424,21 @@
             Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
         {
             return MapCollection<T>(contentCollection, modelCollection, propertyMappings);
+        }
+
+        /// <summary>
+        /// Helper to set the default value of a mapped property, if provided and mapping operation hasn't already found a value
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">View model to map to</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="property">Property of view model to map to</param>
+        private static void SetDefaultValueIfProvided<T>(T model, Dictionary<string, PropertyMapping> propertyMappings, PropertyInfo property) where T : class
+        {
+            if (HasDefaultValue(propertyMappings, property.Name) && IsNullOrDefault(property.GetValue(model)))
+            {
+                property.SetValue(model, propertyMappings[property.Name].DefaultValue);
+            }
         }
 
         /// <summary>

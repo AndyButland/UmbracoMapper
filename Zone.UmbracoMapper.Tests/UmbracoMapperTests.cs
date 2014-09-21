@@ -976,6 +976,21 @@
             Assert.AreEqual("Test name", model.Name);
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromXml_MapsDefaultValue()
+        {
+            // Arrange
+            var model = new SimpleViewModel6();
+            var xml = GetXmlForSingle();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(xml, model, new Dictionary<string, PropertyMapping> { { "NonMapped", new PropertyMapping { DefaultValue = "Default text" } } });
+
+            // Assert
+            Assert.AreEqual("Default text", model.NonMapped);
+        }
+
         #endregion
 
         #region Tests - Single Maps From Dictionary
@@ -1038,7 +1053,22 @@
             Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
             Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
             Assert.AreEqual(7, model.GeoCoordinate.Zoom);
-        }        
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromDictionary_MapsDefaultValue()
+        {
+            // Arrange
+            var model = new SimpleViewModel6();
+            var xml = GetXmlForSingle();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(xml, model, new Dictionary<string, PropertyMapping> { { "NonMapped", new PropertyMapping { DefaultValue = "Default text" } } });
+
+            // Assert
+            Assert.AreEqual("Default text", model.NonMapped);
+        }
 
         #endregion
 
@@ -1120,6 +1150,21 @@
             // Assert
             Assert.AreEqual(1, model.Id);
             Assert.AreEqual("Test name", model.Name);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromJson_MapsDefaultValue()
+        {
+            // Arrange
+            var model = new SimpleViewModel6();
+            var xml = GetXmlForSingle();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(xml, model, new Dictionary<string, PropertyMapping> { { "NonMapped", new PropertyMapping { DefaultValue = "Default text" } } });
+
+            // Assert
+            Assert.AreEqual("Default text", model.NonMapped);
         }
 
         #endregion
@@ -2200,6 +2245,8 @@
             public decimal AverageScore { get; set; }
 
             public DateTime RegisteredOn { get; set; }
+
+            public string NonMapped { get; set; }
         }
 
         private class SimpleViewModel7 : SimpleViewModel
