@@ -400,7 +400,7 @@ Class defining the override to the mapping convention for property to a particul
 
 **StringValueFormatter** (Func<string, string>) - If provided, carries out the formatting transformation provided in the function on the mapped value.
 
-**DefaultValue** object - If provided, sets a default value for a property to be used if the mapped value cannot be found.
+**DefaultValue** (object) - If provided, sets a default value for a property to be used if the mapped value cannot be found.
 
 ### BaseNodeViewModel
 
