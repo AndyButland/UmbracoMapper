@@ -74,5 +74,8 @@
 
         [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "emptyField", "Name" })]
         public string CoalescedValue { get; set; }
+
+        [PropertyMapping(DefaultValue = "Default text")]
+        public string NonMapped { get; set; }
     }
 }

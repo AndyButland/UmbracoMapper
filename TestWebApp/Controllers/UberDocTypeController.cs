@@ -93,6 +93,12 @@
                                     }
                                 } 
                         }, 
+                        { 
+                            "NonMapped", new PropertyMapping 
+                                { 
+                                    DefaultValue = "Default text",
+                                } 
+                        }, 
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>
