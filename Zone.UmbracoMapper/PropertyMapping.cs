@@ -66,5 +66,10 @@
         /// If provided, carries out the formatting transformation provided in the function on the mapped value
         /// </summary>
         public Func<string, string> StringValueFormatter { get; set; }
+
+        /// <summary>
+        /// Sets a default value for a property to be used if the mapped value cannot be found.
+        /// </summary>
+        public object DefaultValue { get; set; }
     }
 }

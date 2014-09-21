@@ -760,6 +760,140 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithStringDefaultValue()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return null;
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                { 
+                    { 
+                        "BodyText", 
+                        new PropertyMapping 
+                        { 
+                            DefaultValue = "Default body text",
+                        } 
+                    } 
+                });
+
+                // Assert
+                Assert.AreEqual("Default body text", model.BodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithStringDefaultValueUsingAttribute()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3WithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return null;
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual("Default body text", model.BodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithIntegerDefaultValue()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        return string.Empty;
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> 
+                { 
+                    { 
+                        "NonMapped", 
+                        new PropertyMapping 
+                        { 
+                            DefaultValue = 99,
+                        } 
+                    } 
+                });
+
+                // Assert
+                Assert.AreEqual(99, model.NonMapped);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithIntegerDefaultValueUsingAttribute()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3WithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        return string.Empty;
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual(99, model.NonMapped);
+            }
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -2017,6 +2151,17 @@
         private class SimpleViewModel3 : SimpleViewModel2
         {
             public string BodyText { get; set; }
+
+            public int NonMapped { get; set; }
+        }
+
+        private class SimpleViewModel3WithAttribute : SimpleViewModel2
+        {
+            [PropertyMapping(DefaultValue = "Default body text")]
+            public string BodyText { get; set; }
+
+            [PropertyMapping(DefaultValue = 99)]
+            public int NonMapped { get; set; }
         }
 
         private class SimpleViewModel4 : SimpleViewModel2

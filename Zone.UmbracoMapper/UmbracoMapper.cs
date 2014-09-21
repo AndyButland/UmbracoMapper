@@ -153,6 +153,12 @@
                             MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                             break;
                     }
+
+                    // If property value not set, and default value passed, use it
+                    if (HasDefaultValue(propertyMappings, property.Name) && IsNullOrDefault(property.GetValue(model)))
+                    {
+                        property.SetValue(model, propertyMappings[property.Name].DefaultValue);
+                    }
                 }
             }
 
@@ -648,6 +654,11 @@
                         {
                             propertyMappings[property.Name].MapIfPropertyMatches = propertyMapping.MapIfPropertyMatches;
                         }
+
+                        if (propertyMappings[property.Name].DefaultValue == null)
+                        {
+                            propertyMappings[property.Name].DefaultValue = propertyMapping.DefaultValue;
+                        }
                     }
                     else
                     {
@@ -715,6 +726,7 @@
                 ConcatenationSeperator = attribute.ConcatenationSeperator,
                 SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
                 SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
+                DefaultValue = attribute.DefaultValue,
             };
         }
 
@@ -988,6 +1000,17 @@
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceChildProperty);
         }
 
+        /// <summary>
+        /// Helper to check if particular property has a default value
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private static bool HasDefaultValue(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings.ContainsKey(propName) && propertyMappings[propName].DefaultValue != null;
+        }
+        
         /// <summary>
         /// Helper to retrieve the string value formatting function for the property mapping if available
         /// </summary>
@@ -1395,6 +1418,34 @@
             Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
         {
             return MapCollection<T>(contentCollection, modelCollection, propertyMappings);
+        }
+
+        /// <summary>
+        /// Helper to check if a given value (reference or value type) is null or the default value
+        /// </summary>
+        /// <typeparam name="T">Type of argument</typeparam>
+        /// <param name="argument">Argument to check</param>
+        /// <returns>True if null or default</returns>
+        /// <remarks>See: http://stackoverflow.com/a/6553276/489433</remarks>
+        private static bool IsNullOrDefault<T>(T argument)
+        {
+            // Deal with normal scenarios
+            if (argument == null) return true;
+            if (object.Equals(argument, default(T))) return true;
+
+            // Deal with non-null nullables
+            Type methodType = typeof(T);
+            if (Nullable.GetUnderlyingType(methodType) != null) return false;
+
+            // Deal with boxed value types
+            Type argumentType = argument.GetType();
+            if (argumentType.IsValueType && argumentType != methodType)
+            {
+                object obj = Activator.CreateInstance(argument.GetType());
+                return obj.Equals(argument);
+            }
+
+            return false;
         }
 
         #endregion

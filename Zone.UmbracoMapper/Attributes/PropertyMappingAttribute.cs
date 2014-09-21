@@ -60,5 +60,10 @@
         /// 'StarRating', it'll look for an Umbraco property called 'starRating')
         /// </summary>
         public bool MapRecursively { get; set; }
+
+        /// <summary>
+        /// Sets a default value for a property to be used if the mapped value cannot be found.
+        /// </summary>
+        public object DefaultValue { get; set; }
     }
 }

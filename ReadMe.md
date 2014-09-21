@@ -179,6 +179,8 @@ The StringValueFormatter is a field that can be set to a function to transform t
 				} 
 		},	  	  
 	  });	
+	  
+DefaultValue is a field that if set will provide a value to any properties that aren't mapped.  It works by checking the value of the property after the mapping operation is complete.  If it's null or the default value for the type (e.g. 0 for an integer), and a default value has been provided, the property value will be set to this default.
 
 #### Mapping Using Attributes
 
@@ -398,6 +400,8 @@ Class defining the override to the mapping convention for property to a particul
 
 **StringValueFormatter** (Func<string, string>) - If provided, carries out the formatting transformation provided in the function on the mapped value.
 
+**DefaultValue** object - If provided, sets a default value for a property to be used if the mapped value cannot be found.
+
 ### BaseNodeViewModel
 
 Class representing an Umbraco node that can be used as the basis of any page view models in the client product.
@@ -455,6 +459,9 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added support for Archetype mapping of picked items, by checking for instances of IPublishedContent or IEnumerable<IPublishedContent> when mapping dictionary based collections
 - 1.4.8
 	- Added support for custom mappings on dictionary mapping operations
+- 1.4.9
+	- Added support for mapping [object to object when mapping collections](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/56541-Mapping-collection-custom-mapper)
+	- Added DefaultValue to property mapping
 	
 ## Credits
 
