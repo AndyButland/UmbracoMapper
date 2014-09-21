@@ -385,6 +385,8 @@
                     var itemToCreate = new T();
 
                     // Check for custom mappings for the type itself (in the Map() method we'll check for custom mappings on each property)
+                    // Any custom mappings used here cannot be based on a single property, as we don't have a property to map to to work out what this should be.
+                    // So we just pass an empty string into the custom mapping call.
                     var customMappingKey = itemToCreate.GetType().FullName;
                     if (_customMappings.ContainsKey(customMappingKey))
                     {

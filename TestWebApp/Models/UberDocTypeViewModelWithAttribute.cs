@@ -22,8 +22,12 @@
 
         public string Heading { get; set; }
 
+        public string UpperCaseHeading { get; set; }
+
         [PropertyMapping(SourceProperty = "CreateDate")]
         public DateTime CreatedOn { get; set; }
+
+        public string FormattedCreatedOnDate { get; set; }
 
         public IHtmlString BodyText { get; set; }
         
