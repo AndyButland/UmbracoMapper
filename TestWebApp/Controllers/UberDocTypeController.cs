@@ -150,9 +150,23 @@
                                 } 
                         },
                         { 
-                            "CoalescedValue", new PropertyMapping 
+                            "UpperCaseHeading", new PropertyMapping 
                                 { 
-                                    SourcePropertiesForCoalescing = new string[] { "emptyField", "Name" },
+                                    SourceProperty = "heading",
+                                    StringValueFormatter = x => 
+                                    {
+                                        return x.ToUpper();
+                                    }
+                                } 
+                        }, 
+                        { 
+                            "FormattedCreatedOnDate", new PropertyMapping 
+                                { 
+                                    SourceProperty = "CreateDate",
+                                    StringValueFormatter = x => 
+                                    {
+                                        return DateTime.Parse(x).ToString("dd MMMM, yyyy");
+                                    }
                                 } 
                         }, 
                     })
