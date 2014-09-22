@@ -462,6 +462,8 @@ Class representing an Umbraco media item that can be used within page view model
 - 1.4.9
 	- Added support for mapping [object to object when mapping collections](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/56541-Mapping-collection-custom-mapper)
 	- Added DefaultValue to property mapping
+- 1.4.10
+	- Further additions to support for mapping object to object added 1.4.9
 	
 ## Credits
 

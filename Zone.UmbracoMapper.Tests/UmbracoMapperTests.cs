@@ -1288,6 +1288,47 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContentToCollectionWithoutParentObject_MapsUsingCustomObjectMapping()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new List<GeoCoordinate>();
+                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+                var mapper = GetMapper();
+                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollectionFromObject);
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "geoCoordinate":
+                                return "5.5,10.5,7";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.MapCollection(content, model);
+
+                // Assert
+                Assert.AreEqual(2, model.Count);
+                Assert.IsNotNull(model[0]);
+                Assert.AreEqual((decimal)5.5, model[0].Latitude);
+                Assert.AreEqual((decimal)10.5, model[0].Longitude);
+                Assert.AreEqual(7, model[0].Zoom);
+                Assert.IsNotNull(model[1]);
+                Assert.AreEqual((decimal)5.5, model[1].Latitude);
+                Assert.AreEqual((decimal)10.5, model[1].Longitude);
+                Assert.AreEqual(7, model[1].Zoom);
+            }
+        }
+
         #endregion
         
         #region Tests - Collection Maps From XML
@@ -2307,6 +2348,11 @@
         private static object MapGeoCoordinateForCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive)
         {
             return GetGeoCoordinate(contentToMapFrom.GetPropertyValue("geoCoordinate", false).ToString());
+        }
+
+        private static object MapGeoCoordinateForCollectionFromObject(IUmbracoMapper mapper, object value)
+        {
+            return GetGeoCoordinate(((IPublishedContent)value).GetPropertyValue("geoCoordinate", false).ToString());
         }
 
         private static object MapGeoCoordinateFromObject(IUmbracoMapper mapper, object value)
