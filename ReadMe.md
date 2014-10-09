@@ -464,6 +464,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added DefaultValue to property mapping
 - 1.4.10
 	- Further additions to support for mapping object to object added 1.4.9
+- 1.4.11
+	- Handled special case conversion of string "1" (from Archetype) to boolean true
 	
 ## Credits
 

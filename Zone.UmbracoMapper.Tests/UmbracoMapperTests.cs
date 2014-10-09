@@ -1012,6 +1012,7 @@
             Assert.AreEqual(21, model.Age);
             Assert.AreEqual(123456789, model.FacebookId);
             Assert.AreEqual("13-Apr-2013", model.RegisteredOn.ToString("dd-MMM-yyyy"));
+            Assert.IsTrue(model.IsMember);
         }
 
         [TestMethod]
@@ -2019,7 +2020,8 @@
                 { "Age", 21 },
                 { "FacebookId", 123456789 },
                 { "RegisteredOn", new DateTime(2013, 4, 13) },
-                { "GeoCoordinate", "5.5,10.5,7" }
+                { "GeoCoordinate", "5.5,10.5,7" },
+                { "IsMember", "1" }
             };
         }
 
@@ -2288,6 +2290,8 @@
             public DateTime RegisteredOn { get; set; }
 
             public string NonMapped { get; set; }
+
+            public bool IsMember { get; set; }
         }
 
         private class SimpleViewModel7 : SimpleViewModel

@@ -1173,7 +1173,12 @@
             {
                 case "Boolean":
                     bool boolValue;
-                    if (bool.TryParse(stringValue, out boolValue))
+                    if (stringValue == "1")
+                    {
+                        // Special case: Archetype stores "1" for boolean true, so we'll handle that convention
+                        property.SetValue(model, true);
+                    }
+                    else if (bool.TryParse(stringValue, out boolValue))
                     {
                         property.SetValue(model, boolValue);
                     }
