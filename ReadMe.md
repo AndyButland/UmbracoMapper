@@ -466,6 +466,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Further additions to support for mapping object to object added 1.4.9
 - 1.4.11
 	- Handled special case conversion of string "1" (from Archetype) to boolean true
+- 1.4.12
+	- Fixed issue with [use of recursive and source property attributes on same property](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60295-Property-Mapping-issue)
 	
 ## Credits
 
