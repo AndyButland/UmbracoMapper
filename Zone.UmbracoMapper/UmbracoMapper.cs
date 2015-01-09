@@ -98,7 +98,7 @@
                 propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);                
 
                 // Similarly, the recursive properties can be passed via string array or attribute
-                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties);
+                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties, propertyMappings);
 
                 // Loop through all settable properties on model
                 foreach (var property in SettableProperties(model))
@@ -689,8 +689,9 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="model">Instance of view model</param>
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
+        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>String array of recursive properties</returns>
-        private static string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties) where T : class
+        private static string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, Dictionary<string, PropertyMapping> propertyMappings) where T : class
         {
             var recursivePropertiesAsList = new List<string>();
             if (recursiveProperties != null)
@@ -703,7 +704,8 @@
                 var attribute = GetPropertyMappingAttribute(property);
                 if (attribute != null && attribute.MapRecursively && !recursivePropertiesAsList.Contains(property.Name))
                 {
-                    recursivePropertiesAsList.Add(CamelCase(property.Name));
+                    var propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+                    recursivePropertiesAsList.Add(propName);
                 }
             }
 
@@ -778,7 +780,7 @@
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
         /// <returns>Name of property to map from</returns>
-        private string GetMappedPropertyName(string propName, Dictionary<string, PropertyMapping> propertyMappings,
+        private static string GetMappedPropertyName(string propName, Dictionary<string, PropertyMapping> propertyMappings,
                                              bool convertToCamelCase = false)
         {
             var mappedName = propName;

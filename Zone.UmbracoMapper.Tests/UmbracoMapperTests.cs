@@ -163,7 +163,7 @@
                 Assert.AreEqual("Test content", model.Name);
                 Assert.AreEqual("This is the body text", model.BodyCopy);
             }
-        }
+        }        
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithStringFormatter()
@@ -230,6 +230,49 @@
                 Assert.AreEqual("This is the body text", model.BodyCopy);
             }
         }
+        
+        /// <remarks>
+        /// Failing test for bug report: 
+        /// http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60295-Property-Mapping-issue
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithDifferentNamesUsingAttributeAndRecursiveProperty()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel4bWithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                if (recursive)
+                                {
+                                    return "This is the body text";
+                                }
+
+                                return string.Empty;
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual("Test content", model.Name);
+                Assert.AreEqual("This is the body text", model.BodyCopy);
+            }
+        }        
         
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithConcatenation()
@@ -2260,6 +2303,12 @@
         private class SimpleViewModel4WithAttribute : SimpleViewModel2WithAttribute
         {
             [PropertyMapping(SourceProperty = "bodyText")]
+            public string BodyCopy { get; set; }
+        }
+
+        private class SimpleViewModel4bWithAttribute : SimpleViewModel2WithAttribute
+        {
+            [PropertyMapping(SourceProperty = "bodyText", MapRecursively = true)]
             public string BodyCopy { get; set; }
         }
 
