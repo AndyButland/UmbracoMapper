@@ -103,6 +103,12 @@
                 // Loop through all settable properties on model
                 foreach (var property in SettableProperties(model))
                 {
+                    // Check if property has been marked as ignored, if so, don't attempt to map
+                    if (IsPropertyIgnored(propertyMappings, property.Name))
+                    {
+                        continue;
+                    }
+
                     // Get content to map from (check if we want to map to content at a level above the currently passed node)
                     var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
 
@@ -669,6 +675,8 @@
                         {
                             propertyMappings[property.Name].DefaultValue = propertyMapping.DefaultValue;
                         }
+
+                        propertyMappings[property.Name].Ignore = propertyMapping.Ignore;
                     }
                     else
                     {
@@ -739,6 +747,7 @@
                 SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
                 SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
                 DefaultValue = attribute.DefaultValue,
+                Ignore = attribute.Ignore,
             };
         }
 
@@ -1068,7 +1077,18 @@
             }
 
             return result;
-        }        
+        }
+
+        /// <summary>
+        /// Helper to check if property is ignored
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if ignored</returns>
+        private static bool IsPropertyIgnored(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings.ContainsKey(propName) && propertyMappings[propName].Ignore;
+        }
 
         /// <summary>
         /// Helper to check whether given property is defined as recursive

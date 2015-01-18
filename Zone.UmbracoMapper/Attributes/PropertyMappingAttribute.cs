@@ -65,5 +65,10 @@
         /// Sets a default value for a property to be used if the mapped value cannot be found.
         /// </summary>
         public object DefaultValue { get; set; }
+
+        /// <summary>
+        /// If set property will not be mapped even if an appropriate mapping could be found
+        /// </summary>
+        public bool Ignore { get; set; }
     }
 }

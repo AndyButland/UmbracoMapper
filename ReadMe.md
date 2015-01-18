@@ -182,6 +182,8 @@ The StringValueFormatter is a field that can be set to a function to transform t
 	  
 DefaultValue is a field that if set will provide a value to any properties that aren't mapped.  It works by checking the value of the property after the mapping operation is complete.  If it's null or the default value for the type (e.g. 0 for an integer), and a default value has been provided, the property value will be set to this default.
 
+Ignore can be added to a field and if set to true, it will not be mapped and retain it's default or previously set value
+
 #### Mapping Using Attributes
 
 A newer feature that has been added to the package is the ability to configure your mappings using attributes on the view model, instead of passing in these overrides to the default mapping behaviour via the Dictionary parameter of the Map() method.		  
@@ -402,6 +404,8 @@ Class defining the override to the mapping convention for property to a particul
 
 **DefaultValue** (object) - If provided, sets a default value for a property to be used if the mapped value cannot be found.
 
+**Ignore** (bool) - can be added to a field and if set to true, it will not be mapped and retain it's default or previously set value
+
 ### BaseNodeViewModel
 
 Class representing an Umbraco node that can be used as the basis of any page view models in the client product.
@@ -468,6 +472,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Handled special case conversion of string "1" (from Archetype) to boolean true
 - 1.4.12
 	- Fixed issue with [use of recursive and source property attributes on same property](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60295-Property-Mapping-issue)
+- 1.4.13
+	- Added Ignore property to property mapping [to allow for the omission of some fields from mapping](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60525-PropertySets)
 	
 ## Credits
 

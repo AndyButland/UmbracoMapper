@@ -77,5 +77,8 @@
 
         [PropertyMapping(DefaultValue = "Default text")]
         public string NonMapped { get; set; }
+
+        [PropertyMapping(Ignore = true)]
+        public string DocumentTypeAlias { get; set; }
     }
 }

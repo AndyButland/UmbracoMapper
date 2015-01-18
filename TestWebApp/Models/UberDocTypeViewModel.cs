@@ -71,6 +71,8 @@
         public string CoalescedValue { get; set; }
 
         public string NonMapped { get; set; }
+
+        public string DocumentTypeAlias { get; set; }
     }
 
     public class SubModel

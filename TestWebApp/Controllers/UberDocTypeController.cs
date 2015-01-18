@@ -99,6 +99,13 @@
                                     DefaultValue = "Default text",
                                 } 
                         }, 
+                        { 
+                            "DocumentTypeAlias", new PropertyMapping 
+                                { 
+                                    Ignore = true,
+                                } 
+                        }, 
+
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>

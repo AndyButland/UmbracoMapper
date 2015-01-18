@@ -96,6 +96,38 @@
             Assert.AreEqual("Test content", model.Name);
             Assert.AreEqual("A.N. Editor", model.Author);
         }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapIgnoredNativePropertiesUsingDictionary()
+        {
+            // Arrange
+            var model = new SimpleViewModel();
+            var content = new StubPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { Ignore = true, } } });
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.IsNull(model.Name);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapIgnoredNativePropertiesUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel1b();
+            var content = new StubPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content, model);
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.IsNull(model.Name);
+        }
         
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingNames()
@@ -230,7 +262,75 @@
                 Assert.AreEqual("This is the body text", model.BodyCopy);
             }
         }
-        
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapIgnoredCustomPropertiesUsingDictionary()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { Ignore = true, } } });
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual("Test content", model.Name);
+                Assert.IsNull(model.BodyText);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapIgnoredCustomPropertiesUsingAttribute()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3bWithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual("Test content", model.Name);
+                Assert.IsNull(model.BodyText);
+            }
+        }
+
         /// <remarks>
         /// Failing test for bug report: 
         /// http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60295-Property-Mapping-issue
@@ -2268,6 +2368,14 @@
             public string Name { get; set; }
         }
 
+        private class SimpleViewModel1b
+        {
+            public int Id { get; set; }
+
+            [PropertyMapping(Ignore = true)]
+            public string Name { get; set; }
+        }
+
         private class SimpleViewModel2 : SimpleViewModel
         {
             public string Author { get; set; }
@@ -2292,6 +2400,14 @@
             public string BodyText { get; set; }
 
             [PropertyMapping(DefaultValue = 99)]
+            public int NonMapped { get; set; }
+        }
+
+        private class SimpleViewModel3bWithAttribute : SimpleViewModel2
+        {
+            [PropertyMapping(Ignore = true)]
+            public string BodyText { get; set; }
+
             public int NonMapped { get; set; }
         }
 
