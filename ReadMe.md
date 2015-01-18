@@ -64,7 +64,7 @@ Given an instance of UmbracoMapper you can map a the properties of a particular 
 	
 This will map all view model properties it can find an exact name match for, either from the standard IPublishedContent properties (like Id, Name etc.), or from the document type fields.
 
-To override conventions for property mapping, you can provide a Dictionary of property mappings (or with more recent versions, use attributes - see 'Mapping Using Attributes' below).  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
+To override conventions for property mapping, you can provide a Dictionary of property mappings via the **propertyMappings** parameter (or with more recent versions, use attributes - see 'Mapping Using Attributes' below).  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
 
     mapper.Map(CurrentPage, model,
       new Dictionary<string, PropertyMapping> 
@@ -76,6 +76,12 @@ To override conventions for property mapping, you can provide a Dictionary of pr
 		    } 
 		}, 
 	  });
+	  
+The **recursiveProperties** parameter allows you to pass a string array of Umbraco property aliases that should be mapped recursively (i.e. if not found on the current page, look on the parent, and the parent's parent, and so on until it is found).  See below for an attribute based alternative to using this parameter.
+
+The **propertySet**	is a simple enum based flag to allow to you map just all native properties of IPublishedContent (Id, Name etc.) OR just all custom properties (all the ones put on document types).  The default if not provided is to map both. 
+
+##### From Collections of IPublishedContent
 
 To map a collection use the following method.  This example maps the child nodes of the current page to a custom collection called 'Comments' on the view model, again using the default name mapping conventions.
 
@@ -335,30 +341,30 @@ Full signature of mapping methods are as follows:
 
     IUmbracoMapper Map<T>(IPublishedContent content, 
         T model, 
-        Dictionary<string, PropertyMapping> propertyNameMappings = null,
+        Dictionary<string, PropertyMapping> propertyMappings = null,
         string[] recursiveProperties = null,
 		PropertySet propertySet = PropertySet.All);
 
     IUmbracoMapper Map<T>(XElement xml, 
         T model,
-        Dictionary<string, PropertyMapping> propertyNameMappings = null);
+        Dictionary<string, PropertyMapping> propertyMappings = null);
 
     IUmbracoMapper Map<T>(Dictionary<string, object> dictionary,
         T model,
-        Dictionary<string, PropertyMapping> propertyNameMappings = null);
+        Dictionary<string, PropertyMapping> propertyMappings = null);
 
     IUmbracoMapper Map<T>(string json,
         T model,
-        Dictionary<string, PropertyMapping> propertyNameMappings = null);
+        Dictionary<string, PropertyMapping> propertyMappings = null);
 
     IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
         IList<T> modelCollection,
-        Dictionary<string, PropertyMapping> propertyNameMappings = null,
+        Dictionary<string, PropertyMapping> propertyMappings = null,
         string[] recursiveProperties = null,
 		PropertySet propertySet = PropertySet.All) where T : new();
 
     IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
-        Dictionary<string, PropertyMapping> propertyNameMappings = null, 
+        Dictionary<string, PropertyMapping> propertyMappings = null, 
         string groupElementName = "Item", 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
@@ -366,13 +372,13 @@ Full signature of mapping methods are as follows:
 
     IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries, 
         IList<T> modelCollection, 
-        Dictionary<string, PropertyMapping> propertyNameMappings = null, 
+        Dictionary<string, PropertyMapping> propertyMappings = null, 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
         string destIdentifyingPropName = "Id") where T : new();
 
     IUmbracoMapper MapCollection<T>(string json, IList<T> modelCollection, 
-        Dictionary<string, PropertyMapping> propertyNameMappings = null,
+        Dictionary<string, PropertyMapping> propertyMappings = null,
         string rootElementName = "items", 
         bool createItemsIfNotAlreadyInList = true, 
         string sourceIdentifyingPropName = "Id", 
