@@ -1485,6 +1485,14 @@
             if (argument == null) return true;
             if (object.Equals(argument, default(T))) return true;
 
+            // Handle empty string (we'll treat this as a default value for string even through strictly the default is null, as that's what Umbraco
+            // will return for an empty string property value)
+            var stringArgument = argument as string;
+            if (string.IsNullOrEmpty(stringArgument))
+            {
+                return true;
+            }
+
             // Deal with non-null nullables
             Type methodType = typeof(T);
             if (Nullable.GetUnderlyingType(methodType) != null) return false;

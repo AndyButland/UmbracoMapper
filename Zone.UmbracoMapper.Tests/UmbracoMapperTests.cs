@@ -922,6 +922,8 @@
                         {
                             case "bodyText":
                                 return null;
+                            case "bodyText2":
+                                return string.Empty;
                             default:
                                 return string.Empty;
                         }
@@ -936,11 +938,19 @@
                         { 
                             DefaultValue = "Default body text",
                         } 
+                    },
+                    { 
+                        "BodyText2", 
+                        new PropertyMapping 
+                        { 
+                            DefaultValue = "Default body text 2",
+                        } 
                     } 
                 });
 
                 // Assert
                 Assert.AreEqual("Default body text", model.BodyText);
+                Assert.AreEqual("Default body text 2", model.BodyText2);
             }
         }
 
@@ -963,6 +973,8 @@
                         {
                             case "bodyText":
                                 return null;
+                            case "bodyText2":
+                                return string.Empty;
                             default:
                                 return string.Empty;
                         }
@@ -973,6 +985,7 @@
 
                 // Assert
                 Assert.AreEqual("Default body text", model.BodyText);
+                Assert.AreEqual("Default body text 2", model.BodyText2);
             }
         }
 
@@ -2391,6 +2404,8 @@
         {
             public string BodyText { get; set; }
 
+            public string BodyText2 { get; set; }
+
             public int NonMapped { get; set; }
         }
 
@@ -2398,6 +2413,9 @@
         {
             [PropertyMapping(DefaultValue = "Default body text")]
             public string BodyText { get; set; }
+
+            [PropertyMapping(DefaultValue = "Default body text 2")]
+            public string BodyText2 { get; set; }
 
             [PropertyMapping(DefaultValue = 99)]
             public int NonMapped { get; set; }

@@ -24,6 +24,8 @@
 
         public string UpperCaseHeading { get; set; }
 
+        public string HeadingWithDefaultValue { get; set; }
+
         public DateTime CreatedOn { get; set; }
 
         public string FormattedCreatedOnDate { get; set; }
@@ -71,6 +73,8 @@
         public string CoalescedValue { get; set; }
 
         public string NonMapped { get; set; }
+
+        public string NonMappedFromEmptyString { get; set; }
 
         public string DocumentTypeAlias { get; set; }
     }

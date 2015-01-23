@@ -100,6 +100,20 @@
                                 } 
                         }, 
                         { 
+                            "NonMappedFromEmptyString", new PropertyMapping 
+                                { 
+                                    SourceProperty = "emptyField",
+                                    DefaultValue = "Default text",
+                                } 
+                        }, 
+                        { 
+                            "HeadingWithDefaultValue", new PropertyMapping 
+                                { 
+                                    SourceProperty = "Heading",
+                                    DefaultValue = "Default text",
+                                } 
+                        }, 
+                        { 
                             "DocumentTypeAlias", new PropertyMapping 
                                 { 
                                     Ignore = true,

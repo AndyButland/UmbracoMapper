@@ -480,6 +480,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Fixed issue with [use of recursive and source property attributes on same property](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60295-Property-Mapping-issue)
 - 1.4.13
 	- Added Ignore property to property mapping [to allow for the omission of some fields from mapping](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60525-PropertySets)
+- 1.4.14
+	- Fixed DefaultValue property mapping [to correctly handle empty strings](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60708-Property-Mapping-DefaultValue)
 	
 ## Credits
 

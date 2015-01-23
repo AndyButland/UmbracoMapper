@@ -24,6 +24,9 @@
 
         public string UpperCaseHeading { get; set; }
 
+        [PropertyMapping(SourceProperty = "Heading", DefaultValue = "Default text")]
+        public string HeadingWithDefaultValue { get; set; }
+
         [PropertyMapping(SourceProperty = "CreateDate")]
         public DateTime CreatedOn { get; set; }
 
@@ -77,6 +80,9 @@
 
         [PropertyMapping(DefaultValue = "Default text")]
         public string NonMapped { get; set; }
+
+        [PropertyMapping(SourceProperty = "emptyField", DefaultValue = "Default text")]
+        public string NonMappedFromEmptyString { get; set; }
 
         [PropertyMapping(Ignore = true)]
         public string DocumentTypeAlias { get; set; }
