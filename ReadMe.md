@@ -486,3 +486,9 @@ Class representing an Umbraco media item that can be used within page view model
 ## Credits
 
 Thanks to Ali Taheri and Neil Cumpstey at [Zone](http://www.thisiszone.com) for code, reviews and testing.
+
+## License
+
+Copyright &copy; 2015 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
+
+Licensed under the [MIT License](LICENSE.md)
