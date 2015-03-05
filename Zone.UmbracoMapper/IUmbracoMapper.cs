@@ -13,6 +13,11 @@
         string AssetsRootUrl { get; set; }
 
         /// <summary>
+        /// Gets or sets a flag enabling caching.  On by default.
+        /// </summary>
+        bool EnableCaching { get; set; }
+
+        /// <summary>
         /// Allows the mapper to use a custom mapping for a specified type from IPublishedContent
         /// </summary>
         /// <param name="propertyTypeFullName">Full name of the property type to map to</param>

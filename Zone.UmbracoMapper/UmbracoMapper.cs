@@ -1,6 +1,7 @@
 ﻿namespace Zone.UmbracoMapper
 {
     using System;
+    using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
     using System.Reflection;
@@ -14,6 +15,12 @@
     {
         #region Fields
 
+        /// <summary>
+        /// Provides a cache of view model settable properties, only need to use reflection once for each view model within the 
+        /// application lifetime
+        /// </summary>
+        private static ConcurrentDictionary<string, IList<PropertyInfo>> _settableProperties = new ConcurrentDictionary<string, IList<PropertyInfo>>();
+
         private readonly Dictionary<string, CustomMapping> _customMappings;
         private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
 
@@ -25,6 +32,7 @@
         {
             _customMappings = new Dictionary<string, CustomMapping>();
             _customObjectMappings = new Dictionary<string, CustomObjectMapping>();
+            EnableCaching = true;
         }
 
         #endregion
@@ -36,6 +44,11 @@
         /// absolute URLs for media files (and support CDN delivery)
         /// </summary>
         public string AssetsRootUrl { get; set; }
+
+        /// <summary>
+        /// Gets or sets a flag enabling caching.  On by default.
+        /// </summary>
+        public bool EnableCaching { get; set; }
 
         #endregion
 
@@ -614,7 +627,7 @@
         /// <param name="model">Instance of view model</param>
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Set of property mappings</returns>
-        private static Dictionary<string, PropertyMapping> EnsurePropertyMappingsAndUpdateFromModel<T>(T model, Dictionary<string, PropertyMapping> propertyMappings) where T : class
+        private Dictionary<string, PropertyMapping> EnsurePropertyMappingsAndUpdateFromModel<T>(T model, Dictionary<string, PropertyMapping> propertyMappings) where T : class
         {
             if (propertyMappings == null)
             {
@@ -699,7 +712,7 @@
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>String array of recursive properties</returns>
-        private static string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, Dictionary<string, PropertyMapping> propertyMappings) where T : class
+        private string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, Dictionary<string, PropertyMapping> propertyMappings) where T : class
         {
             var recursivePropertiesAsList = new List<string>();
             if (recursiveProperties != null)
@@ -727,7 +740,7 @@
         /// <returns>Instance of attribute if found, otherwise null</returns>
         private static PropertyMappingAttribute GetPropertyMappingAttribute(PropertyInfo property)
         {
-            return Attribute.GetCustomAttribute(property, typeof(PropertyMappingAttribute)) as PropertyMappingAttribute;
+            return Attribute.GetCustomAttribute(property, typeof(PropertyMappingAttribute), false) as PropertyMappingAttribute;
         }
 
         /// <summary>
@@ -752,14 +765,38 @@
         }
 
         /// <summary>
-        /// Helper to get the settable properties from a model for mapping
+        /// Helper to get the settable properties from a model for mapping from the cache or the model object
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="model">Instance of view model</param>
         /// <returns>Enumerable of settable properties from the model</returns>
-        private static IEnumerable<PropertyInfo> SettableProperties<T>(T model) where T : class
+        private IList<PropertyInfo> SettableProperties<T>(T model) where T : class
         {
-            return model.GetType().GetProperties().Where(p => p.GetSetMethod() != null);
+            if (EnableCaching)
+            {
+                var cacheKey = model.GetType().FullName;
+                if (!_settableProperties.ContainsKey(cacheKey))
+                {
+                    _settableProperties[cacheKey] = SettablePropertiesFromObject(model);
+                }
+
+                return _settableProperties[cacheKey];
+            }
+
+            return SettablePropertiesFromObject(model);
+        }
+
+        /// <summary>
+        /// Helper to get the settable properties from a model for mapping from the cache or the model object
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <returns>Enumerable of settable properties from the model</returns>
+        private IList<PropertyInfo> SettablePropertiesFromObject<T>(T model) where T : class
+        {
+            return model.GetType().GetProperties()
+                .Where(p => p.GetSetMethod() != null)
+                .ToList();
         }
 
         /// <summary>

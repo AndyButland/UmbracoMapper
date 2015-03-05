@@ -297,6 +297,7 @@
       <SubType>Code</SubType>
     </Content>
     <Content Include="Views\UberDocTypeWithAttribute.cshtml" />
+    <Content Include="Views\UberDocTypeWithAttributeAndDiagnostics.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

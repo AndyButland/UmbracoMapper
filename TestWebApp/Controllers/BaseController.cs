@@ -14,6 +14,7 @@
         {
             Mapper = mapper;
             Mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
+            Mapper.EnableCaching = true;
         }
 
         #region IRenderMvcController methods

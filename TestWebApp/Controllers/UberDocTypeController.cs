@@ -2,6 +2,7 @@
 {
     using System;
     using System.Collections.Generic;
+    using System.Diagnostics;
     using System.IO;
     using System.Web.Mvc;
     using System.Xml.Linq;
@@ -160,6 +161,13 @@
 
             // Create view model and run mapping
             var model = new UberDocTypeViewModelWithAttribute();
+            MapToViewModelWithAttributes(countryNodes, relatedLinksXml, model);
+
+            return CurrentTemplate(model);
+        }
+
+        private void MapToViewModelWithAttributes(IEnumerable<IPublishedContent> countryNodes, XElement relatedLinksXml, UberDocTypeViewModelWithAttribute model)
+        {
             Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> 
                     { 
                         { 
@@ -207,7 +215,30 @@
                 .Map(GetSingleJson(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromJson", new PropertyMapping { SourceProperty = "Name" } }, })
                 .MapCollection(GetCollectionJson(), model.CollectionFromJson)
                 .Map(CurrentPage, model.SubModel);
+        }
 
+        public ActionResult UberDocTypeWithAttributeAndDiagnostics()
+        {
+            // Get related content
+            var countryNodes = GetRelatedNodes();
+            var relatedLinksXml = GetRelatedLinks();
+
+            var sw = new Stopwatch();
+
+            var model = new UberDocTypeViewModelWithAttribute();
+
+            var times = 10000;
+
+            sw.Start();
+            for (int i = 0; i < times; i++)
+            {
+                MapToViewModelWithAttributes(countryNodes, relatedLinksXml, model);
+            }
+
+            var timeTaken = sw.ElapsedMilliseconds;
+            sw.Stop();
+
+            model.TimeTaken = string.Format("Time taken for {0} mapping operations: {1}ms", times, timeTaken);
             return CurrentTemplate(model);
         }
 

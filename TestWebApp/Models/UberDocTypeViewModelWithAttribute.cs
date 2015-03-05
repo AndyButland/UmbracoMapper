@@ -86,5 +86,7 @@
 
         [PropertyMapping(Ignore = true)]
         public string DocumentTypeAlias { get; set; }
+
+        public string TimeTaken { get; set; }
     }
 }
