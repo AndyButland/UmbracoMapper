@@ -484,6 +484,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Fixed DefaultValue property mapping [to correctly handle empty strings](http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60708-Property-Mapping-DefaultValue)
 - 1.4.15
 	- Performance improvements
+- 1.4.16
+	- Added dependency details to NuGet package
 	
 ## Credits
 
