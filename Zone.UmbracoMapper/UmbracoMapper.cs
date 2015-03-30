@@ -320,7 +320,7 @@
                         else
                         {
                             // Otherwise we just map the object as a simple type
-                            var stringValue = dictionary[propName].ToString();
+                            var stringValue = dictionary[propName] != null ? dictionary[propName].ToString() : string.Empty;
                             SetTypedPropertyValue(model, property, stringValue);
                         }
                     }

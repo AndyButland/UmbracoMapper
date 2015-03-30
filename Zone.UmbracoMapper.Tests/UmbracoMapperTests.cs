@@ -1227,6 +1227,24 @@
             Assert.AreEqual("Default text", model.NonMapped);
         }
 
+        /// <remarks>
+        /// Failing test for bug report: (Zone, PCUK, Codebase: #267)
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromDictionary_MapsNullToStringWithoutError()
+        {
+            // Arrange
+            var model = new SimpleViewModel6();
+            var dictionary = GetDictionaryForSingle();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(dictionary, model);
+
+            // Assert
+            Assert.AreEqual(string.Empty, model.TwitterUserName);
+        }
+
         #endregion
 
         #region Tests - Single Maps From JSON
@@ -2177,7 +2195,8 @@
                 { "FacebookId", 123456789 },
                 { "RegisteredOn", new DateTime(2013, 4, 13) },
                 { "GeoCoordinate", "5.5,10.5,7" },
-                { "IsMember", "1" }
+                { "IsMember", "1" },
+                { "TwitterUserName", null }
             };
         }
 
@@ -2475,6 +2494,8 @@
             public string NonMapped { get; set; }
 
             public bool IsMember { get; set; }
+
+            public string TwitterUserName { get; set; }
         }
 
         private class SimpleViewModel7 : SimpleViewModel

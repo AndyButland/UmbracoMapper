@@ -486,6 +486,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Performance improvements
 - 1.4.16
 	- Added dependency details to NuGet package
+- 1.4.17
+	- Fixed bug found with mapping null values from dictionaries to strings
 	
 ## Credits
 
