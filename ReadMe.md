@@ -488,6 +488,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Added dependency details to NuGet package
 - 1.4.17
 	- Fixed bug found with mapping null values from dictionaries to strings
+- 1.4.18
+	- Set mapping of empty date values to nullable DateTime to null rather than DateTime.MinValue
 	
 ## Credits
 

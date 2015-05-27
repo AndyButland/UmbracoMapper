@@ -1223,9 +1223,11 @@
             }
 
             var propertyTypeName = property.PropertyType.Name;
+            var isNullable = false;
             if (propertyTypeName == "Nullable`1" && property.PropertyType.GenericTypeArguments.Length == 1)
             {
                 propertyTypeName = property.PropertyType.GenericTypeArguments[0].Name;
+                isNullable = true;
             }
 
             switch (propertyTypeName)
@@ -1303,7 +1305,12 @@
                     DateTime dateTimeValue;
                     if (DateTime.TryParse(stringValue, out dateTimeValue))
                     {
-                        property.SetValue(model, dateTimeValue);
+                        // Umbraco returns DateTime.MinValue if no date set.  If mapping to a nullable date time makes more sense
+                        // to leave as null if this value is returned.
+                        if (dateTimeValue > DateTime.MinValue || !isNullable)
+                        {
+                            property.SetValue(model, dateTimeValue);
+                        }
                     }
 
                     break;

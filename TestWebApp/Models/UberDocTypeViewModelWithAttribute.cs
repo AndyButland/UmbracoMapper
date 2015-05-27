@@ -87,6 +87,10 @@
         [PropertyMapping(Ignore = true)]
         public string DocumentTypeAlias { get; set; }
 
+        public DateTime? Date1 { get; set; }
+
+        public DateTime? Date2 { get; set; }
+
         public string TimeTaken { get; set; }
     }
 }
