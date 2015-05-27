@@ -219,6 +219,7 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helpers\TypeExtensions.cs" />
     <Compile Include="IPropertyMapping.cs" />
     <Compile Include="Attributes\PropertyMappingAttribute.cs" />
     <Compile Include="BaseDestinationTypes\BaseNodeViewModel.cs" />

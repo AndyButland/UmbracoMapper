@@ -7,6 +7,7 @@
     using System.Reflection;
     using System.Web;
     using System.Xml.Linq;
+    using Helpers;
     using Newtonsoft.Json.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
@@ -887,7 +888,7 @@
                                            PropertySet propertySet = PropertySet.All)
         {
             // First check to see if there's a condition that might mean we don't carry out the mapping
-            if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingFromRelatedProperty(propertyMappings, property.Name))
+            if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
             {
                 if (!IsMappingConditionMet(contentToMapFrom, propertyMappings[property.Name].MapIfPropertyMatches))
                 {
@@ -934,7 +935,7 @@
                 if (value != null)
                 {
                     // Check if we are mapping to a related IPublishedContent
-                    if (IsMappingFromRelatedProperty(propertyMappings, property.Name))
+                    if (IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
                     {
                         // The value we have will either be:
                         //  - an Id of a related IPublishedContent
@@ -1000,6 +1001,12 @@
                             }
                         }
                     }
+                    else if (value is IPublishedContent && !property.PropertyType.IsSimpleType())
+                    {
+                        // TODO: If Umbraco Core Property Editor Converters are installed, we can get back IPublishedContent instances
+                        // automatically.  If that's the case and we are mapping to a complex type, we can "automap" it.
+                        //Map((IPublishedContent)value, property.GetValue(model), propertyMappings, recursiveProperties, propertySet);
+                    }
                     else
                     {
                         // Map primitive types
@@ -1040,7 +1047,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool IsMappingFromRelatedProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static bool IsMappingSpecifiedAsFromRelatedProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceRelatedProperty);
