@@ -1050,6 +1050,47 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_AutomapsRelatedIPublishedContent()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel3WithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "subHeading":
+                                return "This is the sub-heading";
+                            case "bodyText":
+                                return "This is the body text";
+                            case "subModelValue":
+                                return new StubPublishedContent();
+                            case "subModelValues":
+                                return new List<StubPublishedContent> { new StubPublishedContent(), new StubPublishedContent() };
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual("This is the body text", model.BodyText);
+                Assert.AreEqual("This is the sub-heading", model.SubModelValue.SubHeading);
+                Assert.AreEqual(2, model.SubModelValues.Count());
+                Assert.AreEqual("This is the sub-heading", model.SubModelValues.First().SubHeading);
+            }
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -2430,6 +2471,12 @@
 
         private class SimpleViewModel3WithAttribute : SimpleViewModel2
         {
+            public SimpleViewModel3WithAttribute()
+            {
+                SubModelValue = new SubModel();
+                SubModelValues = new List<SubModel>();
+            }
+
             [PropertyMapping(DefaultValue = "Default body text")]
             public string BodyText { get; set; }
 
@@ -2438,6 +2485,15 @@
 
             [PropertyMapping(DefaultValue = 99)]
             public int NonMapped { get; set; }
+
+            public SubModel SubModelValue { get; set; }
+
+            public IList<SubModel> SubModelValues { get; set; }
+
+            public class SubModel
+            {
+                public string SubHeading { get; set; }    
+            }
         }
 
         private class SimpleViewModel3bWithAttribute : SimpleViewModel2

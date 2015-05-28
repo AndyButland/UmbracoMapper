@@ -1,6 +1,7 @@
 ﻿namespace Zone.UmbracoMapper
 {
     using System;
+    using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
@@ -1001,11 +1002,28 @@
                             }
                         }
                     }
-                    else if (value is IPublishedContent && !property.PropertyType.IsSimpleType())
+                    else if (!property.PropertyType.IsSimpleType())
                     {
-                        // TODO: If Umbraco Core Property Editor Converters are installed, we can get back IPublishedContent instances
-                        // automatically.  If that's the case and we are mapping to a complex type, we can "automap" it.
-                        //Map((IPublishedContent)value, property.GetValue(model), propertyMappings, recursiveProperties, propertySet);
+                        // If Umbraco Core Property Editor Converters (or other known property converters) are installed, we can get back IPublishedContent 
+                        // instances automatically.  If that's the case and we are mapping to a complex sub-type, we can "automap" it.
+                        // We have to use reflection to do this as the type parameter for the sub-type on the model is only known at run-time.
+                        // All mapping customisations are expected to to be implemented as attributes on the sub-type (as we can't pass them in
+                        // in the dictionary)
+                        if (value is IPublishedContent)
+                        {
+                            typeof (UmbracoMapper)
+                                .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                                .MakeGenericMethod(property.PropertyType)
+                                .Invoke(this, new object[] {(IPublishedContent) value, property.GetValue(model)});
+                        }
+                        else if (value is IEnumerable<IPublishedContent> && property.PropertyType.GetInterface("IEnumerable") != null)
+                        {
+                            var collectionPropertyType = property.PropertyType.GetProperty("Item").PropertyType;
+                            typeof (UmbracoMapper)
+                                .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                                .MakeGenericMethod(collectionPropertyType)
+                                .Invoke(this, new object[] {(IEnumerable<IPublishedContent>)value, property.GetValue(model), null});                            
+                        }
                     }
                     else
                     {
@@ -1499,6 +1517,22 @@
             Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
         {
             return MapCollection<T>(contentCollection, modelCollection, propertyMappings);
+        }
+
+        /// <summary>
+        /// Maps a single IPublishedContent to the passed view model
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="content">Single IPublishedContent</param>
+        /// <param name="model">Model to map to</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        /// <remarks>
+        /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
+        /// by having multiple overloads.
+        /// </remarks>
+        private IUmbracoMapper MapIPublishedContent<T>(IPublishedContent content, T model) where T : class, new()
+        {
+            return Map<T>(content, model);
         }
 
         /// <summary>
