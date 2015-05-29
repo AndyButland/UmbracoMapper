@@ -313,7 +313,7 @@
                             // - if so, we'll fully map from that
                             // Have to make this call using reflection as we don't know the type of the generic collection at compile time
                             var propertyValue = property.GetValue(model);
-                            var collectionPropertyType = propertyValue.GetType().GetProperty("Item").PropertyType;
+                            var collectionPropertyType = GetGenericCollectionType(property);
                             typeof(UmbracoMapper)
                                 .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                                 .MakeGenericMethod(collectionPropertyType)
@@ -413,6 +413,14 @@
                     throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
                 }
 
+                // Check to see if the collection has any items already, if it does, clear it first (could have come about with an 
+                // explicit mapping called before the auto-mapping feature was introduced.  In any case, assuming collection is empty
+                // seems reasonable
+                if (modelCollection.Any())
+                {
+                    modelCollection.Clear();
+                }
+
                 foreach (var content in contentCollection)
                 {
                     var itemToCreate = new T();
@@ -429,12 +437,12 @@
                         // So we just pass an empty string into the custom mapping call
                         itemToCreate = _customMappings[customMappingKey](this, content, string.Empty, false) as T;
                     }
-                    else 
+                    else
                     {
                         // Otherwise map the single content item as normal
                         Map<T>(content, itemToCreate, propertyMappings, recursiveProperties, propertySet);
                     }
-                    
+
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -1018,7 +1026,7 @@
                         }
                         else if (value is IEnumerable<IPublishedContent> && property.PropertyType.GetInterface("IEnumerable") != null)
                         {
-                            var collectionPropertyType = property.PropertyType.GetProperty("Item").PropertyType;
+                            var collectionPropertyType = GetGenericCollectionType(property);
                             typeof (UmbracoMapper)
                                 .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                                 .MakeGenericMethod(collectionPropertyType)
@@ -1591,6 +1599,16 @@
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Helper to determine the type of a generic collection
+        /// </summary>
+        /// <param name="property">Property info for collection</param>
+        /// <returns>Type of collection</returns>
+        private static Type GetGenericCollectionType(PropertyInfo property)
+        {
+            return property.PropertyType.GetTypeInfo().GenericTypeArguments[0];
         }
 
         #endregion

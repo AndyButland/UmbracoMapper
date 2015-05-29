@@ -16,6 +16,8 @@
             CollectionFromDictionary = new List<NamedItemViewModel>();
             CollectionFromJson = new List<NamedItemViewModel>();
             SubModel = new SubModel();
+            AutoMapSingle = new CountryViewModel();
+            AutoMapMultiple = new List<CountryViewModel>();
         }
 
         public int Id { get; set; }
@@ -81,6 +83,10 @@
         public DateTime? Date1 { get; set; }
 
         public DateTime? Date2 { get; set; }
+
+        public CountryViewModel AutoMapSingle { get; set; }
+
+        public IEnumerable<CountryViewModel> AutoMapMultiple { get; set; }
     }
 
     public class SubModel

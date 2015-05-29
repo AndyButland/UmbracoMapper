@@ -7,8 +7,10 @@
     using System.Web.Mvc;
     using System.Xml.Linq;
     using TestWebApp.Models;
+    using Umbraco.Core;
     using Umbraco.Core.Models;
     using Umbraco.Web;
+    using Umbraco.Web.Models;
     using Zone.UmbracoMapper;
 
     public class UberDocTypeController : BaseController
@@ -245,7 +247,7 @@
         private IEnumerable<IPublishedContent> GetRelatedNodes()
         {
             IEnumerable<IPublishedContent> countryNodes = null;
-            var countryIds = CurrentPage.GetPropertyValue<string>("countries");
+            var countryIds = CurrentPage.GetProperty("countries").Value.ToString();
             if (!string.IsNullOrEmpty(countryIds))
             {
                 countryNodes = Umbraco.TypedContent(countryIds.Split(','));
@@ -256,7 +258,7 @@
 
         private XElement GetRelatedLinks()
         {
-            var sr = new StringReader(CurrentPage.GetPropertyValue<string>("relatedLinks"));
+            var sr = new StringReader(CurrentPage.GetProperty("relatedLinks").Value.ToString());    // using this method for when Umbraco Core Property Value Converters installed
             return XElement.Load(sr);
         }
 

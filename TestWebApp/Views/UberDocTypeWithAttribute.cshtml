@@ -65,6 +65,7 @@ else
 
 @if (Model.Countries.Any())
 {
+    <p>Count: @Model.Countries.Count()</p>
     <ul>
         @foreach (var country in Model.Countries)
         {
@@ -117,3 +118,15 @@ else
 {
     <p>Sub-model is null</p>
 }
+
+<h2>Auto-Mapping</h2>
+
+<p>Single country: @Model.AutoMapSingle.Name (@Model.AutoMapSingle.Currency)</p>
+
+<p>Multiple countries:</p>
+<ul>
+    @foreach (var country in Model.AutoMapMultiple)
+    {
+        <li>@country.Name (@country.Currency)</li>
+    }
+</ul>
