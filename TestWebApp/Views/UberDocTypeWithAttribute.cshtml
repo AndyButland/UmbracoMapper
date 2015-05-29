@@ -20,6 +20,8 @@
 <p>Default value (from empty string): @Model.NonMappedFromEmptyString</p>
 <p>Default value (from populated field, so default should not be used): @Model.HeadingWithDefaultValue</p>
 <p>Ignored value: @Model.DocumentTypeAlias (should NOT be populated)</p>
+<p>Date with set value: @(Model.Date1.HasValue ? "Has value - " + Model.Date1.Value.ToString("d-MMM-yyyy") : "No value")</p>
+<p>Date with no value set: @(Model.Date2.HasValue ? "Has value - " + Model.Date2.Value.ToString("d-MMM-yyyy") : "No value")</p>
 
 @if (Model.MainImage != null)
 {

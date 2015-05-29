@@ -77,6 +77,10 @@
         public string NonMappedFromEmptyString { get; set; }
 
         public string DocumentTypeAlias { get; set; }
+
+        public DateTime? Date1 { get; set; }
+
+        public DateTime? Date2 { get; set; }
     }
 
     public class SubModel

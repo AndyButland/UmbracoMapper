@@ -1049,6 +1049,42 @@
                 Assert.AreEqual(99, model.NonMapped);
             }
         }
+        
+        /// <remarks>
+        /// Failing test for issue: 
+        /// https://github.com/AndyButland/UmbracoMapper/issues/1
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsNullToNullableDateTimeWithNoValue()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel4bWithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "dateTime":
+                                return "1/1/0001 12:00:00 AM";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.IsFalse(model.DateTime.HasValue);
+            }
+        }          
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_AutomapsRelatedIPublishedContent()
@@ -2519,6 +2555,8 @@
         {
             [PropertyMapping(SourceProperty = "bodyText", MapRecursively = true)]
             public string BodyCopy { get; set; }
+
+            public DateTime? DateTime { get; set; }
         }
 
         private class SimpleViewModel5 : SimpleViewModel2
