@@ -1581,6 +1581,72 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContentToCollection_WithClearCollection_ClearsCollectionBeforeMapping()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new List<SimpleViewModel3>();
+                var mapper = GetMapper();
+                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.MapCollection(content, model);
+                mapper.MapCollection(content, model);
+
+                // Assert
+                Assert.AreEqual(2, model.Count);
+            }
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContentToCollection_WithoutClearCollection_ClearsCollectionBeforeMapping()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new List<SimpleViewModel3>();
+                var mapper = GetMapper();
+                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "bodyText":
+                                return "This is the body text";
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.MapCollection(content, model);
+                mapper.MapCollection(content, model, clearCollectionBeforeMapping: false);
+
+                // Assert
+                Assert.AreEqual(4, model.Count);
+            }
+        }
+
         #endregion
         
         #region Tests - Collection Maps From XML
