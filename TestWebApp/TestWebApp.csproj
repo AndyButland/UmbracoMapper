@@ -257,8 +257,10 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\NinjectWebCommon.cs" />
+    <Compile Include="Controllers\AutoMapping\NewsLandingPageController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\UberDocTypeController.cs" />
+    <Compile Include="Models\AutoMapping\NewsLandingPageViewModel.cs" />
     <Compile Include="Models\CommentViewModelWithAttribute.cs" />
     <Compile Include="Models\CommentViewModel.cs" />
     <Compile Include="Models\NamedItemViewModel.cs" />
@@ -298,6 +300,7 @@
     </Content>
     <Content Include="Views\UberDocTypeWithAttribute.cshtml" />
     <Content Include="Views\UberDocTypeWithAttributeAndDiagnostics.cshtml" />
+    <Content Include="Views\NewsLandingPage.cshtml" />
     <None Include="Web.Debug.config">
       <DependentUpon>Web.config</DependentUpon>
     </None>

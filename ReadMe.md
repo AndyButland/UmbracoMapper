@@ -225,7 +225,75 @@ It's used like this:
 
 	[PropertyMapping(MapRecursively = true)]
 	public int StarRating { get; set; }
- 	  
+	
+#### "Auto-mapping" related content
+
+Version 1.5.0 introduced a new feature that would auto-map related and ancestor content to avoid having to explicitly make secondary mapping calls.  It works when you have a view model that itself contains a property that is a complex type - i.e. an instance of a call with one or more properties - or a collection of complex types.
+
+If in the standard mapping operation that property is mapped to a single or multiple content/node picker AND you have the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters) installed (required so we get back an IPublishedContent or IEnumerable<IPublishedContent>), OR you use the **LevelsAbove** property mapping attribute field to indicate that the mapping should be made from a parent node, Umbraco Mapper will automatically make further mapping operations for that related or ancestor content to the complex type on your view model.
+
+To take an example illustrating all three types of auto-mapping (single related content, multiple related content and parent content), say you have a view model that looks like this:
+
+    public class NewsLandingPageViewModel
+    {
+        public NewsLandingPageViewModel()
+        {
+			NewsCategory = new Category();
+            TopStory = new NewsStory();
+            OtherStories = new List<NewsStory>();
+        }
+
+        public string Heading { get; set; }
+		
+		[PropertyMapping(LevelsAbove = 1)]
+		public Category NewsCategory { get; set; }
+
+        public NewsStory TopStory { get; set; }
+
+        public IEnumerable<NewsStory> OtherStories { get; set; }
+		
+		public class Category
+		{
+			public string Title { get; set; }		
+		}		
+		
+		public class NewsStory
+		{
+			public string Headline { get; set; }		
+			
+			public DateTime StoryDate { get; set; }	
+
+			public IHtmlString BodyText { get; set; }			
+		}
+	}	
+	
+And you were mapping from a content node based on document type that contained the following properties:
+
+ - A text string with an alias of **heading**
+ - A single item content picker with an alias of **topStory**
+ - A multiple item content picker with an alias of **otherStories**
+ 
+And that those picker fields were selecting fields of a document type containing:
+
+ - A text string with an alias of **headline**
+ - A date picker content picker with an alias of **storyDate**
+ - A rich text editor an alias of **bodyText**
+ 
+And that the content node had a parent that indicated the news category and was based on a document type containing:
+
+ - A text string with an alias of **title**
+ 
+You could map the whole lot with a single call to:
+
+    var model = new NewsLandingPageViewModel();
+    mapper.Map(CurrentPage, model);
+	
+Note: there's a small backward compatibility issue introduced with this feature.  Given mapping related content previously required a second call to a mapping operation, if those calls are in place those related fields will be mapped twice - once by the explicit call and once by the auto-mapping.  In the case of mapping to a collection you would end up in that case with twice as many values in the collection as you'd expect, with each one repeated.
+
+The explicit call can of course now be removed which would resolve this issue.  
+
+If that wasn't done though, to avoid the unwanted doubling behaviour, any call to map a collection has been set by default to clear the destination collection before carrying out the mapping.  In most cases that's likely what is required.  However if you have a case where you do want a collection to be left intact before mapping - perhaps it having been part-populated from another source - you can set the newly introduced optional parameter **clearCollectionBeforeMapping** to false.
+ 
 #### From Other Sources	  
 
 Some Umbraco 6 data types store XML and Umbraco 7 ones JSON.  This can be mapped to a custom collection on the view model.  The example below uses the related links data type from version 6.  Note the need to provide an override here to ensure the correct root node is passed to the mapping method.
@@ -361,7 +429,8 @@ Full signature of mapping methods are as follows:
         IList<T> modelCollection,
         Dictionary<string, PropertyMapping> propertyMappings = null,
         string[] recursiveProperties = null,
-		PropertySet propertySet = PropertySet.All) where T : new();
+		PropertySet propertySet = PropertySet.All, 
+		bool clearCollectionBeforeMapping = true) where T : new();
 
     IUmbracoMapper MapCollection<T>(XElement xml, IList<T> modelCollection, 
         Dictionary<string, PropertyMapping> propertyMappings = null, 
@@ -490,6 +559,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Fixed bug found with mapping null values from dictionaries to strings
 - 1.4.18
 	- Set mapping of empty date values to nullable DateTime to null rather than DateTime.MinValue
+- 1.5.0
+	- Implemented the "auto-mapping" feature for related content
 	
 ## Credits
 

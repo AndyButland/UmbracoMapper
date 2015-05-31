@@ -1,0 +1,20 @@
+﻿@model TestWebApp.Models.NewsLandingPageViewModel
+
+<h1>@Model.Heading</h1>
+
+<h2>Top Story</h2>
+
+<h3>@Model.TopStory.Headline</h3>
+
+@Model.TopStory.BodyText
+<div><em>@Model.TopStory.StoryDate</em></div>
+
+<h2>Other Stories</h2>
+
+@foreach (var story in Model.OtherStories)
+{
+    <h3>@story.Headline</h3>
+
+    @story.BodyText
+    <div><em>@story.StoryDate</em></div>    
+}

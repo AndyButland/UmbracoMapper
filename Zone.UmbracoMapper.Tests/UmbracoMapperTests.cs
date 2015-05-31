@@ -1127,6 +1127,39 @@
             }
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_AutomapsParentIPublishedContent()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel2bWithAttribute();
+                var mapper = GetMapper();
+                var content = new StubPublishedContent();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "parent":
+                                return new StubPublishedContent(1001);
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual(1000, model.Id);
+                Assert.AreEqual(1001, model.Parent.Id);
+            }
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -1615,7 +1648,7 @@
         }
 
         [TestMethod]
-        public void UmbracoMapper_MapFromIPublishedContentToCollection_WithoutClearCollection_ClearsCollectionBeforeMapping()
+        public void UmbracoMapper_MapFromIPublishedContentToCollection_WithoutClearCollection_DoesNotClearCollectionBeforeMapping()
         {
             // Using a shim of umbraco.dll
             using (ShimsContext.Create())
@@ -2560,6 +2593,17 @@
         {
             [PropertyMapping(SourceProperty = "CreatorName")]
             public string Author { get; set; }
+        }
+
+        private class SimpleViewModel2bWithAttribute : SimpleViewModel
+        {
+            public SimpleViewModel2bWithAttribute()
+            {
+                Parent = new SimpleViewModel();
+            }
+
+            [PropertyMapping(LevelsAbove = 1)]
+            public SimpleViewModel Parent { get; set; }
         }
 
         private class SimpleViewModel3 : SimpleViewModel2

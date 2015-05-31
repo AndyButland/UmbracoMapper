@@ -1,7 +1,6 @@
 ﻿namespace Zone.UmbracoMapper
 {
     using System;
-    using System.Collections;
     using System.Collections.Concurrent;
     using System.Collections.Generic;
     using System.Linq;
@@ -124,8 +123,21 @@
                         continue;
                     }
 
-                    // Get content to map from (check if we want to map to content at a level above the currently passed node)
-                    var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name);
+                    // Get content to map from (check if we want to map to content at a level above the currently passed node) and also
+                    // get the level above the current node that we are mapping from
+                    int levelsAbove;
+                    var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name, out levelsAbove);
+
+                    // Check if property is a complex type and is being asked to be mapped from a higher level in the node tree.
+                    // If so, we need to trigger a separate mapping operation for this.
+                    if (!property.PropertyType.IsSimpleType() && levelsAbove > 0)
+                    {
+                        typeof(UmbracoMapper)
+                            .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(property.PropertyType)
+                            .Invoke(this, new object[] { contentToMapFrom, property.GetValue(model) });
+                        continue;
+                    }
 
                     // Check if we have a string value formatter passed
                     var stringValueFormatter = GetStringValueFormatter(propertyMappings, property.Name);
@@ -863,13 +875,17 @@
         /// <param name="content">Passed content to map from</param>
         /// <param name="propertyMappings">Dictionary of properties and levels to map from</param>
         /// <param name="propName">Name of property to map</param>
+        /// <param name="levelsAbove">Output parameter indicating the levels above the current node we are mapping from</param>
         /// <returns>Instance of IPublishedContent to map from</returns>
-        private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, PropertyMapping> propertyMappings, 
+            string propName, out int levelsAbove)
         {
+            levelsAbove = 0;
             var contentToMapFrom = content;
             if (propertyMappings.ContainsKey(propName))
             {
-                for (int i = 0; i < propertyMappings[propName].LevelsAbove; i++)
+                levelsAbove = propertyMappings[propName].LevelsAbove;
+                for (int i = 0; i < levelsAbove; i++)
                 {
                     contentToMapFrom = contentToMapFrom.Parent;
                 }
