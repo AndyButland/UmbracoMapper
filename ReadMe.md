@@ -228,12 +228,13 @@ It's used like this:
 	
 #### "Auto-mapping" related content
 
-Version 1.5.0 introduced a new feature that would auto-map related and ancestor content to avoid having to explicitly make secondary mapping calls.  It works when you have a view model that itself contains a property that is a complex type - i.e. an instance of a call with one or more properties - or a collection of complex types.
+Version 1.5.0 introduced a new feature that would auto-map related and ancestor content to avoid having to explicitly make secondary mapping calls.  It works when you have a view model that itself contains a property that is a complex type - i.e. an instance of a class with one or more properties - or a collection of complex types.
 
 If in the standard mapping operation that property is mapped to a single or multiple content/node picker AND you have the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters) installed (required so we get back an IPublishedContent or IEnumerable<IPublishedContent>), OR you use the **LevelsAbove** property mapping attribute field to indicate that the mapping should be made from a parent node, Umbraco Mapper will automatically make further mapping operations for that related or ancestor content to the complex type on your view model.
 
 To take an example illustrating all three types of auto-mapping (single related content, multiple related content and parent content), say you have a view model that looks like this:
 
+	```C#
     public class NewsLandingPageViewModel
     {
         public NewsLandingPageViewModel()
@@ -266,6 +267,7 @@ To take an example illustrating all three types of auto-mapping (single related 
 			public IHtmlString BodyText { get; set; }			
 		}
 	}	
+	```
 	
 And you were mapping from a content node based on document type that contained the following properties:
 
@@ -288,11 +290,9 @@ You could map the whole lot with a single call to:
     var model = new NewsLandingPageViewModel();
     mapper.Map(CurrentPage, model);
 	
-Note: there's a small backward compatibility issue introduced with this feature.  Given mapping related content previously required a second call to a mapping operation, if those calls are in place those related fields will be mapped twice - once by the explicit call and once by the auto-mapping.  In the case of mapping to a collection you would end up in that case with twice as many values in the collection as you'd expect, with each one repeated.
+> Note: there's a small backward compatibility issue introduced with this feature.  Given mapping related content previously required a second call to a mapping operation, if those calls are in place those related fields will be mapped twice - once by the explicit call and once by the auto-mapping.  In the case of mapping to a collection you would end up in that case with twice as many values in the collection as you'd expect, with each one repeated.  The explicit call can of course now be removed which would resolve this issue.  
 
-The explicit call can of course now be removed which would resolve this issue.  
-
-If that wasn't done though, to avoid the unwanted doubling behaviour, any call to map a collection has been set by default to clear the destination collection before carrying out the mapping.  In most cases that's likely what is required.  However if you have a case where you do want a collection to be left intact before mapping - perhaps it having been part-populated from another source - you can set the newly introduced optional parameter **clearCollectionBeforeMapping** to false.
+> If that wasn't done though, to avoid the unwanted doubling behaviour, any call to map a collection has been set by default to clear the destination collection before carrying out the mapping.  In most cases that's likely what is required.  However if you have a case where you do want a collection to be left intact before mapping - perhaps it having been part-populated from another source - you can set the newly introduced optional parameter **clearCollectionBeforeMapping** to false.
  
 #### From Other Sources	  
 
