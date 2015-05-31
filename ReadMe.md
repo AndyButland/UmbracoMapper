@@ -234,7 +234,6 @@ If in the standard mapping operation that property is mapped to a single or mult
 
 To take an example illustrating all three types of auto-mapping (single related content, multiple related content and parent content), say you have a view model that looks like this:
 
-	```csharp
     public class NewsLandingPageViewModel
     {
         public NewsLandingPageViewModel()
@@ -267,7 +266,6 @@ To take an example illustrating all three types of auto-mapping (single related 
 			public IHtmlString BodyText { get; set; }			
 		}
 	}	
-	```
 	
 And you were mapping from a content node based on document type that contained the following properties:
 
