@@ -87,6 +87,8 @@
         public CountryViewModel AutoMapSingle { get; set; }
 
         public IEnumerable<CountryViewModel> AutoMapMultiple { get; set; }
+
+        public string DictionaryValue { get; set; }
     }
 
     public class SubModel

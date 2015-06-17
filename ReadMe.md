@@ -114,7 +114,7 @@ Or if you are also using the [Umbraco Core Property Editor Converters](http://ou
 
 #### Further Property Mapping Overrides	
 	  
-Another PropertyMapping field allows you to map properties from related content.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance (or the IPublishedContent itself if you have the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters) installed).  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
+Another PropertyMapping field allows you to map properties from **related content**.  Say for example your document type contains a content picker - the value of this will be an integer representing the Id of another IPublished content instance (or the IPublishedContent itself if you have the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters) installed).  You can provide an override here to tell the mapper to map from a particular property of that instance instead.  
 
 The following example maps a string property on the view model called 'LinkToPage' to the 'Url' property of an IPublishedContent picked using a content picker for the current page.
 
@@ -129,7 +129,7 @@ The following example maps a string property on the view model called 'LinkToPag
 		}, 
 	  });
 	  
-Yet another couple of PropertyMapping fields allow you to concatenate two or more source properties to a single string property on your view model.  You pass through an array of properties to map to and a separation string like this.  The following example would map the firstName ("Fred") and lastName ("Bloggs") properties to a single concatenated string ("Bloggs, Fred"):
+Yet another couple of PropertyMapping fields allow you to **concatenate** two or more source properties to a single string property on your view model.  You pass through an array of properties to map to and a separation string like this.  The following example would map the firstName ("Fred") and lastName ("Bloggs") properties to a single concatenated string ("Bloggs, Fred"):
 
     mapper.Map(CurrentPage, model,
       new Dictionary<string, PropertyMapping> 
@@ -143,7 +143,7 @@ Yet another couple of PropertyMapping fields allow you to concatenate two or mor
 		}, 
 	  });
 	  
-Similarly you can coalesce (take the first non null, empty or whitespace) source property from a list:	
+Similarly you can **coalesce** (take the first non null, empty or whitespace) source property from a list:	
 
     mapper.Map(CurrentPage, model,
       new Dictionary<string, PropertyMapping> 
@@ -156,7 +156,7 @@ Similarly you can coalesce (take the first non null, empty or whitespace) source
 		}, 
 	  });  
 	  
-The MapIfPropertyMatches field allows you to define a condition for when the mapping operation occurs.  In this example, we want to map a string containing a URL to a related page, only if the page is intended to be linked to:
+The **MapIfPropertyMatches** field allows you to define a condition for when the mapping operation occurs.  In this example, we want to map a string containing a URL to a related page, only if the page is intended to be linked to:
 
     mapper.Map(CurrentPage, model,
       new Dictionary<string, PropertyMapping> 
@@ -171,7 +171,7 @@ The MapIfPropertyMatches field allows you to define a condition for when the map
 		},	  	  
 	  });	  
 	  
-The StringValueFormatter is a field that can be set to a function to transform the mapped value.  For example, you could use this to format a date field to a string with a particular date format.  This simple example shows how to apply a transformation function that converts the mapped value to upper case:
+The **StringValueFormatter** is a field that can be set to a function to transform the mapped value.  For example, you could use this to format a date field to a string with a particular date format.  This simple example shows how to apply a transformation function that converts the mapped value to upper case:
 
     mapper.Map(CurrentPage, model,
       new Dictionary<string, PropertyMapping> 
@@ -186,9 +186,11 @@ The StringValueFormatter is a field that can be set to a function to transform t
 		},	  	  
 	  });	
 	  
-DefaultValue is a field that if set will provide a value to any properties that aren't mapped.  It works by checking the value of the property after the mapping operation is complete.  If it's null or the default value for the type (e.g. 0 for an integer), and a default value has been provided, the property value will be set to this default.
+**DefaultValue** is a field that if set will provide a value to any properties that aren't mapped.  It works by checking the value of the property after the mapping operation is complete.  If it's null or the default value for the type (e.g. 0 for an integer), and a default value has been provided, the property value will be set to this default.
 
-Ignore can be added to a field and if set to true, it will not be mapped and retain it's default or previously set value
+**Ignore** can be added to a field and if set to true, it will not be mapped and retain it's default or previously set value
+
+**DictionaryKey** can be added with a string value of a dictionary key, which will be mapped to it's value
 
 #### Mapping Using Attributes
 
@@ -479,6 +481,8 @@ Class defining the override to the mapping convention for property to a particul
 
 **Ignore** (bool) - can be added to a field and if set to true, it will not be mapped and retain it's default or previously set value
 
+**DictionaryKey** (string) - if set property will be mapped from the given Umbraco dictionary key
+
 ### BaseNodeViewModel
 
 Class representing an Umbraco node that can be used as the basis of any page view models in the client product.
@@ -559,6 +563,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Set mapping of empty date values to nullable DateTime to null rather than DateTime.MinValue
 - 1.5.0
 	- Implemented the "auto-mapping" feature for related content
+- 1.5.1
+	- Added support for mapping from dictionary values
 	
 ## Credits
 

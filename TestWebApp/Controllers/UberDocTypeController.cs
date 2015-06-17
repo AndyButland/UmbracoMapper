@@ -7,10 +7,7 @@
     using System.Web.Mvc;
     using System.Xml.Linq;
     using TestWebApp.Models;
-    using Umbraco.Core;
     using Umbraco.Core.Models;
-    using Umbraco.Web;
-    using Umbraco.Web.Models;
     using Zone.UmbracoMapper;
 
     public class UberDocTypeController : BaseController
@@ -90,10 +87,7 @@
                             "FormattedCreatedOnDate", new PropertyMapping 
                                 { 
                                     SourceProperty = "CreateDate",
-                                    StringValueFormatter = x => 
-                                    {
-                                        return DateTime.Parse(x).ToString("dd MMMM, yyyy");
-                                    }
+                                    StringValueFormatter = x => DateTime.Parse(x).ToString("dd MMMM, yyyy")
                                 } 
                         }, 
                         { 
@@ -122,7 +116,12 @@
                                     Ignore = true,
                                 } 
                         }, 
-
+                        { 
+                            "DictionaryValue", new PropertyMapping 
+                                { 
+                                    DictionaryKey = "testKey" 
+                                } 
+                        }, 
                     })
                 .MapCollection(CurrentPage.Children, model.Comments,
                     new Dictionary<string, PropertyMapping>

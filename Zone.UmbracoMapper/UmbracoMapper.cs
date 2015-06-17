@@ -123,6 +123,13 @@
                         continue;
                     }
 
+                    // Check if mapping from a dictionary value
+                    if (IsMappingFromDictionaryValue(propertyMappings, property.Name))
+                    {
+                        SetValueFromDictionary(model, property, propertyMappings[property.Name].DictionaryKey);
+                        continue;
+                    }
+
                     // Get content to map from (check if we want to map to content at a level above the currently passed node) and also
                     // get the level above the current node that we are mapping from
                     int levelsAbove;
@@ -714,6 +721,11 @@
                             propertyMappings[property.Name].DefaultValue = propertyMapping.DefaultValue;
                         }
 
+                        if (propertyMappings[property.Name].DictionaryKey == null)
+                        {
+                            propertyMappings[property.Name].DictionaryKey = propertyMapping.DictionaryKey;
+                        }
+
                         propertyMappings[property.Name].Ignore = propertyMapping.Ignore;
                     }
                     else
@@ -785,6 +797,7 @@
                 SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
                 SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
                 DefaultValue = attribute.DefaultValue,
+                DictionaryKey = attribute.DictionaryKey,
                 Ignore = attribute.Ignore,
             };
         }
@@ -1119,6 +1132,17 @@
         private static bool HasDefaultValue(Dictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].DefaultValue != null;
+        }
+
+        /// <summary>
+        /// Helper to check if particular property is to be bound to a dictionary value
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private static bool IsMappingFromDictionaryValue(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings.ContainsKey(propName) && !string.IsNullOrEmpty(propertyMappings[propName].DictionaryKey);
         }
         
         /// <summary>
@@ -1567,6 +1591,19 @@
         private IUmbracoMapper MapIPublishedContent<T>(IPublishedContent content, T model) where T : class, new()
         {
             return Map<T>(content, model);
+        }
+
+        /// <summary>
+        /// Helper to set the value of a property from a dictionary key value
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="model">View model to map to</param>
+        /// <param name="property">Property of view model to map to</param>
+        /// <param name="dictionaryKey">Dictionary key</param>
+        private static void SetValueFromDictionary<T>(T model, PropertyInfo property, string dictionaryKey) where T : class
+        {
+            var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
+            property.SetValue(model, umbracoHelper.GetDictionaryValue(dictionaryKey));
         }
 
         /// <summary>

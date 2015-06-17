@@ -98,5 +98,8 @@
         public CountryViewModel AutoMapSingle { get; set; }
 
         public IEnumerable<CountryViewModel> AutoMapMultiple { get; set; }
+
+        [PropertyMapping(DictionaryKey = "testKey")]
+        public string DictionaryValue { get; set; }
     }
 }

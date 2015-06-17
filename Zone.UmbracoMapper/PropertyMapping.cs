@@ -76,5 +76,10 @@
         /// If set property will not be mapped even if an appropriate mapping could be found
         /// </summary>
         public bool Ignore { get; set; }
+
+        /// <summary>
+        /// If set property will be mapped from the given Umbraco dictionary key
+        /// </summary>
+        public string DictionaryKey { get; set; }
     }
 }
