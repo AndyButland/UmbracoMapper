@@ -565,6 +565,8 @@ Class representing an Umbraco media item that can be used within page view model
 	- Implemented the "auto-mapping" feature for related content
 - 1.5.1
 	- Added support for mapping from dictionary values
+- 1.5.2
+	- Fixed issue introduced in 1.5.0 that prevented mapping of properties defined as IHtmlString
 	
 ## Credits
 

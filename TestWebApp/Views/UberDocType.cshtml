@@ -8,7 +8,7 @@
 <h1>@Model.Heading</h1>
 <p>Upper-cased heading: @Model.UpperCaseHeading</p>
 <p>Created on: @Model.CreatedOn, formatted date: @Model.FormattedCreatedOnDate</p>
-@Html.Raw(Model.BodyText)
+<div>Body text: @Html.Raw(Model.BodyText)</div>
 <p>Rating: @Model.StarRating stars</p>
 <p>Approved: @(Model.IsApproved ? "Yes" : "No")</p>
 <p>Average Score: @Model.AverageScore</p>

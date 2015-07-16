@@ -2,6 +2,7 @@
 {
     using System;
     using System.Linq;
+    using System.Web;
 
     internal static class TypeExtensions
     {
@@ -18,6 +19,7 @@
                 type.IsPrimitive ||
                 new Type[] { 
 				typeof(String),
+                typeof(IHtmlString),
 				typeof(Decimal),
 				typeof(DateTime),
 				typeof(DateTimeOffset),

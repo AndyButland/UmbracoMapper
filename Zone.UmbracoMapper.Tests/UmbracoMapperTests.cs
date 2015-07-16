@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Linq;
+    using System.Web;
     using System.Xml.Linq;
     using Microsoft.QualityTools.Testing.Fakes;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
@@ -148,6 +149,8 @@
                         {
                             case "bodyText":
                                 return "This is the body text";
+                            case "bodyTextAsHtmlString":
+                                return "<p>This is the body text</p>";
                             default:
                                 return string.Empty;
                         }                        
@@ -160,6 +163,7 @@
                 Assert.AreEqual(1000, model.Id);
                 Assert.AreEqual("Test content", model.Name);
                 Assert.AreEqual("This is the body text", model.BodyText);
+                Assert.AreEqual("<p>This is the body text</p>", model.BodyTextAsHtmlString.ToString());
             }
         }
 
@@ -2611,6 +2615,8 @@
             public string BodyText { get; set; }
 
             public string BodyText2 { get; set; }
+
+            public IHtmlString BodyTextAsHtmlString { get; set; }
 
             public int NonMapped { get; set; }
         }
