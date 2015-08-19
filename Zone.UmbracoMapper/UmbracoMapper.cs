@@ -301,7 +301,15 @@
                     // If element with mapped name found, map the value
                     if (dictionary.ContainsKey(propName))
                     {
-                        // First check to see if we have a custom dictionary mapping defined
+                        // First check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
+                        var mapFromAttribute = GetMapFromAttribute(property);
+                        if (mapFromAttribute != null)
+                        {
+                            mapFromAttribute.SetPropertyValue(dictionary[propName], property, model, this);
+                            continue;
+                        }
+
+                        // Then check to see if we have a custom dictionary mapping defined
                         var namedCustomMappingKey = GetNamedCustomMappingKey(property);
                         var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property); 
                         if (_customObjectMappings.ContainsKey(namedCustomMappingKey))
@@ -803,6 +811,30 @@
         }
 
         /// <summary>
+        /// Helper to retrieve an attribute derived from IMapFromAttribute from a property
+        /// </summary>
+        /// <param name="property">Property to retrieve the attribute from</param>
+        /// <returns>IMapFromAttribute marked on the property, or null if no such attribute is found</returns>
+        private static IMapFromAttribute GetMapFromAttribute(PropertyInfo property)
+        {
+            var attributes = property.GetCustomAttributes(false);
+
+            // Note - this code returns the last attribute from the property -
+            // this shouldn't be an issue since logically there should only ever be one
+            // IMapFromAttribute on a property
+            IMapFromAttribute mapFromAttribute = null;
+            foreach (var attribute in attributes)
+            {
+                if (attribute is IMapFromAttribute)
+                {
+                    mapFromAttribute = attribute as IMapFromAttribute;
+                }
+            }
+
+            return mapFromAttribute;
+        }
+
+        /// <summary>
         /// Helper to get the settable properties from a model for mapping from the cache or the model object
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
@@ -942,6 +974,15 @@
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
             {
                 MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
+                return;
+            }
+
+            // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
+            var mapFromAttribute = GetMapFromAttribute(property);
+            if (mapFromAttribute != null)
+            {
+                var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
+                mapFromAttribute.SetPropertyValue(value, property, model, this);
                 return;
             }
 
