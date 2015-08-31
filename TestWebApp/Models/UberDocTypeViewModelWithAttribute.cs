@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Web;
+    using Attributes;
     using Zone.UmbracoMapper;
     
     public class UberDocTypeViewModelWithAttribute
@@ -63,6 +64,10 @@
         public IList<NamedItemViewModel> CollectionFromJson { get; set; }
 
         public SubModel SubModel { get; set; }
+
+        [MapFromContentPicker]
+        [PropertyMapping(SourceProperty = "selectedComment")]
+        public CommentModel SelectedCommentModel { get; set; }
 
         [PropertyMapping(SourceRelatedProperty = "text")]
         public string SelectedComment { get; set; }

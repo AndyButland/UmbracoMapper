@@ -817,21 +817,8 @@
         /// <returns>IMapFromAttribute marked on the property, or null if no such attribute is found</returns>
         private static IMapFromAttribute GetMapFromAttribute(PropertyInfo property)
         {
-            var attributes = property.GetCustomAttributes(false);
-
-            // Note - this code returns the last attribute from the property -
-            // this shouldn't be an issue since logically there should only ever be one
-            // IMapFromAttribute on a property
-            IMapFromAttribute mapFromAttribute = null;
-            foreach (var attribute in attributes)
-            {
-                if (attribute is IMapFromAttribute)
-                {
-                    mapFromAttribute = attribute as IMapFromAttribute;
-                }
-            }
-
-            return mapFromAttribute;
+            return (IMapFromAttribute)property.GetCustomAttributes(false)
+                .FirstOrDefault(x => x is IMapFromAttribute);
         }
 
         /// <summary>
@@ -976,7 +963,11 @@
                 MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
                 return;
             }
-
+            
+            // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
+            // properties, unless override provided)
+            propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+            
             // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
             var mapFromAttribute = GetMapFromAttribute(property);
             if (mapFromAttribute != null)
@@ -985,10 +976,6 @@
                 mapFromAttribute.SetPropertyValue(value, property, model, this);
                 return;
             }
-
-            // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
-            // properties, unless override provided)
-            propName = GetMappedPropertyName(property.Name, propertyMappings, true);
 
             // Map properties, first checking for custom mappings
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);

@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Web;
+    using Attributes;
     using Zone.UmbracoMapper;
     
     public class UberDocTypeViewModel
@@ -62,6 +63,9 @@
 
         public SubModel SubModel { get; set; }
 
+        [MapFromContentPicker]
+        public CommentModel SelectedCommentModel { get; set; }
+
         public string SelectedComment { get; set; }
 
         public int SelectedCommentId { get; set; }
@@ -96,5 +100,12 @@
         public int Id { get; set; }
 
         public string Heading { get; set; }
+    }
+
+    public class CommentModel
+    {
+        public int Id { get; set; }
+
+        public string Text { get; set; }
     }
 }

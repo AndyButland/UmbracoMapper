@@ -260,6 +260,7 @@
     <Compile Include="Controllers\AutoMapping\NewsLandingPageController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\UberDocTypeController.cs" />
+    <Compile Include="Models\Attributes\MapFromContentPickerAttribute.cs" />
     <Compile Include="Models\AutoMapping\NewsLandingPageViewModel.cs" />
     <Compile Include="Models\CommentViewModelWithAttribute.cs" />
     <Compile Include="Models\CommentViewModel.cs" />

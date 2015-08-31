@@ -237,8 +237,10 @@
   </Choose>
   <ItemGroup>
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="SimpleMapFromAttribute.cs" />
     <Compile Include="Stubs\StubPublishedContentProperty.cs" />
     <Compile Include="Stubs\StubPublishedContent.cs" />
+    <Compile Include="TestModelClasses.cs" />
     <Compile Include="UmbracoMapperTests.cs" />
   </ItemGroup>
   <ItemGroup>

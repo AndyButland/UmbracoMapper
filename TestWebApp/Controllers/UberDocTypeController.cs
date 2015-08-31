@@ -8,6 +8,7 @@
     using System.Xml.Linq;
     using TestWebApp.Models;
     using Umbraco.Core.Models;
+    using Umbraco.Web;
     using Zone.UmbracoMapper;
 
     public class UberDocTypeController : BaseController
@@ -44,6 +45,12 @@
                                 { 
                                     SourceProperty = "selectedComment",
                                     SourceRelatedProperty = "Id" 
+                                } 
+                        }, 
+                        { 
+                            "SelectedCommentModel", new PropertyMapping 
+                                { 
+                                    SourceProperty = "selectedComment",
                                 } 
                         }, 
                         { 
@@ -123,7 +130,7 @@
                                 } 
                         }, 
                     })
-                .MapCollection(CurrentPage.Children, model.Comments,
+                .MapCollection(CurrentPage.Children.Where(x => x.DocumentTypeAlias == "Comment"), model.Comments,
                     new Dictionary<string, PropertyMapping>
                         { 
                             { 

@@ -840,6 +840,39 @@
         }
 
         [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingMapFromAttribute()
+        {
+            // Using a shim of umbraco.dll
+            using (ShimsContext.Create())
+            {
+                // Arrange
+                var model = new SimpleViewModel9();
+                var content = new StubPublishedContent();
+                var mapper = GetMapper();
+
+                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
+                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
+                    (doc, alias, recursive) =>
+                    {
+                        switch (alias)
+                        {
+                            case "child":
+                                return 1001;
+                            default:
+                                return string.Empty;
+                        }
+                    };
+
+                // Act
+                mapper.Map(content, model);
+
+                // Assert
+                Assert.AreEqual("Test content", model.Name);
+                Assert.AreEqual("Child item", model.Child.Name);
+            }
+        }
+
+        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsOnlyNativeProperties()
         {
             // Using a shim of umbraco.dll
@@ -2567,191 +2600,6 @@
                     'Text': 'Sally\'s comment',
                     'CreatedOn': '2013-04-13 10:30'
                 }]}";
-        }
-
-        #endregion
-
-        #region Test model classes
-
-        private class SimpleViewModel
-        {
-            public int Id { get; set; }
-
-            public string Name { get; set; }
-        }
-
-        private class SimpleViewModel1b
-        {
-            public int Id { get; set; }
-
-            [PropertyMapping(Ignore = true)]
-            public string Name { get; set; }
-        }
-
-        private class SimpleViewModel2 : SimpleViewModel
-        {
-            public string Author { get; set; }
-        }
-
-        private class SimpleViewModel2WithAttribute : SimpleViewModel
-        {
-            [PropertyMapping(SourceProperty = "CreatorName")]
-            public string Author { get; set; }
-        }
-
-        private class SimpleViewModel2bWithAttribute : SimpleViewModel
-        {
-            public SimpleViewModel2bWithAttribute()
-            {
-                Parent = new SimpleViewModel();
-            }
-
-            [PropertyMapping(LevelsAbove = 1)]
-            public SimpleViewModel Parent { get; set; }
-        }
-
-        private class SimpleViewModel3 : SimpleViewModel2
-        {
-            public string BodyText { get; set; }
-
-            public string BodyText2 { get; set; }
-
-            public IHtmlString BodyTextAsHtmlString { get; set; }
-
-            public int NonMapped { get; set; }
-        }
-
-        private class SimpleViewModel3WithAttribute : SimpleViewModel2
-        {
-            public SimpleViewModel3WithAttribute()
-            {
-                SubModelValue = new SubModel();
-                SubModelValues = new List<SubModel>();
-            }
-
-            [PropertyMapping(DefaultValue = "Default body text")]
-            public string BodyText { get; set; }
-
-            [PropertyMapping(DefaultValue = "Default body text 2")]
-            public string BodyText2 { get; set; }
-
-            [PropertyMapping(DefaultValue = 99)]
-            public int NonMapped { get; set; }
-
-            public SubModel SubModelValue { get; set; }
-
-            public IList<SubModel> SubModelValues { get; set; }
-
-            public class SubModel
-            {
-                public string SubHeading { get; set; }    
-            }
-        }
-
-        private class SimpleViewModel3bWithAttribute : SimpleViewModel2
-        {
-            [PropertyMapping(Ignore = true)]
-            public string BodyText { get; set; }
-
-            public int NonMapped { get; set; }
-        }
-
-        private class SimpleViewModel4 : SimpleViewModel2
-        {
-            public string BodyCopy { get; set; }
-        }
-
-        private class SimpleViewModel4WithAttribute : SimpleViewModel2WithAttribute
-        {
-            [PropertyMapping(SourceProperty = "bodyText")]
-            public string BodyCopy { get; set; }
-        }
-
-        private class SimpleViewModel4bWithAttribute : SimpleViewModel2WithAttribute
-        {
-            [PropertyMapping(SourceProperty = "bodyText", MapRecursively = true)]
-            public string BodyCopy { get; set; }
-
-            public DateTime? DateTime { get; set; }
-        }
-
-        private class SimpleViewModel5 : SimpleViewModel2
-        {
-            public string HeadingAndBodyText { get; set; }
-
-            public string SummaryText { get; set; }
-        }
-
-        private class SimpleViewModel5WithAttribute : SimpleViewModel2WithAttribute
-        {
-            [PropertyMapping(SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
-            public string HeadingAndBodyText { get; set; }
-
-            [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" })]
-            public string SummaryText { get; set; }
-        }
-        
-        private class SimpleViewModel6 : SimpleViewModel
-        {
-            public byte Age { get; set; }
-
-            public long FacebookId { get; set; }
-
-            public decimal AverageScore { get; set; }
-
-            public DateTime RegisteredOn { get; set; }
-
-            public string NonMapped { get; set; }
-
-            public bool IsMember { get; set; }
-
-            public string TwitterUserName { get; set; }
-        }
-
-        private class SimpleViewModel7 : SimpleViewModel
-        {            
-            public int ParentId { get; set; }
-        }
-
-        private class SimpleViewModel7WithAttribute : SimpleViewModel
-        {
-            [PropertyMapping(SourceProperty = "Id", LevelsAbove = 1)]
-            public int ParentId { get; set; }
-        }
-
-        private class SimpleViewModel8 : SimpleViewModel
-        {
-            public GeoCoordinate GeoCoordinate { get; set; }
-        }
-
-        private class SimpleViewModelWithCollection : SimpleViewModel
-        {
-            public SimpleViewModelWithCollection()
-            {
-                Comments = new List<Comment>();
-            }
-
-            public IList<Comment> Comments { get; set; }
-        }
-
-        private class Comment
-        {
-            public int Id { get; set; }
-
-            public string Name { get; set; }
-
-            public string Text { get; set; }
-
-            public DateTime CreatedOn { get; set; }
-        }
-
-        private class GeoCoordinate
-        {
-            public decimal Longitude { get; set; }
-
-            public decimal Latitude { get; set; }
-
-            public int Zoom { get; set; }
         }
 
         #endregion
