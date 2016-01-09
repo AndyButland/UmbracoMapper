@@ -31,7 +31,7 @@ Conventions are used throughout the mapping process.  For example it's expected 
 A couple of base types are provided to help create the necessary view models in your application.  It's not essential to use these, but they may provide some useful properties.
 
 - **BaseNodeViewModel** - can be used as the base type for your view models, containing fields matching for standard IPublishedContent properties like Id, Name, DocumentTypeAlias and Url.
-- **MediaFile** - a representation for an Umbraco media file, with properties including Url, Width, Height etc.
+- **MediaFile** - a representation for an Umbraco media file, with properties including Url, Width, Height etc.  If single or multiple media pickers are defined on a document type and instances of `MediaFile` or `IEnumerable<MediaFile>` are defined on the view model, they will be automatically mapped.
 
 It is also possible to define custom mapping functions for property types not included in the default mapper. This could be used, for example, if you have custom Media types with properties not included in the default MediaFile class, or for mapping complex data types like the Google Maps type.
 
@@ -643,6 +643,8 @@ Class representing an Umbraco media item that can be used within page view model
     - Fixed issue introduced in 1.5.0 that prevented mapping of properties defined as IHtmlString
 - 1.6.0
     - Added support for mapping generically from given Umbraco data types via IMapFromAttribute attribute.  Thanks to [Robin Herd](https://github.com/21robin12) for the PR
+- 1.6.1
+    - Added support for mapping single and multiple media to view model instances of MediaFile (using a custom mapping, but one that the mapper defines itself)
     
 ## Credits
 

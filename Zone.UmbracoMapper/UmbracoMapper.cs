@@ -20,7 +20,7 @@
         /// Provides a cache of view model settable properties, only need to use reflection once for each view model within the 
         /// application lifetime
         /// </summary>
-        private static ConcurrentDictionary<string, IList<PropertyInfo>> _settableProperties = new ConcurrentDictionary<string, IList<PropertyInfo>>();
+        private static readonly ConcurrentDictionary<string, IList<PropertyInfo>> _settableProperties = new ConcurrentDictionary<string, IList<PropertyInfo>>();
 
         private readonly Dictionary<string, CustomMapping> _customMappings;
         private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
@@ -33,6 +33,8 @@
         {
             _customMappings = new Dictionary<string, CustomMapping>();
             _customObjectMappings = new Dictionary<string, CustomObjectMapping>();
+
+            InitializeDefaultCustomMappings();
             EnableCaching = true;
         }
 
@@ -657,6 +659,39 @@
         #endregion
 
         #region Helpers
+
+        /// <summary>
+        /// Sets up the default mappings of known types that will be handled automatically
+        /// </summary>
+        private void InitializeDefaultCustomMappings()
+        {
+            InitializeDefaultCustomMappingForMediaFile();
+            InitializeDefaultCustomMappingForMediaFileCollection();
+        }
+
+        /// <summary>
+        /// If a custom mapping hasn't already been provided, sets up the default mappings of single instances of <see cref="MediaFile"/> that will be handled automatically
+        /// </summary>
+        private void InitializeDefaultCustomMappingForMediaFile()
+        {
+            var customMappingKey = typeof(MediaFile).FullName;
+            if (!_customMappings.ContainsKey(customMappingKey))
+            {
+                AddCustomMapping(customMappingKey, PickedMediaMapper.MapMediaFile);
+            }
+        }
+
+        /// <summary>
+        /// If a custom mapping hasn't already been provided, sets up the default mappings of collections of <see cref="MediaFile"/> that will be handled automatically
+        /// </summary>
+        private void InitializeDefaultCustomMappingForMediaFileCollection()
+        {
+            var customMappingKey = typeof(IEnumerable<MediaFile>).FullName;
+            if (!_customMappings.ContainsKey(customMappingKey))
+            {
+                AddCustomMapping(customMappingKey, PickedMediaMapper.MapMediaFileCollection);
+            }
+        }
 
         /// <summary>
         /// Helper to ensure property mappings are not null even if not provided via the dictionary.

@@ -220,6 +220,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\IMapFromAttribute.cs" />
+    <Compile Include="PickedMediaMapper.cs" />
     <Compile Include="Helpers\TypeExtensions.cs" />
     <Compile Include="IPropertyMapping.cs" />
     <Compile Include="Attributes\PropertyMappingAttribute.cs" />

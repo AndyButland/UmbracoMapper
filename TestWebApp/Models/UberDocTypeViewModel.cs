@@ -42,7 +42,11 @@
         public decimal AverageScore { get; set; }
 
         public MediaFile MainImage { get; set; }
+        
+        public MediaFile MediaPickedImage { get; set; }
 
+        public IEnumerable<MediaFile> MultipleMediaPickedImages { get; set; }
+        
         public string SingleValueFromXml { get; set; }
 
         public string SingleValueFromDictionary { get; set; }

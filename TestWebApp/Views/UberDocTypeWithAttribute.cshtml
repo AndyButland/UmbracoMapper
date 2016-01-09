@@ -24,8 +24,15 @@
 <p>Date with no value set: @(Model.Date2.HasValue ? "Has value - " + Model.Date2.Value.ToString("d-MMM-yyyy") : "No value")</p>
 <p>Dictionary value: @Model.DictionaryValue</p>
 
+@if (Model.MediaPickedImage != null)
+{
+    <div>Media picker image:</div>
+    <img src="@Model.MediaPickedImage.Url" />
+}
+
 @if (Model.MainImage != null)
 {
+    <div>DAMP image:</div>
     <img src="@Model.MainImage.Url" />
 }
 

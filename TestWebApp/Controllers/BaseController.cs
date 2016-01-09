@@ -10,10 +10,10 @@
     {
         protected IUmbracoMapper Mapper { get; set; }
 
-        public BaseController(IUmbracoMapper mapper)
+        protected BaseController(IUmbracoMapper mapper)
         {
             Mapper = mapper;
-            Mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
+            //Mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
             Mapper.EnableCaching = true;
         }
 
