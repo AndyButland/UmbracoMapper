@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 2013
-VisualStudioVersion = 12.0.21005.1
+VisualStudioVersion = 12.0.40629.0
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper", "Zone.UmbracoMapper\Zone.UmbracoMapper.csproj", "{55B0188A-097C-4767-A297-28AE036AED7F}"
 EndProject
@@ -10,6 +10,8 @@ EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWebApp", "TestWebApp\TestWebApp.csproj", "{281FF889-A23D-4CFC-A88B-FB392A01C4DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.DampCustomMapping", "Zone.UmbracoMapper.DampCustomMapping\Zone.UmbracoMapper.DampCustomMapping.csproj", "{C1D506FC-AA73-45F9-90C3-2764BF6E856E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWebApp74", "TestWebApp74\TestWebApp74.csproj", "{E66BF122-787E-4BDA-B289-C202CF56A3C9}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -33,6 +35,10 @@ Global
 		{C1D506FC-AA73-45F9-90C3-2764BF6E856E}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{C1D506FC-AA73-45F9-90C3-2764BF6E856E}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{C1D506FC-AA73-45F9-90C3-2764BF6E856E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
