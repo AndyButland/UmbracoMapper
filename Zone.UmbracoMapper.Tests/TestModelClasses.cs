@@ -122,6 +122,15 @@
         public string SummaryText { get; set; }
     }
 
+    public class SimpleViewModel5bWithAttribute : SimpleViewModel2WithAttribute
+    {
+        [PropertyMapping(SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
+        public string HeadingAndBodyText { get; set; }
+
+        [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "emptyText", "bodyText" })]
+        public string SummaryText { get; set; }
+    }
+
     public class SimpleViewModel6 : SimpleViewModel
     {
         public byte Age { get; set; }

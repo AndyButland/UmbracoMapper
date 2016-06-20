@@ -146,173 +146,88 @@
             Assert.AreEqual("This is the body text", model.BodyText);
             Assert.AreEqual("<p>This is the body text</p>", model.BodyTextAsHtmlString.ToString());
         }
-        /*
+
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithDifferentNames()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel4();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel4();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyCopy", new PropertyMapping { SourceProperty = "bodyText", } } });
 
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyCopy", new PropertyMapping { SourceProperty = "bodyText", } } });
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual("Test content", model.Name);
-                Assert.AreEqual("This is the body text", model.BodyCopy);
-            }
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text", model.BodyCopy);
         }        
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithStringFormatter()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
 
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
-
-                // Assert
-                Assert.AreEqual("THIS IS THE BODY TEXT", model.BodyText);
-            }
+            // Assert
+            Assert.AreEqual("THIS IS THE BODY TEXT", model.BodyText);
         }        
         
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithDifferentNamesUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel4WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel4WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual("Test content", model.Name);
-                Assert.AreEqual("This is the body text", model.BodyCopy);
-            }
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text", model.BodyCopy);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapIgnoredCustomPropertiesUsingDictionary()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { Ignore = true, } } });
 
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { Ignore = true, } } });
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual("Test content", model.Name);
-                Assert.IsNull(model.BodyText);
-            }
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual("Test content", model.Name);
+            Assert.IsNull(model.BodyText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapIgnoredCustomPropertiesUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3bWithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual("Test content", model.Name);
-                Assert.IsNull(model.BodyText);
-            }
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual("Test content", model.Name);
+            Assert.IsNull(model.BodyText);
         }
 
         /// <remarks>
@@ -322,356 +237,185 @@
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithDifferentNamesUsingAttributeAndRecursiveProperty()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel4bWithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel4bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                if (recursive)
-                                {
-                                    return "This is the body text";
-                                }
+            // Act
+            mapper.Map(content.Object, model);
 
-                                return string.Empty;
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual("Test content", model.Name);
-                Assert.AreEqual("This is the body text", model.BodyCopy);
-            }
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text", model.BodyCopy);
         }        
         
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithConcatenation()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel5();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel5();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+                { 
                     { 
+                        "HeadingAndBodyText", 
+                        new PropertyMapping 
                         { 
-                            "HeadingAndBodyText", 
-                            new PropertyMapping 
-                            { 
-                                SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, 
-                                ConcatenationSeperator = ",",
-                            } 
+                            SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, 
+                            ConcatenationSeperator = ",",
                         } 
-                    });
+                    } 
+                });
 
-                // Assert
-                Assert.AreEqual("Test content,This is the body text", model.HeadingAndBodyText);
-            }
+            // Assert
+            Assert.AreEqual("Test content,This is the body text", model.HeadingAndBodyText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithConcatenationUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel5WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel5WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual("Test content,This is the body text", model.HeadingAndBodyText);
-            }
+            // Assert
+            Assert.AreEqual("Test content,This is the body text", model.HeadingAndBodyText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithCoalescingAndFirstItemAvailable()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel5();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel5();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "summaryText":
-                                return "This is the summary text";
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+                { 
                     { 
+                        "SummaryText", 
+                        new PropertyMapping 
                         { 
-                            "SummaryText", 
-                            new PropertyMapping 
-                            { 
-                                SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
-                            } 
+                            SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
                         } 
-                    });
+                    } 
+                });
 
-                // Assert
-                Assert.AreEqual("This is the summary text", model.SummaryText);
-            }
+            // Assert
+            Assert.AreEqual("This is the summary text", model.SummaryText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithCoalescingAndFirstItemAvailableUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel5WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel5WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "summaryText":
-                                return "This is the summary text";
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual("This is the summary text", model.SummaryText);
-            }
+            // Assert
+            Assert.AreEqual("This is the summary text", model.SummaryText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithCoalescingAndFirstItemNotAvailable()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel5();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel5();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "summaryText":
-                                return string.Empty;
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+                { 
                     { 
+                        "SummaryText", 
+                        new PropertyMapping 
                         { 
-                            "SummaryText", 
-                            new PropertyMapping 
-                            { 
-                                SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
-                            } 
+                            SourcePropertiesForCoalescing = new string[] { "emptyText", "bodyText" }, 
                         } 
-                    });
+                    } 
+                });
 
-                // Assert
-                Assert.AreEqual("This is the body text", model.SummaryText);
-            }
+            // Assert
+            Assert.AreEqual("This is the body text", model.SummaryText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithCoalescingAndFirstItemNotAvailableUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel5WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel5bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "summaryText":
-                                return string.Empty;
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual("This is the body text", model.SummaryText);
-            }
+            // Assert
+            Assert.AreEqual("This is the body text", model.SummaryText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithMatchingCondition()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "summaryText":
-                                return "Test value";
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+                { 
                     { 
+                        "BodyText", 
+                        new PropertyMapping 
                         { 
-                            "BodyText", 
-                            new PropertyMapping 
-                            { 
-                                MapIfPropertyMatches = new KeyValuePair<string, string>("summaryText", "Test value")
-                            } 
+                            MapIfPropertyMatches = new KeyValuePair<string, string>("testText", "Test value")
                         } 
-                    });
+                    } 
+                });
 
-                // Assert
-                Assert.AreEqual("This is the body text", model.BodyText);
-            }
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithNonMatchingCondition()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "summaryText":
-                                return "Another value";
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+                { 
                     { 
+                        "BodyText", 
+                        new PropertyMapping 
                         { 
-                            "BodyText", 
-                            new PropertyMapping 
-                            { 
-                                MapIfPropertyMatches = new KeyValuePair<string, string>("summaryText", "Test value")
-                            } 
+                            MapIfPropertyMatches = new KeyValuePair<string, string>("summaryText", "Another value")
                         } 
-                    });
+                    } 
+                });
 
-                // Assert
-                Assert.IsNull(model.BodyText);
-            }
+            // Assert
+            Assert.IsNull(model.BodyText);
         }
-        */
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesFromParentNode()
@@ -715,358 +459,195 @@
             Assert.AreEqual(1001, model.ParentId);
         }
 
-        /*
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMapping()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel8();
-                var content = MockPublishedContent();
-                var mapper = GetMapper();
-                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "geoCoordinate":
-                                return "5.5,10.5,7";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.IsNotNull(model.GeoCoordinate);
-                Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude); 
-                Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);                
-                Assert.AreEqual(7, model.GeoCoordinate.Zoom);
-            }
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude); 
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);                
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingWithMatchingPropertyCondition()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel8();
-                var content = MockPublishedContent();
-                var mapper = GetMapper();
-                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "GeoCoordinate");
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "GeoCoordinate");
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "geoCoordinate":
-                                return "5.5,10.5,7";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.IsNotNull(model.GeoCoordinate);
-                Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
-                Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
-                Assert.AreEqual(7, model.GeoCoordinate.Zoom);
-            }
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingWithNonMatchingPropertyCondition()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel8();
-                var content = MockPublishedContent();
-                var mapper = GetMapper();
-                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "AnotherProperty");
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "AnotherProperty");
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "geoCoordinate":
-                                return "5.5,10.5,7";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.IsNull(model.GeoCoordinate);
-            }
+            // Assert
+            Assert.IsNull(model.GeoCoordinate);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsUsingMapFromAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel9();
-                var content = MockPublishedContent();
-                var mapper = GetMapper();
+            // Arrange
+            var model = new SimpleViewModel9();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "child":
-                                return 1001;
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual("Test content", model.Name);
-                Assert.AreEqual("Child item", model.Child.Name);
-            }
+            // Assert
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("Child item", model.Child.Name);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsOnlyNativeProperties()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model, propertySet: PropertySet.Native);
 
-                // Act
-                mapper.Map(content.Object, model, propertySet: PropertySet.Native);
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual("Test content", model.Name);
-                Assert.IsNull(model.BodyText);
-            }
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual("Test content", model.Name);
+            Assert.IsNull(model.BodyText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsOnlyCustomProperties()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model, propertySet: PropertySet.Custom);
 
-                // Act
-                mapper.Map(content.Object, model, propertySet: PropertySet.Custom);
-
-                // Assert
-                Assert.AreEqual(0, model.Id);
-                Assert.IsNull(model.Name);
-                Assert.AreEqual("This is the body text", model.BodyText);
-            }
+            // Assert
+            Assert.AreEqual(0, model.Id);
+            Assert.IsNull(model.Name);
+            Assert.AreEqual("This is the body text", model.BodyText);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsWithStringDefaultValue()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent(bodyTextValue: null);
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return null;
-                            case "bodyText2":
-                                return string.Empty;
-                            default:
-                                return string.Empty;
-                        }
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            { 
                 { 
+                    "BodyText", 
+                    new PropertyMapping 
                     { 
-                        "BodyText", 
-                        new PropertyMapping 
-                        { 
-                            DefaultValue = "Default body text",
-                        } 
-                    },
-                    { 
-                        "BodyText2", 
-                        new PropertyMapping 
-                        { 
-                            DefaultValue = "Default body text 2",
-                        } 
+                        DefaultValue = "Default body text",
                     } 
-                });
+                },
+                { 
+                    "BodyText2", 
+                    new PropertyMapping 
+                    { 
+                        DefaultValue = "Default body text 2",
+                    } 
+                } 
+            });
 
-                // Assert
-                Assert.AreEqual("Default body text", model.BodyText);
-                Assert.AreEqual("Default body text 2", model.BodyText2);
-            }
+            // Assert
+            Assert.AreEqual("Default body text", model.BodyText);
+            Assert.AreEqual("Default body text 2", model.BodyText2);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsWithStringDefaultValueUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent(bodyTextValue: null);
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return null;
-                            case "bodyText2":
-                                return string.Empty;
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual("Default body text", model.BodyText);
-                Assert.AreEqual("Default body text 2", model.BodyText2);
-            }
+            // Assert
+            Assert.AreEqual("Default body text", model.BodyText);
+            Assert.AreEqual("Default body text 2", model.BodyText2);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsWithIntegerDefaultValue()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        return string.Empty;
-                    };
-
-                // Act
-                mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            { 
                 { 
+                    "NonMapped", 
+                    new PropertyMapping 
                     { 
-                        "NonMapped", 
-                        new PropertyMapping 
-                        { 
-                            DefaultValue = 99,
-                        } 
+                        DefaultValue = 99,
                     } 
-                });
+                } 
+            });
 
-                // Assert
-                Assert.AreEqual(99, model.NonMapped);
-            }
+            // Assert
+            Assert.AreEqual(99, model.NonMapped);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsWithIntegerDefaultValueUsingAttribute()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        return string.Empty;
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual(99, model.NonMapped);
-            }
+            // Assert
+            Assert.AreEqual(99, model.NonMapped);
         }
         
         /// <remarks>
@@ -1076,76 +657,37 @@
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsNullToNullableDateTimeWithNoValue()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel4bWithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel4bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "dateTime":
-                                return "1/1/0001 12:00:00 AM";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.IsFalse(model.DateTime.HasValue);
-            }
+            // Assert
+            Assert.IsFalse(model.DateTime.HasValue);
         }          
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_AutomapsRelatedIPublishedContent()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel3WithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "subHeading":
-                                return "This is the sub-heading";
-                            case "bodyText":
-                                return "This is the body text";
-                            case "subModelValue":
-                                return new StubPublishedContent();
-                            case "subModelValues":
-                                return new List<StubPublishedContent> { new StubPublishedContent(), new StubPublishedContent() };
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model);
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual("This is the body text", model.BodyText);
-                Assert.AreEqual("This is the sub-heading", model.SubModelValue.SubHeading);
-                Assert.AreEqual(2, model.SubModelValues.Count());
-                Assert.AreEqual("This is the sub-heading", model.SubModelValues.First().SubHeading);
-            }
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyText);
+            Assert.AreEqual("This is the sub-heading", model.SubModelValue.SubHeading);
+            Assert.AreEqual(2, model.SubModelValues.Count());
+            Assert.AreEqual("This is the sub-heading", model.SubModelValues.First().SubHeading);
         }
 
+        /*
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_AutomapsParentIPublishedContent()
         {
@@ -2621,7 +2163,7 @@
             if (!string.IsNullOrEmpty(csv))
             {
                 var parts = csv.Split(',');
-                if (parts != null && parts.Length == 3)
+                if (parts.Length == 3)
                 {
                     return new GeoCoordinate
                     {
@@ -2639,15 +2181,64 @@
 
         #region Mocks
 
-        private Mock<IPublishedContent> MockPublishedContent()
+        private Mock<IPublishedContent> MockPublishedContent(string bodyTextValue = "This is the body text",
+            bool recursiveCall = false)
         {
+            var summaryTextPropertyMock = new Mock<IPublishedProperty>();
+            summaryTextPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("summaryText");
+            summaryTextPropertyMock.Setup(c => c.Value).Returns("This is the summary text");
+
+            var emptyTextPropertyMock = new Mock<IPublishedProperty>();
+            emptyTextPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("emptyText");
+            emptyTextPropertyMock.Setup(c => c.Value).Returns(null);
+
             var bodyTextPropertyMock = new Mock<IPublishedProperty>();
             bodyTextPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("bodyText");
-            bodyTextPropertyMock.Setup(c => c.Value).Returns("This is the body text");
+            bodyTextPropertyMock.Setup(c => c.Value).Returns(bodyTextValue);
+
+            var bodyText2PropertyMock = new Mock<IPublishedProperty>();
+            bodyText2PropertyMock.Setup(c => c.PropertyTypeAlias).Returns("bodyText2");
+            bodyText2PropertyMock.Setup(c => c.Value).Returns(string.Empty);
 
             var bodyTextAsHtmlStringPropertyMock = new Mock<IPublishedProperty>();
             bodyTextAsHtmlStringPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("bodyTextAsHtmlString");
             bodyTextAsHtmlStringPropertyMock.Setup(c => c.Value).Returns("<p>This is the body text</p>");
+
+            var testTextPropertyMock = new Mock<IPublishedProperty>();
+            testTextPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("testText");
+            testTextPropertyMock.Setup(c => c.Value).Returns("Test value");
+
+            var geoCoordinatePropertyMock = new Mock<IPublishedProperty>();
+            geoCoordinatePropertyMock.Setup(c => c.PropertyTypeAlias).Returns("geoCoordinate");
+            geoCoordinatePropertyMock.Setup(c => c.Value).Returns("5.5,10.5,7");
+
+            var childContentMock = new Mock<IPublishedProperty>();
+            childContentMock.Setup(c => c.PropertyTypeAlias).Returns("child");
+            childContentMock.Setup(c => c.Value).Returns(1001);
+
+            var nonMappedContentMock = new Mock<IPublishedProperty>();
+            nonMappedContentMock.Setup(c => c.PropertyTypeAlias).Returns("nonMapped");
+            nonMappedContentMock.Setup(c => c.Value).Returns(string.Empty);
+
+            var dateTimeContentMock = new Mock<IPublishedProperty>();
+            dateTimeContentMock.Setup(c => c.PropertyTypeAlias).Returns("dateTime");
+            dateTimeContentMock.Setup(c => c.Value).Returns("1/1/0001 12:00:00 AM");
+
+            var subHeadingContentMock = new Mock<IPublishedProperty>();
+            subHeadingContentMock.Setup(c => c.PropertyTypeAlias).Returns("subHeading");
+            subHeadingContentMock.Setup(c => c.Value).Returns("This is the sub-heading");
+
+            var subModelValueContentMock = new Mock<IPublishedProperty>();
+            var subModelValuesContentMock = new Mock<IPublishedProperty>();
+            if (!recursiveCall)
+            {
+                subModelValueContentMock.Setup(c => c.PropertyTypeAlias).Returns("subModelValue");
+                subModelValueContentMock.Setup(c => c.Value).Returns(MockPublishedContent(recursiveCall: true).Object);
+
+                subModelValuesContentMock.Setup(c => c.PropertyTypeAlias).Returns("subModelValue");
+                subModelValuesContentMock.Setup(c => c.Value)
+                    .Returns(new List<IPublishedContent> {MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object});
+            }
 
             var parentContentMock = new Mock<IPublishedContent>();
             parentContentMock.Setup(c => c.Id).Returns(1001);
@@ -2657,8 +2248,19 @@
             contentMock.Setup(c => c.Parent).Returns(parentContentMock.Object);
             contentMock.Setup(c => c.Name).Returns("Test content");
             contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "summaryText"), It.IsAny<bool>())).Returns(summaryTextPropertyMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "emptyText"), It.IsAny<bool>())).Returns(emptyTextPropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "bodyText"), It.IsAny<bool>())).Returns(bodyTextPropertyMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "bodyText2"), It.IsAny<bool>())).Returns(bodyText2PropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "bodyTextAsHtmlString"), It.IsAny<bool>())).Returns(bodyTextAsHtmlStringPropertyMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "testText"), It.IsAny<bool>())).Returns(testTextPropertyMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "geoCoordinate"), It.IsAny<bool>())).Returns(geoCoordinatePropertyMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "child"), It.IsAny<bool>())).Returns(childContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "nonMapped"), It.IsAny<bool>())).Returns(nonMappedContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "dateTime"), It.IsAny<bool>())).Returns(dateTimeContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subHeading"), It.IsAny<bool>())).Returns(subHeadingContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValue"), It.IsAny<bool>())).Returns(subModelValueContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValues"), It.IsAny<bool>())).Returns(subModelValuesContentMock.Object);
 
             return contentMock;
         }
