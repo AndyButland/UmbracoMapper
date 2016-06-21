@@ -20,6 +20,7 @@
         [PropertyMapping(SourceRelatedProperty = "Name")]
         public string Country { get; set; }
 
+        [PropertyMapping(MapRecursively = true)]
         public MediaFile MainImage { get; set; }
 
         public string Heading { get; set; }

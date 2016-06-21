@@ -30,6 +30,15 @@
     <img src="@Model.MediaPickedImage.Url" />
 }
 
+@if (Model.MultipleMediaPickedImages != null)
+{
+    <div>Multiple media picker images:</div>
+    foreach (var media in Model.MultipleMediaPickedImages)
+    {
+        <img src="@media.Url" width="@media.Width" height="@media.Width" />
+    }
+}
+
 @if (Model.MainImage != null)
 {
     <div>DAMP image:</div>

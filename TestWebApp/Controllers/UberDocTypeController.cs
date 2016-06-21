@@ -213,7 +213,7 @@
                                 } 
                         }, 
                     })
-                .MapCollection(CurrentPage.Children, model.Comments)
+                .MapCollection(CurrentPage.Children.Where(x => x.DocumentTypeAlias == "Comment"), model.Comments)
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
