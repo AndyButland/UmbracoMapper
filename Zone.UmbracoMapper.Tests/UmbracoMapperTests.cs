@@ -1018,234 +1018,130 @@
 
         #region Tests - Collection Maps From IPublishedContent
 
-        /*
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContentToCollection_MapsCustomPropertiesWithMatchingNames()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new List<SimpleViewModel3>();
-                var mapper = GetMapper();
-                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+            // Arrange
+            var model = new List<SimpleViewModel3>();
+            var mapper = GetMapper();
+            var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.MapCollection(content, model);
 
-                // Act
-                mapper.MapCollection(content, model);
-
-                // Assert
-                Assert.AreEqual(2, model.Count);
-                Assert.AreEqual(1000, model[0].Id);
-                Assert.AreEqual("This is the body text", model[0].BodyText);
-                Assert.AreEqual(1001, model[1].Id);
-            }
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.AreEqual(1000, model[0].Id);
+            Assert.AreEqual("This is the body text", model[0].BodyText);
+            Assert.AreEqual(1001, model[1].Id);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContentToCollection_MapsUsingCustomMapping()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new List<SimpleViewModel8>();
-                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
-                var mapper = GetMapper();
-                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+            // Arrange
+            var model = new List<SimpleViewModel8>();
+            var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "geoCoordinate":
-                                return "5.5,10.5,7";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.MapCollection(content, model);
 
-                // Act
-                mapper.MapCollection(content, model);
-
-                // Assert
-                Assert.AreEqual(2, model.Count);
-                Assert.IsNotNull(model[0].GeoCoordinate);
-                Assert.AreEqual((decimal)5.5, model[0].GeoCoordinate.Latitude);
-                Assert.AreEqual((decimal)10.5, model[0].GeoCoordinate.Longitude);
-                Assert.AreEqual(7, model[0].GeoCoordinate.Zoom);
-                Assert.IsNotNull(model[1].GeoCoordinate);
-                Assert.AreEqual((decimal)5.5, model[1].GeoCoordinate.Latitude);
-                Assert.AreEqual((decimal)10.5, model[1].GeoCoordinate.Longitude);
-                Assert.AreEqual(7, model[1].GeoCoordinate.Zoom);
-            }
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.IsNotNull(model[0].GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model[0].GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model[0].GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model[0].GeoCoordinate.Zoom);
+            Assert.IsNotNull(model[1].GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model[1].GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model[1].GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model[1].GeoCoordinate.Zoom);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContentToCollectionWithoutParentObject_MapsUsingCustomMapping()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new List<GeoCoordinate>();
-                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
-                var mapper = GetMapper();
-                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollection);
+            // Arrange
+            var model = new List<GeoCoordinate>();
+            var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollection);
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "geoCoordinate":
-                                return "5.5,10.5,7";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.MapCollection(content, model);
 
-                // Act
-                mapper.MapCollection(content, model);
-
-                // Assert
-                Assert.AreEqual(2, model.Count);
-                Assert.IsNotNull(model[0]);
-                Assert.AreEqual((decimal)5.5, model[0].Latitude);
-                Assert.AreEqual((decimal)10.5, model[0].Longitude);
-                Assert.AreEqual(7, model[0].Zoom);
-                Assert.IsNotNull(model[1]);
-                Assert.AreEqual((decimal)5.5, model[1].Latitude);
-                Assert.AreEqual((decimal)10.5, model[1].Longitude);
-                Assert.AreEqual(7, model[1].Zoom);
-            }
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.IsNotNull(model[0]);
+            Assert.AreEqual((decimal)5.5, model[0].Latitude);
+            Assert.AreEqual((decimal)10.5, model[0].Longitude);
+            Assert.AreEqual(7, model[0].Zoom);
+            Assert.IsNotNull(model[1]);
+            Assert.AreEqual((decimal)5.5, model[1].Latitude);
+            Assert.AreEqual((decimal)10.5, model[1].Longitude);
+            Assert.AreEqual(7, model[1].Zoom);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContentToCollectionWithoutParentObject_MapsUsingCustomObjectMapping()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new List<GeoCoordinate>();
-                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
-                var mapper = GetMapper();
-                mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollectionFromObject);
+            // Arrange
+            var model = new List<GeoCoordinate>();
+            var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollectionFromObject);
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "geoCoordinate":
-                                return "5.5,10.5,7";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.MapCollection(content, model);
 
-                // Act
-                mapper.MapCollection(content, model);
-
-                // Assert
-                Assert.AreEqual(2, model.Count);
-                Assert.IsNotNull(model[0]);
-                Assert.AreEqual((decimal)5.5, model[0].Latitude);
-                Assert.AreEqual((decimal)10.5, model[0].Longitude);
-                Assert.AreEqual(7, model[0].Zoom);
-                Assert.IsNotNull(model[1]);
-                Assert.AreEqual((decimal)5.5, model[1].Latitude);
-                Assert.AreEqual((decimal)10.5, model[1].Longitude);
-                Assert.AreEqual(7, model[1].Zoom);
-            }
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.IsNotNull(model[0]);
+            Assert.AreEqual((decimal)5.5, model[0].Latitude);
+            Assert.AreEqual((decimal)10.5, model[0].Longitude);
+            Assert.AreEqual(7, model[0].Zoom);
+            Assert.IsNotNull(model[1]);
+            Assert.AreEqual((decimal)5.5, model[1].Latitude);
+            Assert.AreEqual((decimal)10.5, model[1].Longitude);
+            Assert.AreEqual(7, model[1].Zoom);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContentToCollection_WithClearCollection_ClearsCollectionBeforeMapping()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new List<SimpleViewModel3>();
-                var mapper = GetMapper();
-                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+            // Arrange
+            var model = new List<SimpleViewModel3>();
+            var mapper = GetMapper();
+            var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.MapCollection(content, model);
+            mapper.MapCollection(content, model);
 
-                // Act
-                mapper.MapCollection(content, model);
-                mapper.MapCollection(content, model);
-
-                // Assert
-                Assert.AreEqual(2, model.Count);
-            }
+            // Assert
+            Assert.AreEqual(2, model.Count);
         }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContentToCollection_WithoutClearCollection_DoesNotClearCollectionBeforeMapping()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new List<SimpleViewModel3>();
-                var mapper = GetMapper();
-                var content = new List<IPublishedContent> { new StubPublishedContent(1000), new StubPublishedContent(1001) };
+            // Arrange
+            var model = new List<SimpleViewModel3>();
+            var mapper = GetMapper();
+            var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "bodyText":
-                                return "This is the body text";
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.MapCollection(content, model);
+            mapper.MapCollection(content, model, clearCollectionBeforeMapping: false);
 
-                // Act
-                mapper.MapCollection(content, model);
-                mapper.MapCollection(content, model, clearCollectionBeforeMapping: false);
-
-                // Assert
-                Assert.AreEqual(4, model.Count);
-            }
+            // Assert
+            Assert.AreEqual(4, model.Count);
         }
-        */
 
         #endregion
-        
+
         #region Tests - Collection Maps From XML
 
         [TestMethod]
@@ -2181,7 +2077,8 @@
 
         #region Mocks
 
-        private Mock<IPublishedContent> MockPublishedContent(string bodyTextValue = "This is the body text",
+        private Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
+            string bodyTextValue = "This is the body text",
             bool recursiveCall = false)
         {
             var summaryTextPropertyMock = new Mock<IPublishedProperty>();
@@ -2244,7 +2141,7 @@
             parentContentMock.Setup(c => c.Id).Returns(1001);
 
             var contentMock = new Mock<IPublishedContent>();
-            contentMock.Setup(c => c.Id).Returns(1000);
+            contentMock.Setup(c => c.Id).Returns(id);
             contentMock.Setup(c => c.Parent).Returns(parentContentMock.Object);
             contentMock.Setup(c => c.Name).Returns("Test content");
             contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
