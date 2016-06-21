@@ -564,7 +564,19 @@ Class representing an Umbraco node that can be used as the basis of any page vie
 ### MediaFile
 
 Class representing an Umbraco media item that can be used within page view models in the client product.
-        
+
+## Supported Umbraco Versions
+
+The earliest version of Umbraco this package has been tested with is `6.1.6` although the expectation is that all versions from *6.0* should be supported.
+
+The last version of the package strictly supporting out of the box Umbraco version 6 is `1.6.1`.
+
+After that the references to Umbraco Core were updated to version 7.  The package still works though with Umbraco 6, so long as the JSON.Net dependency is updated to the version that ships with Umbraco 7, `6.0.8`.  This can be done with a NuGet command:
+
+    PM> Install-Package Newtonsoft.Json -Version: 6.0.8
+	
+With that dependency updated Umbraco 6 appears to work unaffected, which is borne out by [other discussion](https://our.umbraco.org/forum/developers/api-questions/57394-Is-the-latest-version-of-JsonNET-compatible-with-Umbraco-616).
+	
 ## Version History
 
 - 1.0.2 - First public release
@@ -645,13 +657,16 @@ Class representing an Umbraco media item that can be used within page view model
     - Added support for mapping generically from given Umbraco data types via IMapFromAttribute attribute.  Thanks to [Robin Herd](https://github.com/21robin12) for the PR
 - 1.6.1
     - Added support for mapping single and multiple media to view model instances of MediaFile (using a custom mapping, but one that the mapper defines itself)
+- 2.0.0
+    - Upgraded Umbraco reference to version 7 allowing for unit testing without use of MS Fakes
+	- Use on Umbraco 6 now requires an update to the JSON.Net dependency (see "Supported Umbraco Versions" above)
     
 ## Credits
 
-Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.thisiszone.com) for code, reviews and testing.
+Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing.
 
 ## License
 
-Copyright &copy; 2015 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
+Copyright &copy; 2016 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
 
 Licensed under the [MIT License](License.md)
