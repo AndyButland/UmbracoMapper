@@ -575,7 +575,7 @@ After that the references to Umbraco Core were updated to version 7.  The packag
 
     PM> Install-Package Newtonsoft.Json -Version: 6.0.8
 	
-With that dependency updated Umbraco 6 appears to work unaffected, which is borne out by [other discussion](https://our.umbraco.org/forum/developers/api-questions/57394-Is-the-latest-version-of-JsonNET-compatible-with-Umbraco-616).
+With that dependency updated Umbraco 6 *appears to me* to work unaffected, which is borne to some extent out by [other discussion](https://our.umbraco.org/forum/developers/api-questions/57394-Is-the-latest-version-of-JsonNET-compatible-with-Umbraco-616).
 	
 ## Version History
 
