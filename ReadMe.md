@@ -567,7 +567,7 @@ Class representing an Umbraco media item that can be used within page view model
 
 ## Supported Umbraco Versions
 
-The earliest version of Umbraco this package has been tested with is `6.1.6` although the expectation is that all versions from *6.0* should be supported.
+The earliest version of Umbraco this package has been tested with is `6.1.6` although the expectation is that all versions from `6.0` should be supported.
 
 The last version of the package strictly supporting out of the box Umbraco version 6 is `1.6.1`.
 
