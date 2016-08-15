@@ -982,12 +982,6 @@
                                            Func<string, string> stringValueFormatter = null, 
                                            PropertySet propertySet = PropertySet.All)
         {
-            // If the content we are mapping from is null then we can't map it
-            if (contentToMapFrom == null)
-            {
-                return;
-            }
-
             // First check to see if there's a condition that might mean we don't carry out the mapping
             if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
             {
