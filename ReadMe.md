@@ -660,6 +660,9 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 - 2.0.0
     - Upgraded Umbraco reference to version 7 allowing for unit testing without use of MS Fakes
 	- Use on Umbraco 6 now requires an update to the JSON.Net dependency (see "Supported Umbraco Versions" above)
+- 2.0.1
+    - Fully removed dependency on MS Fakes
+	- Handled case where trying to map parent of home page (issue #4) - thanks [richarth](https://github.com/richarth)
     
 ## Credits
 
