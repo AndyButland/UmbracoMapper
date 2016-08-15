@@ -459,6 +459,22 @@
         }
 
         [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsNullParent()
+        {
+            // Arrange
+            var model = new SimpleViewModel7WithAttribute();
+            var content = MockPublishedContent(mockParent: false);
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual(0, model.ParentId);
+        }
+
+        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMapping()
         {
             // Arrange
@@ -2078,7 +2094,8 @@
 
         private Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
             string bodyTextValue = "This is the body text",
-            bool recursiveCall = false)
+            bool recursiveCall = false,
+            bool mockParent = true)
         {
             var summaryTextPropertyMock = new Mock<IPublishedProperty>();
             summaryTextPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("summaryText");
@@ -2141,7 +2158,14 @@
 
             var contentMock = new Mock<IPublishedContent>();
             contentMock.Setup(c => c.Id).Returns(id);
-            contentMock.Setup(c => c.Parent).Returns(parentContentMock.Object);
+            if (mockParent)
+            {
+                contentMock.Setup(c => c.Parent).Returns(parentContentMock.Object);
+            }
+            else
+            {
+                contentMock.Setup(c => c.Parent).Returns((IPublishedContent)null);
+            }
             contentMock.Setup(c => c.Name).Returns("Test content");
             contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "summaryText"), It.IsAny<bool>())).Returns(summaryTextPropertyMock.Object);
