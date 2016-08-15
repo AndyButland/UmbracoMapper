@@ -107,7 +107,7 @@ You can also map any other collection of IPublishedContent, e.g. that built up f
     var countryNodes = Umbraco.TypedContent(countryIds.Split(','));
     mapper.MapCollection(countryNodes, model.Countries);
     
-Or if you are also using the [Umbraco Core Property Editor Converters](http://our.umbraco.org/projects/developer-tools/umbraco-core-property-editor-converters), more simply like this:
+Or if you are also using the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters), more simply like this:
 
     var countryNodes = CurrentPage.GetPropertyValue<IEnumerable<IPublishedContent>>("countries");
     mapper.MapCollection(countryNodes, model.Countries);    
