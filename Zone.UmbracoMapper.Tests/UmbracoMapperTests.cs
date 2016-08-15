@@ -4,7 +4,6 @@
     using System.Collections.Generic;
     using System.Linq;
     using System.Xml.Linq;
-    //using Microsoft.QualityTools.Testing.Fakes;
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using Umbraco.Core.Models;
