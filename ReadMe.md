@@ -663,7 +663,9 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 - 2.0.1
     - Fully removed dependency on MS Fakes
 	- Handled case where trying to map parent of home page (issue #4) - thanks [richarth](https://github.com/richarth)
-    
+- 2.0.2
+    - Added mapping attributes to `MediaFile`
+	
 ## Credits
 
 Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing.
