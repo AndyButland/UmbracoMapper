@@ -16,12 +16,16 @@
 
         public string AltText { get; set; }
 
+        [PropertyMapping(SourceProperty = "umbracoWidth")]
         public int Width { get; set; }
 
+        [PropertyMapping(SourceProperty = "umbracoHeight")]
         public int Height { get; set; }
 
+        [PropertyMapping(SourceProperty = "umbracoBytes")]
         public int Size { get; set; }
 
+        [PropertyMapping(SourceProperty = "umbracoExtension")]
         public string FileExtension { get; set; }
     }
 }
