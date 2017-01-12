@@ -735,6 +735,39 @@
             Assert.AreEqual("This is the body text...", model.BodyText);
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithCustomDefaultPropertyValueGetterProvidedInConstructor()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper(new SuffixAddingPropertyValueGetter());
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithCustomDefaultPropertyValueGetterProvidedInProperty()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            ((UmbracoMapper)mapper).DefaultPropertyValueGetter = new SuffixAddingPropertyValueGetter();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -1728,9 +1761,9 @@
 
         #region Test helpers
 
-        private static IUmbracoMapper GetMapper()
+        private static IUmbracoMapper GetMapper(IPropertyValueGetter propertyValueGetter = null)
         {
-            return new UmbracoMapper();
+            return propertyValueGetter == null ? new UmbracoMapper() : new UmbracoMapper(propertyValueGetter);
         }
 
         private static XElement GetXmlForSingle()

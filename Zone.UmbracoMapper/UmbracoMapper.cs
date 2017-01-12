@@ -25,15 +25,18 @@
         private readonly Dictionary<string, CustomMapping> _customMappings;
         private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
 
-        private readonly IPropertyValueGetter _defaultPropertyValueGetter;
-
         #endregion
 
         #region Constructor
 
-        public UmbracoMapper()
+        public UmbracoMapper() 
+            : this (new DefaultPropertyValueGetter())
         {
-            _defaultPropertyValueGetter = new DefaultPropertyValueGetter();
+        }
+
+        public UmbracoMapper(IPropertyValueGetter propertyValueGetter)
+        {
+            DefaultPropertyValueGetter = propertyValueGetter;
             _customMappings = new Dictionary<string, CustomMapping>();
             _customObjectMappings = new Dictionary<string, CustomObjectMapping>();
 
@@ -55,6 +58,11 @@
         /// Gets or sets a flag enabling caching.  On by default.
         /// </summary>
         public bool EnableCaching { get; set; }
+
+        /// <summary>
+        /// Defines the default method for retrieving values from a property
+        /// </summary>
+        public IPropertyValueGetter DefaultPropertyValueGetter { get; set; }
 
         #endregion
 
@@ -1162,7 +1170,7 @@
         {
             if (!propertyMappings.ContainsKey(propName) || propertyMappings[propName].PropertyValueGetter == null)
             {
-                return _defaultPropertyValueGetter;
+                return DefaultPropertyValueGetter;
             }
 
             var propertyValueGetterType = propertyMappings[propName].PropertyValueGetter;
