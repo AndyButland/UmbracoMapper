@@ -698,44 +698,42 @@
             // Assert
             Assert.AreEqual("This is the body text", model.BodyText);
             Assert.AreEqual("This is the sub-heading", model.SubModelValue.SubHeading);
-            Assert.AreEqual(2, model.SubModelValues.Count());
+            Assert.AreEqual(2, model.SubModelValues.Count);
             Assert.AreEqual("This is the sub-heading", model.SubModelValues.First().SubHeading);
         }
 
-        /*
         [TestMethod]
-        public void UmbracoMapper_MapFromIPublishedContent_AutomapsParentIPublishedContent()
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithCustomPropertyValueGetter()
         {
-            // Using a shim of umbraco.dll
-            using (ShimsContext.Create())
-            {
-                // Arrange
-                var model = new SimpleViewModel2bWithAttribute();
-                var mapper = GetMapper();
-                var content = MockPublishedContent();
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
 
-                // - shim GetPropertyValue (an extension method on IPublishedContent so can't be mocked)
-                Umbraco.Web.Fakes.ShimPublishedContentExtensions.GetPropertyValueIPublishedContentStringBoolean =
-                    (doc, alias, recursive) =>
-                    {
-                        switch (alias)
-                        {
-                            case "parent":
-                                return new StubPublishedContent(1001);
-                            default:
-                                return string.Empty;
-                        }
-                    };
+            // Act
+            mapper.Map(content.Object, model, 
+                new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { PropertyValueGetter = typeof(SuffixAddingPropertyValueGetter), } } });
 
-                // Act
-                mapper.Map(content.Object, model);
-
-                // Assert
-                Assert.AreEqual(1000, model.Id);
-                Assert.AreEqual(1001, model.Parent.Id);
-            }
+            // Assert
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text...", model.BodyText);
         }
-        */
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithCustomPropertyValueGetterUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel3cWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test content", model.Name);
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
 
         #endregion
 

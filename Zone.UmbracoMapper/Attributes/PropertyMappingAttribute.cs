@@ -75,5 +75,11 @@
         /// If set property will be mapped from the given Umbraco dictionary key
         /// </summary>
         public string DictionaryKey { get; set; }
+
+        /// <summary>
+        /// Provides a type that must implement <see cref="IPropertyValueGetter"/> to be used when retrieving the property value from Umbraco.
+        /// A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
+        /// </summary>
+        public Type PropertyValueGetter { get; set; }
     }
 }

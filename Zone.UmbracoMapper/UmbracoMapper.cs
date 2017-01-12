@@ -25,12 +25,15 @@
         private readonly Dictionary<string, CustomMapping> _customMappings;
         private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
 
+        private readonly IPropertyValueGetter _defaultPropertyValueGetter;
+
         #endregion
 
         #region Constructor
 
         public UmbracoMapper()
         {
+            _defaultPropertyValueGetter = new DefaultPropertyValueGetter();
             _customMappings = new Dictionary<string, CustomMapping>();
             _customObjectMappings = new Dictionary<string, CustomObjectMapping>();
 
@@ -770,6 +773,11 @@
                         }
 
                         propertyMappings[property.Name].Ignore = propertyMapping.Ignore;
+
+                        if (propertyMappings[property.Name].PropertyValueGetter == null)
+                        {
+                            propertyMappings[property.Name].PropertyValueGetter = propertyMapping.PropertyValueGetter;
+                        }
                     }
                     else
                     {
@@ -842,6 +850,7 @@
                 DefaultValue = attribute.DefaultValue,
                 DictionaryKey = attribute.DictionaryKey,
                 Ignore = attribute.Ignore,
+                PropertyValueGetter = attribute.PropertyValueGetter
             };
         }
 
@@ -851,6 +860,7 @@
         /// <param name="property">Property to retrieve the attribute from</param>
         /// <returns>IMapFromAttribute marked on the property, or null if no such attribute is found</returns>
         private static IMapFromAttribute GetMapFromAttribute(PropertyInfo property)
+
         {
             return (IMapFromAttribute)property.GetCustomAttributes(false)
                 .FirstOrDefault(x => x is IMapFromAttribute);
@@ -918,8 +928,7 @@
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
         /// <returns>Name of property to map from</returns>
-        private static string GetMappedPropertyName(string propName, Dictionary<string, PropertyMapping> propertyMappings,
-                                             bool convertToCamelCase = false)
+        private static string GetMappedPropertyName(string propName, Dictionary<string, PropertyMapping> propertyMappings, bool convertToCamelCase = false)
         {
             var mappedName = propName;
             if (propertyMappings.ContainsKey(propName) &&
@@ -988,10 +997,13 @@
                 return;
             }
 
+            // Get the property value getter for this view model property
+            var propertyValueGetter = GetPropertyValueGetter(property.Name, propertyMappings);
+
             // First check to see if there's a condition that might mean we don't carry out the mapping
             if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
             {
-                if (!IsMappingConditionMet(contentToMapFrom, propertyMappings[property.Name].MapIfPropertyMatches))
+                if (!IsMappingConditionMet(contentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
                 {
                     return;
                 }
@@ -1008,12 +1020,12 @@
             // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
             // properties, unless override provided)
             propName = GetMappedPropertyName(property.Name, propertyMappings, true);
-            
+
             // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
             var mapFromAttribute = GetMapFromAttribute(property);
             if (mapFromAttribute != null)
             {
-                var value = contentToMapFrom.GetPropertyValue(propName, IsRecursiveProperty(recursiveProperties, propName));
+                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, IsRecursiveProperty(recursiveProperties, propName));
                 mapFromAttribute.SetPropertyValue(value, property, model, this);
                 return;
             }
@@ -1041,7 +1053,7 @@
             else
             {
                 // Otherwise map types we can handle
-                var value = contentToMapFrom.GetPropertyValue(propName, isRecursiveProperty);
+                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, isRecursiveProperty);
                 if (value != null)
                 {
                     // Check if we are mapping to a related IPublishedContent
@@ -1061,10 +1073,7 @@
                         if (relatedContentToMapFrom == null)
                         {
                             var listOfRelatedContent = value as IEnumerable<IPublishedContent>;
-                            if (listOfRelatedContent != null && listOfRelatedContent.Any())
-                            {
-                                relatedContentToMapFrom = listOfRelatedContent.First();
-                            }
+                            relatedContentToMapFrom = listOfRelatedContent?.FirstOrDefault();
                         }
 
                         // If it's not already IPublishedContent, now check using Id
@@ -1085,7 +1094,7 @@
                             // Check to see if there's a condition that might mean we don't carry out the mapping (on the related content)
                             if (IsMappingConditional(propertyMappings, property.Name))
                             {
-                                if (!IsMappingConditionMet(relatedContentToMapFrom, propertyMappings[property.Name].MapIfPropertyMatches))
+                                if (!IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
                                 {
                                     return;
                                 }
@@ -1102,7 +1111,7 @@
                             else
                             {
                                 // Otherwise look at a doc type field
-                                value = relatedContentToMapFrom.GetPropertyValue(relatedPropName);
+                                value = GetPropertyValue(relatedContentToMapFrom, propertyValueGetter, relatedPropName);
                                 if (value != null)
                                 {
                                     // Map primitive types
@@ -1144,16 +1153,56 @@
         }
 
         /// <summary>
+        /// Helper method to get the type to use to retrieve property values
+        /// </summary>
+        /// <param name="propName">Name of property to map to</param>
+        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <returns>Name of property to map from</returns>
+        private IPropertyValueGetter GetPropertyValueGetter(string propName, Dictionary<string, PropertyMapping> propertyMappings)
+        {
+            if (!propertyMappings.ContainsKey(propName) || propertyMappings[propName].PropertyValueGetter == null)
+            {
+                return _defaultPropertyValueGetter;
+            }
+
+            var propertyValueGetterType = propertyMappings[propName].PropertyValueGetter;
+            if (!typeof(IPropertyValueGetter).IsAssignableFrom(propertyValueGetterType))
+            {
+                throw new InvalidOperationException(
+                    $"The type provided as the PropertyValueGetter for the property {propName} must implement IPropertyValueGetter");
+            }
+
+            return Activator.CreateInstance(propertyValueGetterType) as IPropertyValueGetter;
+        }
+
+        /// <summary>
+        /// Wrapper for retrieving a property value to allow override of the method used instead of the standard GetPropertyValue
+        /// </summary>
+        /// <param name="content">IPublished content to map from</param>
+        /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
+        /// <param name="propName">Property alias</param>
+        /// <param name="recursive">Flag for whether property should be recursively mapped</param>
+        /// <returns>Property value</returns>
+        private static object GetPropertyValue(IPublishedContent content, 
+            IPropertyValueGetter propertyValueGetter, 
+            string propName, bool recursive = false)
+        {
+            return propertyValueGetter.GetPropertyValue(content, propName, recursive);
+        }
+
+        /// <summary>
         /// Helper to check if a mapping conditional applies
         /// </summary>
         /// <param name="contentToMapFrom">IPublished content to map from</param>
+        /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="mapIfPropertyMatches">Property alias and value to match</param>
         /// <returns>True if mapping condition is met</returns>
-        private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, KeyValuePair<string, string> mapIfPropertyMatches)
+        private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, IPropertyValueGetter propertyValueGetter, KeyValuePair<string, string> mapIfPropertyMatches)
         {
             var conditionalPropertyAlias = mapIfPropertyMatches.Key;
-            var conditionalPropertyValue = contentToMapFrom.GetPropertyValue(conditionalPropertyAlias, false);
-            return conditionalPropertyValue != null && conditionalPropertyValue.ToString().ToLowerInvariant() == mapIfPropertyMatches.Value.ToLowerInvariant();
+            var conditionalPropertyValue = GetPropertyValue(contentToMapFrom, propertyValueGetter, conditionalPropertyAlias, false);
+            return conditionalPropertyValue != null && 
+                string.Equals(conditionalPropertyValue.ToString(), mapIfPropertyMatches.Value, StringComparison.InvariantCultureIgnoreCase);
         }
 
         /// <summary>

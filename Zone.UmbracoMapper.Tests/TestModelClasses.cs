@@ -3,6 +3,7 @@
     using System;
     using System.Collections.Generic;
     using System.Web;
+    using Umbraco.Core.Models;
 
     public class SimpleViewModel
     {
@@ -82,6 +83,14 @@
     public class SimpleViewModel3bWithAttribute : SimpleViewModel2
     {
         [PropertyMapping(Ignore = true)]
+        public string BodyText { get; set; }
+
+        public int NonMapped { get; set; }
+    }
+
+    public class SimpleViewModel3cWithAttribute : SimpleViewModel2
+    {
+        [PropertyMapping(PropertyValueGetter = typeof(SuffixAddingPropertyValueGetter))]
         public string BodyText { get; set; }
 
         public int NonMapped { get; set; }
@@ -198,5 +207,14 @@
         public decimal Latitude { get; set; }
 
         public int Zoom { get; set; }
+    }
+
+    public class SuffixAddingPropertyValueGetter : DefaultPropertyValueGetter
+    {
+        public override object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
+        {
+            var value = base.GetPropertyValue(content, alias, recursive) as string ?? string.Empty;
+            return value + "...";
+        }
     }
 }
