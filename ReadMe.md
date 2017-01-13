@@ -456,6 +456,40 @@ We can implement IMapFromAttribute as follows:
 
 Just to reiterate the difference between these two methods: custom mappings define a mapping for a particular C# type; IMapFromAttribute implementations define a mapping for a particular Umbraco data type and are reusable across multiple C# property types.
 
+### Working with Vorto
+
+[Vorto](https://our.umbraco.org/projects/backoffice-extensions/vorto/) is an Umbraco package that supports 1:1 translations in Umbraco.  It works by wrapping standard Umbraco data types and you retrieve values for IPublishedContent using those types not with `GetPropertyValue` but with a custom extension method `GetVortoValue`.
+
+As of version 2.0.3 we've provided a way of replacing the default Umbraco method of retrieving property values that Umbraco Mapper uses with custom one, that can use this Vorto specific method.  Of course this technique can also be used for any other property editor that has a similar requirement to amend how the raw content values from Umbraco are retrieved.
+
+If you have just a few properties on your view model that you wish to use a custom method for, you can decorate your properties like this:
+
+    [PropertyMapping(PropertyValueGetter = typeof(MyPropertyValueGetter))]
+	public string MyProperty { get; set; }
+	
+On the other hand, if you wanted to use this method for all mapping operations, you can set the `DefaultPropertyValueGetter` property on your `UmbracoMapper` instance itself: 
+
+	mapper.DefaultPropertyValueGetter = new MyPropertyValueGetter();
+
+Or provide the value in the overloaded constructor:
+
+    var mapper = new UmbracoMapper(new MyPropertyValueGetter());
+	
+The type you use here must implement `IPropertyValueGetter`.  Here's an example we've used for working with Vorto, that falls back to the standard means of retrieving property values if the particular field is not a Vorto model:
+
+	public class VortoPropertyGetter : IPropertyValueGetter
+	{
+		public object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
+		{
+			if (content.HasVortoValue(alias))
+			{
+				return content.GetVortoValue(alias, recursive: recursive);
+			}
+
+			return content.GetPropertyValue(alias, recursive);
+		}
+	}
+
 ## Classes, Properties and Methods
 
 ### IUmbracoMapper / UmbracoMapper
@@ -465,6 +499,8 @@ The primary mapping component.
 #### Properties
 
 **AssetsRootUrl** (string) - If set allows the population of mapped MediaFile's **DomainWithUrl** property with an absolute URL.  Useful only in the context where a CDN is used for distributing media files rather than them being served from the web server via relative links.
+
+**DefaultPropertyValueGetter** (IPropertyValueGetter) - If set uses the provided type for retrieving property values from Umbraco, instead of the default which uses standard Umbraco GetPropertyValue() calls
 
 #### Methods
 
@@ -665,6 +701,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 	- Handled case where trying to map parent of home page (issue #4) - thanks [richarth](https://github.com/richarth)
 - 2.0.2
     - Added mapping attributes to `MediaFile`
+- 2.0.3
+    - Allowed the default method of retrieving property values from Umbraco to be overriden at the component or view model field level, supporting use with Vorto
 	
 ## Credits
 
