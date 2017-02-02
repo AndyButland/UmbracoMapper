@@ -971,7 +971,10 @@
                 levelsAbove = propertyMappings[propName].LevelsAbove;
                 for (int i = 0; i < levelsAbove; i++)
                 {
-                    contentToMapFrom = contentToMapFrom.Parent;
+                    if (contentToMapFrom != null)
+                    {
+                        contentToMapFrom = contentToMapFrom.Parent;
+                    }
                 }
             }
 
