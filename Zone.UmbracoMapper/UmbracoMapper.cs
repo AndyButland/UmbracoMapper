@@ -969,11 +969,12 @@
             if (propertyMappings.ContainsKey(propName))
             {
                 levelsAbove = propertyMappings[propName].LevelsAbove;
-                for (int i = 0; i < levelsAbove; i++)
+                for (var i = 0; i < levelsAbove; i++)
                 {
-                    if (contentToMapFrom != null)
+                    contentToMapFrom = contentToMapFrom.Parent;
+                    if (contentToMapFrom == null)
                     {
-                        contentToMapFrom = contentToMapFrom.Parent;
+                        break;
                     }
                 }
             }

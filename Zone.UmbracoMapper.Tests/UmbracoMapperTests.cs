@@ -443,6 +443,32 @@
         }
 
         [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotMapWhenLevelRequestedDoesNotExist()
+        {
+            // Arrange
+            var model = new SimpleViewModel7();
+            var content = MockPublishedContent(mockParent: false);
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "ParentId",
+                        new PropertyMapping
+                        {
+                            SourceProperty = "Id",
+                            LevelsAbove = 2
+                        }
+                    }
+                });
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.AreEqual(0, model.ParentId);
+        }
+
+        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesFromParentNodeUsingAttribute()
         {
             // Arrange

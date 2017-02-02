@@ -703,10 +703,12 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Added mapping attributes to `MediaFile`
 - 2.0.3
     - Allowed the default method of retrieving property values from Umbraco to be overriden at the component or view model field level, supporting use with Vorto
+- 2.0.4
+	- Fixed issue when mapping to level above the current node, where the level is too high for the current position in the content tree - thanks [richarth](https://github.com/richarth)
 	
 ## Credits
 
-Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing.
+Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing - thanks 
 
 ## License
 
