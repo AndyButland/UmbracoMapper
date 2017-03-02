@@ -690,7 +690,65 @@
             // Assert
             Assert.AreEqual(99, model.NonMapped);
         }
-        
+
+        /// <remarks>
+        /// Failing test for issue: 
+        /// https://github.com/AndyButland/UmbracoMapper/issues/10
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotApplyIntegerDefaultValueWhenZeroMapped()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            {
+                {
+                    "MappedFromZero",
+                    new PropertyMapping
+                    {
+                        SourceProperty = "zeroInt",
+                        DefaultValue = 1,
+                    }
+                }
+            });
+
+            // Assert
+            Assert.AreEqual(0, model.MappedFromZero);
+        }
+
+        /// <remarks>
+        /// Failing test for issue: 
+        /// https://github.com/AndyButland/UmbracoMapper/issues/10
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_DoesNotApplyBooleanDefaultValueWhenFalseMapped()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            {
+                {
+                    "MappedFromFalse",
+                    new PropertyMapping
+                    {
+                        SourceProperty = "falseBool",
+                        DefaultValue = true,
+                    }
+                }
+            });
+
+            // Assert
+            Assert.IsFalse(model.MappedFromFalse);
+        }
+
         /// <remarks>
         /// Failing test for issue: 
         /// https://github.com/AndyButland/UmbracoMapper/issues/1
@@ -986,7 +1044,7 @@
             mapper.Map(dictionary, model);
 
             // Assert
-            Assert.AreEqual(string.Empty, model.TwitterUserName);
+            Assert.IsNull(model.TwitterUserName);
         }
 
         #endregion
@@ -2190,6 +2248,14 @@
             nonMappedContentMock.Setup(c => c.PropertyTypeAlias).Returns("nonMapped");
             nonMappedContentMock.Setup(c => c.Value).Returns(string.Empty);
 
+            var zeroIntContentMock = new Mock<IPublishedProperty>();
+            zeroIntContentMock.Setup(c => c.PropertyTypeAlias).Returns("zeroInt");
+            zeroIntContentMock.Setup(c => c.Value).Returns(0);
+
+            var falseBoolContentMock = new Mock<IPublishedProperty>();
+            falseBoolContentMock.Setup(c => c.PropertyTypeAlias).Returns("falseBool");
+            falseBoolContentMock.Setup(c => c.Value).Returns(false);
+
             var dateTimeContentMock = new Mock<IPublishedProperty>();
             dateTimeContentMock.Setup(c => c.PropertyTypeAlias).Returns("dateTime");
             dateTimeContentMock.Setup(c => c.Value).Returns("1/1/0001 12:00:00 AM");
@@ -2234,6 +2300,8 @@
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "geoCoordinate"), It.IsAny<bool>())).Returns(geoCoordinatePropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "child"), It.IsAny<bool>())).Returns(childContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "nonMapped"), It.IsAny<bool>())).Returns(nonMappedContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "zeroInt"), It.IsAny<bool>())).Returns(zeroIntContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "falseBool"), It.IsAny<bool>())).Returns(falseBoolContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "dateTime"), It.IsAny<bool>())).Returns(dateTimeContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subHeading"), It.IsAny<bool>())).Returns(subHeadingContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValue"), It.IsAny<bool>())).Returns(subModelValueContentMock.Object);

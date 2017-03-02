@@ -51,6 +51,10 @@
         public IHtmlString BodyTextAsHtmlString { get; set; }
 
         public int NonMapped { get; set; }
+
+        public int MappedFromZero { get; set; }
+
+        public bool MappedFromFalse { get; set; }
     }
 
     public class SimpleViewModel3WithAttribute : SimpleViewModel2

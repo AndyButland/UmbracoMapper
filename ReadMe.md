@@ -705,6 +705,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Allowed the default method of retrieving property values from Umbraco to be overriden at the component or view model field level, supporting use with Vorto
 - 2.0.4
 	- Fixed issue when mapping to level above the current node, where the level is too high for the current position in the content tree - thanks [richarth](https://github.com/richarth)
+- 2.0.5
+	- Fixed issue with default mapping not being applied when primitive type default value is mapped (issue #10)
 	
 ## Credits
 

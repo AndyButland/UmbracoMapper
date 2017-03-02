@@ -162,6 +162,9 @@
                     // Check if we have a string value formatter passed
                     var stringValueFormatter = GetStringValueFormatter(propertyMappings, property.Name);
 
+                    // If default value passed, set it.  If a mapping is completed it'll be overwritten.
+                    SetDefaultValueIfProvided(model, propertyMappings, property);
+
                     // Check if we are looking to concatenate or coalesce more than one source property
                     var multipleMappingOperation = GetMultiplePropertyMappingOperation(propertyMappings, property.Name);
                     switch (multipleMappingOperation)
@@ -169,11 +172,7 @@
                         case MultiplePropertyMappingOperation.Concatenate:
 
                             // Loop through all the source properties requested for concatenation
-                            var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator;
-                            if (concatenationSeperator == null)
-                            {
-                                concatenationSeperator = string.Empty;
-                            }
+                            var concatenationSeperator = propertyMappings[property.Name].ConcatenationSeperator ?? string.Empty;
 
                             var isFirst = true;
                             foreach (var sourceProp in propertyMappings[property.Name].SourcePropertiesForConcatenation)
@@ -181,7 +180,7 @@
                                 // Call the mapping function, passing in each source property to use, and flag to contatenate
                                 // on all but the first
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
+                                MapContentProperty(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
                                     concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                                 isFirst = false;
                             }
@@ -195,7 +194,7 @@
                                 // Call the mapping function, passing in each source property to use, and flag to coalesce
                                 // on all but the first
                                 propertyMappings[property.Name].SourceProperty = sourceProp;
-                                MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
+                                MapContentProperty(model, property, contentToMapFrom, propertyMappings, recursiveProperties,
                                     coalesceWithExistingValue: true, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                             }
 
@@ -203,12 +202,9 @@
                         default:
 
                             // Map the single property
-                            MapContentProperty<T>(model, property, contentToMapFrom, propertyMappings, recursiveProperties, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
+                            MapContentProperty(model, property, contentToMapFrom, propertyMappings, recursiveProperties, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                             break;
                     }
-
-                    // If property value not set, and default value passed, use it
-                    SetDefaultValueIfProvided(model, propertyMappings, property);
                 }
             }
 
@@ -1440,10 +1436,10 @@
             {
                 case "Boolean":
                     bool boolValue;
-                    if (stringValue == "1")
+                    if (stringValue == "1" || stringValue == "0")
                     {
                         // Special case: Archetype stores "1" for boolean true, so we'll handle that convention
-                        property.SetValue(model, true);
+                        property.SetValue(model, stringValue == "1");
                     }
                     else if (bool.TryParse(stringValue, out boolValue))
                     {
@@ -1529,7 +1525,7 @@
                     // Only supporting/makes sense to allow concatenation and coalescing for String type
                     if (concatenateToExistingValue)
                     {
-                        var prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                        var prefixValueWith = property.GetValue(model) + concatenationSeperator;
                         property.SetValue(model, prefixValueWith + stringValue);
                     }
                     else if (coalesceWithExistingValue)
@@ -1544,7 +1540,7 @@
                     {
                         property.SetValue(model, stringValueFormatter(stringValue));
                     }
-                    else
+                    else if (!string.IsNullOrEmpty(stringValue))
                     {
                         property.SetValue(model, stringValue);
                     }
@@ -1743,9 +1739,9 @@
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="property">Property of view model to map to</param>
-        private static void SetDefaultValueIfProvided<T>(T model, Dictionary<string, PropertyMapping> propertyMappings, PropertyInfo property) where T : class
+        private static void SetDefaultValueIfProvided<T>(T model, Dictionary<string, PropertyMapping> propertyMappings, PropertyInfo property)
         {
-            if (HasDefaultValue(propertyMappings, property.Name) && IsNullOrDefault(property.GetValue(model)))
+            if (HasDefaultValue(propertyMappings, property.Name))
             {
                 property.SetValue(model, propertyMappings[property.Name].DefaultValue);
             }
