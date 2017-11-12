@@ -1091,8 +1091,7 @@
                             if (int.TryParse(value.ToString(), out relatedId))
                             {
                                 // Get the related content
-                                var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
-                                relatedContentToMapFrom = umbracoHelper.TypedContent(relatedId);
+                                relatedContentToMapFrom = UmbracoContext.Current.ContentCache.GetById(relatedId);
                             }
                         }
 
