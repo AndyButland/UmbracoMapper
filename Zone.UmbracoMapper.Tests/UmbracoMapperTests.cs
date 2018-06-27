@@ -852,6 +852,24 @@
             Assert.AreEqual("This is the body text...", model.BodyText);
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithCustomPropertyValueGetterReturningComplexType()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model,
+                new Dictionary<string, PropertyMapping> { { "GeoCoordinate", new PropertyMapping { PropertyValueGetter = typeof(ComplexTypeReturningPropertyValueGetter), } } });
+
+            // Assert
+            Assert.AreEqual("Test content", model.Name);
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual(1.9M, model.GeoCoordinate.Latitude);
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML

@@ -707,10 +707,12 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 	- Fixed issue when mapping to level above the current node, where the level is too high for the current position in the content tree - thanks [richarth](https://github.com/richarth)
 - 2.0.5
 	- Fixed issue with default mapping not being applied when primitive type default value is mapped (issue #10)
+- 2.0.6
+	- Handled case where IPropertyValueGetter is in use and returns a complex type - as reported and solution provided by [Olie here](https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter)
 	
 ## Credits
 
-Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing - thanks 
+Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing. 
 
 ## License
 

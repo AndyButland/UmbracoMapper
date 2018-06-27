@@ -221,4 +221,17 @@
             return value + "...";
         }
     }
+
+    public class ComplexTypeReturningPropertyValueGetter : DefaultPropertyValueGetter
+    {
+        public override object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
+        {
+            return new GeoCoordinate
+                {
+                    Latitude = 1.9M,
+                    Longitude = 0.1M,
+                    Zoom = 10
+                };
+        }
+    }
 }

@@ -1136,18 +1136,26 @@
                         // in the dictionary)
                         if (value is IPublishedContent)
                         {
-                            typeof (UmbracoMapper)
+                            typeof(UmbracoMapper)
                                 .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                                 .MakeGenericMethod(property.PropertyType)
-                                .Invoke(this, new object[] {(IPublishedContent) value, property.GetValue(model)});
+                                .Invoke(this, new[] {(IPublishedContent) value, property.GetValue(model)});
                         }
                         else if (value is IEnumerable<IPublishedContent> && property.PropertyType.GetInterface("IEnumerable") != null)
                         {
                             var collectionPropertyType = GetGenericCollectionType(property);
-                            typeof (UmbracoMapper)
+                            typeof(UmbracoMapper)
                                 .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                                 .MakeGenericMethod(collectionPropertyType)
-                                .Invoke(this, new object[] {(IEnumerable<IPublishedContent>)value, property.GetValue(model), null});                            
+                                .Invoke(this, new[] {(IEnumerable<IPublishedContent>)value, property.GetValue(model), null});                            
+                        }
+                        else if (value.GetType().IsAssignableFrom(property.PropertyType))
+                        {
+                            // We could also have an instance of IPropertyValueGetter in use here.
+                            // If that returns a complex type and it matches the type of the view model, 
+                            // we can set it here.
+                            // See: https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter
+                            property.SetValue(model, value);
                         }
                     }
                     else
