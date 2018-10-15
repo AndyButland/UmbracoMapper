@@ -388,12 +388,21 @@ For the finest control, it's also possible to provided a custom mapping method v
       new Dictionary<string, PropertyMapping>
       {
           {
-            "geoCoordinate", new PropertyMapping
+            "GeoCoordinate", new PropertyMapping
                 {
                     CustomMapping = CustomMappings.MapGeoCoordinate
                 }
           },
       });
+      
+This can also be achieved using an attribute on the view mode, which, if in place, means the Dictionary object doesn't need to be passed:
+
+    [PropertyMapping(
+        CustomMappingType = typeof(CustomMappings), 
+        CustomMappingMethod = nameof(CustomMappings.MapGeoCoordinate))]
+    public GeoCoordinate GeoCoordinate { get; set; }
+    
+    mapper.Map(CurrentPage, model);
 
 
 ### Using IMapFromAttribute
@@ -725,6 +734,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Handled case where IPropertyValueGetter is in use and returns a complex type - as reported and solution provided by [Olie here](https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter)
 - 2.0.7
     - Added the option to provide a CustomMapping for a single property via the customisation dictionary
+- 2.0.8
+    - Implemented the above via the `PropertyMapping` attribute
     
 ## Credits
 
