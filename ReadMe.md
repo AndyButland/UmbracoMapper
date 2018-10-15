@@ -382,6 +382,20 @@ Here's another example, this time mapping from the [Google Maps data type](http:
 
 A custom mapping method can be restricted to a single property, rather than all properties of the given type, by passing the **propertyName** parameter to the **AddCustomMapping** method.
 
+For the finest control, it's also possible to provided a custom mapping method via the optional Dictionary object provided for a mapping operation.  If this is done, the provided mapping will be used in preference to any globally registerd custom mapping method that would otherwise match the type and/or property name.
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping>
+      {
+          {
+            "geoCoordinate", new PropertyMapping
+                {
+                    CustomMapping = CustomMappings.MapGeoCoordinate
+                }
+          },
+      });
+
+
 ### Using IMapFromAttribute
 
 Custom mappings allow you to define one way to map a given complex type on your view model.  But there's another, even more generic approach you can take from version 1.6.0 thanks to a pull request from [Robin Herd](https://github.com/21robin12).  
@@ -465,30 +479,30 @@ As of version 2.0.3 we've provided a way of replacing the default Umbraco method
 If you have just a few properties on your view model that you wish to use a custom method for, you can decorate your properties like this:
 
     [PropertyMapping(PropertyValueGetter = typeof(MyPropertyValueGetter))]
-	public string MyProperty { get; set; }
-	
+    public string MyProperty { get; set; }
+    
 On the other hand, if you wanted to use this method for all mapping operations, you can set the `DefaultPropertyValueGetter` property on your `UmbracoMapper` instance itself: 
 
-	mapper.DefaultPropertyValueGetter = new MyPropertyValueGetter();
+    mapper.DefaultPropertyValueGetter = new MyPropertyValueGetter();
 
 Or provide the value in the overloaded constructor:
 
     var mapper = new UmbracoMapper(new MyPropertyValueGetter());
-	
+    
 The type you use here must implement `IPropertyValueGetter`.  Here's an example we've used for working with Vorto, that falls back to the standard means of retrieving property values if the particular field is not a Vorto model:
 
-	public class VortoPropertyGetter : IPropertyValueGetter
-	{
-		public object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
-		{
-			if (content.HasVortoValue(alias))
-			{
-				return content.GetVortoValue(alias, recursive: recursive);
-			}
+    public class VortoPropertyGetter : IPropertyValueGetter
+    {
+        public object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
+        {
+            if (content.HasVortoValue(alias))
+            {
+                return content.GetVortoValue(alias, recursive: recursive);
+            }
 
-			return content.GetPropertyValue(alias, recursive);
-		}
-	}
+            return content.GetPropertyValue(alias, recursive);
+        }
+    }
 
 ## Classes, Properties and Methods
 
@@ -610,9 +624,9 @@ The last version of the package strictly supporting out of the box Umbraco versi
 After that the references to Umbraco Core were updated to version 7.  The package still works though with Umbraco 6, so long as the JSON.Net dependency is updated to the version that ships with Umbraco 7, `6.0.8`.  This can be done with a NuGet command:
 
     PM> Install-Package Newtonsoft.Json -Version: 6.0.8
-	
+    
 With that dependency updated Umbraco 6 *appears to me* to work unaffected, which is borne to some extent out by [other discussion](https://our.umbraco.org/forum/developers/api-questions/57394-Is-the-latest-version-of-JsonNET-compatible-with-Umbraco-616).
-	
+    
 ## Version History
 
 - 1.0.2 - First public release
@@ -695,21 +709,23 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Added support for mapping single and multiple media to view model instances of MediaFile (using a custom mapping, but one that the mapper defines itself)
 - 2.0.0
     - Upgraded Umbraco reference to version 7 allowing for unit testing without use of MS Fakes
-	- Use on Umbraco 6 now requires an update to the JSON.Net dependency (see "Supported Umbraco Versions" above)
+    - Use on Umbraco 6 now requires an update to the JSON.Net dependency (see "Supported Umbraco Versions" above)
 - 2.0.1
     - Fully removed dependency on MS Fakes
-	- Handled case where trying to map parent of home page (issue #4) - thanks [richarth](https://github.com/richarth)
+    - Handled case where trying to map parent of home page (issue #4) - thanks [richarth](https://github.com/richarth)
 - 2.0.2
     - Added mapping attributes to `MediaFile`
 - 2.0.3
     - Allowed the default method of retrieving property values from Umbraco to be overriden at the component or view model field level, supporting use with Vorto
 - 2.0.4
-	- Fixed issue when mapping to level above the current node, where the level is too high for the current position in the content tree - thanks [richarth](https://github.com/richarth)
+    - Fixed issue when mapping to level above the current node, where the level is too high for the current position in the content tree - thanks [richarth](https://github.com/richarth)
 - 2.0.5
-	- Fixed issue with default mapping not being applied when primitive type default value is mapped (issue #10)
+    - Fixed issue with default mapping not being applied when primitive type default value is mapped (issue #10)
 - 2.0.6
-	- Handled case where IPropertyValueGetter is in use and returns a complex type - as reported and solution provided by [Olie here](https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter)
-	
+    - Handled case where IPropertyValueGetter is in use and returns a complex type - as reported and solution provided by [Olie here](https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter)
+- 2.0.7
+    - Added the option to provide a CustomMapping for a single property via the customisation dictionary
+    
 ## Credits
 
 Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing. 

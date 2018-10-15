@@ -555,6 +555,61 @@
         }
 
         [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingWhenProvidedViaDictionary()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "geoCoordinate",
+                        new PropertyMapping
+                        {
+                            CustomMapping = MapGeoCoordinate,
+                        }
+                    }
+                });
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingOverridingExistingMapping()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "geoCoordinate",
+                        new PropertyMapping
+                        {
+                            CustomMapping = MapInversedGeoCoordinate,
+                        }
+                    }
+                });
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)-5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)-10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsUsingMapFromAttribute()
         {
             // Arrange
@@ -2180,6 +2235,14 @@
         private static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
         {
             return GetGeoCoordinate(contentToMapFrom.GetPropertyValue(propName, isRecursive).ToString());
+        }
+
+        private static object MapInversedGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive)
+        {
+            var value = GetGeoCoordinate(contentToMapFrom.GetPropertyValue(propName, isRecursive).ToString());
+            value.Latitude = -value.Latitude;
+            value.Longitude = -value.Longitude;
+            return value;
         }
 
         private static object MapGeoCoordinateForCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive)

@@ -782,6 +782,11 @@
                         {
                             propertyMappings[property.Name].PropertyValueGetter = propertyMapping.PropertyValueGetter;
                         }
+
+                        if (propertyMappings[property.Name].CustomMapping == null)
+                        {
+                            propertyMappings[property.Name].CustomMapping = propertyMapping.CustomMapping;
+                        }
                     }
                     else
                     {
@@ -932,7 +937,7 @@
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
         /// <returns>Name of property to map from</returns>
-        private static string GetMappedPropertyName(string propName, Dictionary<string, PropertyMapping> propertyMappings, bool convertToCamelCase = false)
+        private static string GetMappedPropertyName(string propName, IReadOnlyDictionary<string, PropertyMapping> propertyMappings, bool convertToCamelCase = false)
         {
             var mappedName = propName;
             if (propertyMappings.ContainsKey(propName) &&
@@ -957,7 +962,7 @@
         /// <param name="propName">Name of property to map</param>
         /// <param name="levelsAbove">Output parameter indicating the levels above the current node we are mapping from</param>
         /// <returns>Instance of IPublishedContent to map from</returns>
-        private IPublishedContent GetContentToMapFrom(IPublishedContent content, Dictionary<string, PropertyMapping> propertyMappings, 
+        private IPublishedContent GetContentToMapFrom(IPublishedContent content, IReadOnlyDictionary<string, PropertyMapping> propertyMappings, 
             string propName, out int levelsAbove)
         {
             levelsAbove = 0;
@@ -1042,21 +1047,18 @@
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
             var namedCustomMappingKey = GetNamedCustomMappingKey(property);
             var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property);
-            if (_customMappings.ContainsKey(namedCustomMappingKey))
+            CustomMapping providedCustomMapping;
+            if (HasProvidedCustomMapping(propertyMappings, propName, out providedCustomMapping))
             {
-                var value = _customMappings[namedCustomMappingKey](this, contentToMapFrom, propName, isRecursiveProperty);
-                if (value != null)
-                {
-                    property.SetValue(model, value);
-                }
+                SetValueFromCustomMapping(model, property, contentToMapFrom, providedCustomMapping, propName, isRecursiveProperty);
+            }
+            else if (_customMappings.ContainsKey(namedCustomMappingKey))
+            {
+                SetValueFromCustomMapping(model, property, contentToMapFrom, _customMappings[namedCustomMappingKey], propName, isRecursiveProperty);
             }
             else if (_customMappings.ContainsKey(unnamedCustomMappingKey))
             {
-                var value = _customMappings[unnamedCustomMappingKey](this, contentToMapFrom, propName, isRecursiveProperty);
-                if (value != null)
-                {
-                    property.SetValue(model, value);
-                }
+                SetValueFromCustomMapping(model, property, contentToMapFrom, _customMappings[unnamedCustomMappingKey], propName, isRecursiveProperty);
             }
             else
             {
@@ -1168,12 +1170,51 @@
         }
 
         /// <summary>
+        /// Helper to check if particular property has a provided CustomMapping
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <param name="customMapping">Provided custom mapping returned via out parameter</param>
+        /// <returns>True if mapping should be from child property</returns>
+        private static bool HasProvidedCustomMapping(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName, out CustomMapping customMapping)
+        {
+            if (propertyMappings.ContainsKey(propName) && propertyMappings[propName].CustomMapping != null)
+            {
+                customMapping = propertyMappings[propName].CustomMapping;
+                return true;
+            }
+
+            customMapping = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Helper method to set a property value using a CustomMapping
+        /// </summary>
+        /// <typeparam name="T">Type of view model</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="property">Property of view model to map to</param>
+        /// <param name="contentToMapFrom">IPublished content to map from</param>
+        /// <param name="customMapping">Instance of <see cref="CustomMapping"/> to use for mapping</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <param name="isRecursiveProperty">Flag for whether to map property recurisively</param>
+        private void SetValueFromCustomMapping<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
+                                                  CustomMapping customMapping, string propName, bool isRecursiveProperty)
+        {
+            var value = customMapping(this, contentToMapFrom, propName, isRecursiveProperty);
+            if (value != null)
+            {
+                property.SetValue(model, value);
+            }
+        }
+
+        /// <summary>
         /// Helper method to get the type to use to retrieve property values
         /// </summary>
         /// <param name="propName">Name of property to map to</param>
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Name of property to map from</returns>
-        private IPropertyValueGetter GetPropertyValueGetter(string propName, Dictionary<string, PropertyMapping> propertyMappings)
+        private IPropertyValueGetter GetPropertyValueGetter(string propName, IReadOnlyDictionary<string, PropertyMapping> propertyMappings)
         {
             if (!propertyMappings.ContainsKey(propName) || propertyMappings[propName].PropertyValueGetter == null)
             {
@@ -1226,7 +1267,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool IsMappingConditional(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static bool IsMappingConditional(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].MapIfPropertyMatches.Key);
@@ -1250,7 +1291,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool IsMappingFromChildProperty(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static bool IsMappingFromChildProperty(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceChildProperty);
@@ -1262,7 +1303,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool HasDefaultValue(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static bool HasDefaultValue(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].DefaultValue != null;
         }
@@ -1273,7 +1314,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool IsMappingFromDictionaryValue(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static bool IsMappingFromDictionaryValue(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && !string.IsNullOrEmpty(propertyMappings[propName].DictionaryKey);
         }
@@ -1284,7 +1325,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>Formatting function if found, otherwise null</returns>
-        private static Func<string, string> GetStringValueFormatter(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static Func<string, string> GetStringValueFormatter(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             if (propertyMappings != null &&
                 propertyMappings.ContainsKey(propName) &&
@@ -1303,7 +1344,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>Type of multiple mapping operation</returns>
-        private static MultiplePropertyMappingOperation GetMultiplePropertyMappingOperation(Dictionary<string, PropertyMapping> propertyMappings,
+        private static MultiplePropertyMappingOperation GetMultiplePropertyMappingOperation(IReadOnlyDictionary<string, PropertyMapping> propertyMappings,
             string propName)
         {
             var result = MultiplePropertyMappingOperation.None;
@@ -1331,7 +1372,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if ignored</returns>
-        private static bool IsPropertyIgnored(Dictionary<string, PropertyMapping> propertyMappings, string propName)
+        private static bool IsPropertyIgnored(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].Ignore;
         }
@@ -1381,7 +1422,7 @@
                 var stringValue = value.ToString();
                 if (concatenateToExistingValue)
                 {
-                    var prefixValueWith = property.GetValue(model).ToString() + concatenationSeperator;
+                    var prefixValueWith = property.GetValue(model) + concatenationSeperator;
                     property.SetValue(model, prefixValueWith + stringValue);
                 }
                 else if (coalesceWithExistingValue)
@@ -1603,12 +1644,7 @@
         /// <returns>Matched XElement</returns>
         private static XElement GetXElementCaseInsensitive(XElement xml, string propName)
         {
-            if (xml != null)
-            {
-                return xml.Elements().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
-            }
-
-            return null;
+            return xml?.Elements().SingleOrDefault(s => string.Compare(s.Name.ToString(), propName, true) == 0);
         }
 
         /// <summary>
