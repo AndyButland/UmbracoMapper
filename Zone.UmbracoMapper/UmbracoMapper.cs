@@ -859,8 +859,31 @@
                 DefaultValue = attribute.DefaultValue,
                 DictionaryKey = attribute.DictionaryKey,
                 Ignore = attribute.Ignore,
-                PropertyValueGetter = attribute.PropertyValueGetter
+                PropertyValueGetter = attribute.PropertyValueGetter,
+                CustomMapping = InstantiateCustomMappingDelegateFromAttributeFields(attribute)
             };
+        }
+
+        private static CustomMapping InstantiateCustomMappingDelegateFromAttributeFields(PropertyMappingAttribute attribute)
+        {
+            if (attribute.CustomMappingType == null || string.IsNullOrEmpty(attribute.CustomMappingMethod))
+            {
+                return null;
+            }
+
+            var customMappingMethod = GetCustomMappingMethod(attribute.CustomMappingType, attribute.CustomMappingMethod);
+            if (customMappingMethod == null)
+            {
+                return null;
+            }
+
+            return (CustomMapping)Delegate.CreateDelegate(typeof(CustomMapping), customMappingMethod);
+        }
+
+        private static MethodInfo GetCustomMappingMethod(IReflect type, string methodName)
+        {
+            return type.GetMethod(methodName,
+                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
         }
 
         /// <summary>
@@ -1048,7 +1071,7 @@
             var namedCustomMappingKey = GetNamedCustomMappingKey(property);
             var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property);
             CustomMapping providedCustomMapping;
-            if (HasProvidedCustomMapping(propertyMappings, propName, out providedCustomMapping))
+            if (HasProvidedCustomMapping(propertyMappings, property.Name, out providedCustomMapping))
             {
                 SetValueFromCustomMapping(model, property, contentToMapFrom, providedCustomMapping, propName, isRecursiveProperty);
             }

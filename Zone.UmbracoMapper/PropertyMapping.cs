@@ -90,7 +90,7 @@
 
         /// <summary>
         /// Provides an instance of a <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
-        /// custom mapping that might be registered globally.
+        /// custom mapping that might be registered globally. 
         /// </summary>
         public CustomMapping CustomMapping { get; set; }
     }

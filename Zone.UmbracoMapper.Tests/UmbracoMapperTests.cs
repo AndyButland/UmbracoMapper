@@ -566,13 +566,31 @@
             mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 {
                     {
-                        "geoCoordinate",
+                        "GeoCoordinate",
                         new PropertyMapping
                         {
                             CustomMapping = MapGeoCoordinate,
                         }
                     }
                 });
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingCustomMappingWhenProvidedViaAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel8a();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
 
             // Assert
             Assert.IsNotNull(model.GeoCoordinate);
@@ -594,7 +612,7 @@
             mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 {
                     {
-                        "geoCoordinate",
+                        "GeoCoordinate",
                         new PropertyMapping
                         {
                             CustomMapping = MapInversedGeoCoordinate,
@@ -2232,7 +2250,7 @@
 
         #region Custom mappings
 
-        private static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
+        internal static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
         {
             return GetGeoCoordinate(contentToMapFrom.GetPropertyValue(propName, isRecursive).ToString());
         }

@@ -81,5 +81,17 @@
         /// A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
         /// </summary>
         public Type PropertyValueGetter { get; set; }
+
+        /// <summary>
+        /// Provides an type containing <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
+        /// custom mapping that might be registered globally. 
+        /// </summary>
+        public Type CustomMappingType { get; set; }
+
+        /// <summary>
+        /// Provides the name of a method of type <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
+        /// custom mapping that might be registered globally. 
+        /// </summary>
+        public string CustomMappingMethod { get; set; }
     }
 }

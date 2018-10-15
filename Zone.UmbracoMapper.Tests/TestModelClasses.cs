@@ -177,6 +177,14 @@
         public GeoCoordinate GeoCoordinate { get; set; }
     }
 
+    public class SimpleViewModel8a : SimpleViewModel
+    {
+        [PropertyMapping(
+            CustomMappingType = typeof(UmbracoMapperTests), 
+            CustomMappingMethod = nameof(UmbracoMapperTests.MapGeoCoordinate))]
+        public GeoCoordinate GeoCoordinate { get; set; }
+    }
+
     public class SimpleViewModel9 : SimpleViewModel
     {
         [SimpleMapFrom]
