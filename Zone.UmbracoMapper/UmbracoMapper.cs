@@ -116,7 +116,7 @@
                 // Ensure model is not null
                 if (model == null)
                 {
-                    throw new ArgumentNullException("model", "Object to map to cannot be null");
+                    throw new ArgumentNullException(nameof(model), "Object to map to cannot be null");
                 }
 
                 // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
@@ -155,7 +155,7 @@
                         typeof(UmbracoMapper)
                             .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                             .MakeGenericMethod(property.PropertyType)
-                            .Invoke(this, new object[] { contentToMapFrom, property.GetValue(model) });
+                            .Invoke(this, new[] { contentToMapFrom, property.GetValue(model) });
                         continue;
                     }
 
@@ -1037,12 +1037,11 @@
             var propertyValueGetter = GetPropertyValueGetter(property.Name, propertyMappings);
 
             // First check to see if there's a condition that might mean we don't carry out the mapping
-            if (IsMappingConditional(propertyMappings, property.Name) && !IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
+            if (IsMappingConditional(propertyMappings, property.Name) && 
+                !IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name) && 
+                !IsMappingConditionMet(contentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
             {
-                if (!IsMappingConditionMet(contentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
-                {
-                    return;
-                }
+                return;
             }
 
             // Set native IPublishedContent properties (using convention that names match exactly)
@@ -1061,8 +1060,7 @@
             var mapFromAttribute = GetMapFromAttribute(property);
             if (mapFromAttribute != null)
             {
-                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, IsRecursiveProperty(recursiveProperties, propName));
-                mapFromAttribute.SetPropertyValue(value, property, model, this);
+                SetValueFromMapFromAttribute(model, property, contentToMapFrom, mapFromAttribute, propName, recursiveProperties, propertyValueGetter, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                 return;
             }
 
@@ -1124,12 +1122,10 @@
                         if (relatedContentToMapFrom != null)
                         {
                             // Check to see if there's a condition that might mean we don't carry out the mapping (on the related content)
-                            if (IsMappingConditional(propertyMappings, property.Name))
+                            if (IsMappingConditional(propertyMappings, property.Name) && 
+                                !IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
                             {
-                                if (!IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
-                                {
-                                    return;
-                                }
+                                return;
                             }
 
                             var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
@@ -1190,6 +1186,68 @@
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Helper method to set a property value using an <see cref="IMapFromAttribute"/>
+        /// </summary>
+        /// <typeparam name="T">Type of view model</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="property">Property of view model to map to</param>
+        /// <param name="contentToMapFrom">IPublished content to map from</param>
+        /// <param name="mapFromAttribute">Instance of <see cref="IMapFromAttribute"/> to use for mapping</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <param name="recursiveProperties">List of recursive properties</param>
+        /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
+        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
+        /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
+        private void SetValueFromMapFromAttribute<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
+                                                     IMapFromAttribute mapFromAttribute, string propName,
+                                                     string[] recursiveProperties, IPropertyValueGetter propertyValueGetter,
+                                                     bool concatenateToExistingValue, string concatenationSeperator,
+                                                     bool coalesceWithExistingValue)
+        {
+            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, IsRecursiveProperty(recursiveProperties, propName));
+
+            // If mapping to a string, we should manipulate the mapped value to make use of the concatenation and coalescing 
+            // settings, if provided.
+            // So we need to save the current value.
+            var currentStringValue = string.Empty;
+            if (AreMappingToString(property))
+            {
+                currentStringValue = GetStringValueOrEmpty(model, property);
+            }
+            
+            mapFromAttribute.SetPropertyValue(value, property, model, this);
+
+            if (!AreMappingToString(property))
+            {
+                return;
+            }
+
+            // If mapping to a string, we should maniplate the mapped value to make use of the concatenation and coalescing settings, and the string value formatter, if provided.
+            if (concatenateToExistingValue)
+            {
+                var stringValue = GetStringValueOrEmpty(model, property);
+                var prefixValueWith = currentStringValue + concatenationSeperator;
+                property.SetValue(model, prefixValueWith + stringValue);
+            }
+            else if (coalesceWithExistingValue && string.IsNullOrWhiteSpace(currentStringValue))
+            {
+                var stringValue = GetStringValueOrEmpty(model, property);
+                property.SetValue(model, stringValue);
+            }
+        }
+
+        private static bool AreMappingToString(PropertyInfo property)
+        {
+            return property.PropertyType.Name == "String";
+        }
+
+        private static string GetStringValueOrEmpty<T>(T model, PropertyInfo property)
+        {
+            return property.GetValue(model)?.ToString() ?? string.Empty;
         }
 
         /// <summary>
