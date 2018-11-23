@@ -4,6 +4,9 @@
     using System.Collections.Generic;
     using System.Web;
     using Attributes;
+
+    using TestWebApp.Attributes;
+
     using Zone.UmbracoMapper;
     
     public class UberDocTypeViewModelWithAttribute
@@ -88,6 +91,10 @@
 
         [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "emptyField", "Name" })]
         public string CoalescedValue { get; set; }
+
+        [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "emptyField", "heading" })]
+        [MapPropertyValueToUpperCase]
+        public string CoalescedValueWithMapFromAttribute { get; set; }
 
         [PropertyMapping(DefaultValue = "Default text")]
         public string NonMapped { get; set; }

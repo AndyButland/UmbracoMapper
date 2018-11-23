@@ -9,6 +9,8 @@
     using Umbraco.Core.Models;
     using Umbraco.Web;
 
+    using Zone.UmbracoMapper.Tests.Attributes;
+
     [TestClass]
     public class UmbracoMapperTests
     {
@@ -641,6 +643,57 @@
             // Assert
             Assert.AreEqual("Test content", model.Name);
             Assert.AreEqual("Child item", model.Child.Name);
+        }
+
+        // Test for issue #13
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingMapFromAttributeAndRespectsConcatenationParameters()
+        {
+            // Arrange
+            SimpleMapFromForContatenateStringAttribute.ResetCallCount();
+            var model = new SimpleViewModel9a();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test 1,Test 2", model.Test);
+        }
+
+        // Test for issue #13
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingMapFromAttributeAndRespectsCoalesceParameter()
+        {
+            // Arrange
+            SimpleMapFromForContatenateStringAttribute.ResetCallCount();
+            var model = new SimpleViewModel9b();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test 2", model.Test);
+        }
+
+        // Test for issue #13
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsUsingMapFromAttributeAndRespectsCoalesceParameter2()
+        {
+            // Arrange
+            SimpleMapFromForContatenateStringAttribute.ResetCallCount();
+            var model = new SimpleViewModel9c();
+            var content = MockPublishedContent();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the summary text", model.Test);
         }
 
         [TestMethod]

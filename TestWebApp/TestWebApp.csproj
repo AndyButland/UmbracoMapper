@@ -246,6 +246,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="App_Start\NinjectWebCommon.cs" />
+    <Compile Include="Attributes\MapPropertyValueToUpperCaseAttribute.cs" />
     <Compile Include="Controllers\AutoMapping\NewsLandingPageController.cs" />
     <Compile Include="Controllers\BaseController.cs" />
     <Compile Include="Controllers\UberDocTypeController.cs" />

@@ -736,13 +736,15 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Added the option to provide a CustomMapping for a single property via the customisation dictionary
 - 2.0.8
     - Implemented the above via the `PropertyMapping` attribute
-    
+- 2.0.9
+    - Added support for the use of string concatenation and coalescing when using IMapFromAttribute
+	
 ## Credits
 
 Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing. 
 
 ## License
 
-Copyright &copy; 2016 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
+Copyright &copy; 2016-18 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
 
 Licensed under the [MIT License](License.md)

@@ -5,6 +5,8 @@
     using System.Web;
     using Umbraco.Core.Models;
 
+    using Zone.UmbracoMapper.Tests.Attributes;
+
     public class SimpleViewModel
     {
         public int Id { get; set; }
@@ -187,8 +189,29 @@
 
     public class SimpleViewModel9 : SimpleViewModel
     {
-        [SimpleMapFrom]
+        [SimpleMapFromForSimpleViewModel]
         public SimpleViewModel Child { get; set; }
+    }
+
+    public class SimpleViewModel9a : SimpleViewModel
+    {
+        [PropertyMapping(SourcePropertiesForConcatenation = new[] { "bodyText", "summaryText" }, ConcatenationSeperator = ",")]
+        [SimpleMapFromForContatenateString]
+        public string Test { get; set; }
+    }
+
+    public class SimpleViewModel9b : SimpleViewModel
+    {
+        [PropertyMapping(SourcePropertiesForCoalescing = new[] { "bodyText", "summaryText" })]
+        [SimpleMapFromForContatenateString(SetToEmptyOnFirstResult = true)]
+        public string Test { get; set; }
+    }
+
+    public class SimpleViewModel9c : SimpleViewModel
+    {
+        [PropertyMapping(SourcePropertiesForCoalescing = new[] { "emptyText", "summaryText" })]
+        [SimpleMapPropertyValue]
+        public string Test { get; set; }
     }
 
     public class SimpleViewModelWithCollection : SimpleViewModel
