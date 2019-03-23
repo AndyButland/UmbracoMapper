@@ -518,7 +518,7 @@
             foreach (var dictionary in dictionaries)
             {
                 // Check if item is already in the list by looking up provided unique key
-                T itemToUpdate = default(T);
+                var itemToUpdate = default(T);
                 if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                 {
                     itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, dictionary[sourceIdentifyingPropName].ToString());
@@ -527,7 +527,7 @@
                 if (itemToUpdate != null)
                 {
                     // Item found, so map it
-                    Map<T>(dictionary, itemToUpdate, propertyMappings);
+                    Map(dictionary, itemToUpdate, propertyMappings);
                 }
                 else
                 {
@@ -601,7 +601,7 @@
                     }
 
                     var itemToCreate = new T();
-                    Map<T>(element.ToString(), itemToCreate, propertyMappings);
+                    Map(element.ToString(), itemToCreate, propertyMappings);
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -686,49 +686,6 @@
             }
 
             return propertyMappings;
-        }
-
-        /// <summary>
-        /// Helper to recursive properties are not null even if not provided via the string array.
-        /// Also to populate from attributes on the view model if that method is used for configuration of the mapping
-        /// operation.
-        /// </summary>
-        /// <typeparam name="T">View model type</typeparam>
-        /// <param name="model">Instance of view model</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
-        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        /// <returns>String array of recursive properties</returns>
-        private string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings) where T : class
-        {
-            var recursivePropertiesAsList = new List<string>();
-            if (recursiveProperties != null)
-            {
-                recursivePropertiesAsList.AddRange(recursiveProperties);
-            }
-
-            foreach (var property in SettableProperties(model))
-            {
-                var attribute = GetPropertyMappingAttribute(property);
-                if (attribute == null || !attribute.MapRecursively || recursivePropertiesAsList.Contains(property.Name))
-                {
-                    continue;
-                }
-
-                var propName = GetMappedPropertyName(property.Name, propertyMappings, true);
-                recursivePropertiesAsList.Add(propName);
-            }
-
-            return recursivePropertiesAsList.ToArray();
-        }
-
-        /// <summary>
-        /// Helper to extract the PropertyMappingAttribute from a property of the model
-        /// </summary>
-        /// <param name="property">Property to check for attribute on</param>
-        /// <returns>Instance of attribute if found, otherwise null</returns>
-        protected static PropertyMappingAttribute GetPropertyMappingAttribute(MemberInfo property)
-        {
-            return Attribute.GetCustomAttribute(property, typeof(PropertyMappingAttribute), false) as PropertyMappingAttribute;
         }
 
         /// <summary>
