@@ -153,6 +153,7 @@
       <Private>True</Private>
     </Reference>
     <Reference Include="System" />
+    <Reference Include="System.ComponentModel.DataAnnotations" />
     <Reference Include="System.Core" />
     <Reference Include="System.Data.SqlServerCe, Version=4.0.0.1, Culture=neutral, PublicKeyToken=89845dcd8080cc91, processorArchitecture=MSIL">
       <HintPath>..\packages\UmbracoCms.Core.7.4.1\lib\System.Data.SqlServerCe.dll</HintPath>
@@ -249,7 +250,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\IMapFromAttribute.cs" />
-    <Compile Include="BaseDestinationTypes\MediaFile.cs" />
     <Compile Include="IPropertyValueGetter.cs" />
     <Compile Include="PickedMediaMapper.cs" />
     <Compile Include="CustomMapping.cs" />

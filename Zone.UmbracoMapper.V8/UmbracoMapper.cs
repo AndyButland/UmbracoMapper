@@ -1,4 +1,4 @@
-﻿namespace Zone.UmbracoMapper.V7
+﻿namespace Zone.UmbracoMapper.V8
 {
     using System;
     using System.Collections.Generic;
@@ -6,13 +6,14 @@
     using System.Reflection;
     using System.Xml.Linq;
     using Newtonsoft.Json.Linq;
-    using Umbraco.Core.Models;
-    using Umbraco.Web;
+    using Umbraco.Core.Models.PublishedContent;
+    using Umbraco.Web.Composing;
     using Zone.UmbracoMapper.Common;
     using Zone.UmbracoMapper.Common.Attributes;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
     using Zone.UmbracoMapper.Common.Helpers;
-    using Zone.UmbracoMapper.V7.Attributes;
+    using Zone.UmbracoMapper.V8.Attributes;
+    using Zone.UmbracoMapper.V8.Extensions;
 
     public class UmbracoMapper : UmbracoMapperBase, IUmbracoMapper
     {
@@ -871,7 +872,7 @@
                     // If it's not already IPublishedContent, now check using Id
                     if (relatedContentToMapFrom == null && int.TryParse(value.ToString(), out int relatedId))
                     {
-                        relatedContentToMapFrom = UmbracoContext.Current.ContentCache.GetById(relatedId);
+                        relatedContentToMapFrom = Current.UmbracoContext.ContentCache.GetById(relatedId);
                     }
 
                     // If we have a related content item...
@@ -1063,7 +1064,7 @@
                                                string propName, 
                                                bool recursive = false)
         {
-            return propertyValueGetter.GetPropertyValue(content, propName, recursive);
+            return propertyValueGetter.GetPropertyValue(content, propName, null, null, recursive.ToRecuriveFallback());
         }
 
         /// <summary>
@@ -1163,8 +1164,7 @@
         /// <param name="dictionaryKey">Dictionary key</param>
         private static void SetValueFromDictionary<T>(T model, PropertyInfo property, string dictionaryKey) where T : class
         {
-            var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
-            property.SetValue(model, umbracoHelper.GetDictionaryValue(dictionaryKey));
+            property.SetValue(model, Current.UmbracoHelper.GetDictionaryValue(dictionaryKey));
         }
     }
 }

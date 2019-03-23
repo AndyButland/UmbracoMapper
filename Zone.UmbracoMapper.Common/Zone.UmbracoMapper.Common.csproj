@@ -46,6 +46,7 @@
   <ItemGroup>
     <Compile Include="Attributes\PropertyMappingAttribute.cs" />
     <Compile Include="BaseDestinationTypes\BaseNodeViewModel.cs" />
+    <Compile Include="BaseDestinationTypes\MediaFile.cs" />
     <Compile Include="Enums.cs" />
     <Compile Include="Helpers\TypeExtensions.cs" />
     <Compile Include="IPropertyMapping.cs" />

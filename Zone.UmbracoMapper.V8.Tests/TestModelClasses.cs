@@ -1,12 +1,12 @@
-﻿namespace Zone.UmbracoMapper.V7.Tests
+﻿namespace Zone.UmbracoMapper.V8.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Web;
-    using Umbraco.Core.Models;
+    using Umbraco.Core.Models.PublishedContent;
     using Zone.UmbracoMapper.Common.Attributes;
-    using Zone.UmbracoMapper.V7;
-    using Zone.UmbracoMapper.V7.Tests.Attributes;
+    using Zone.UmbracoMapper.V8;
+    using Zone.UmbracoMapper.V8.Tests.Attributes;
 
     public class SimpleViewModel
     {
@@ -247,16 +247,16 @@
 
     public class SuffixAddingPropertyValueGetter : DefaultPropertyValueGetter
     {
-        public override object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
+        public override object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
         {
-            var value = base.GetPropertyValue(content, alias, recursive) as string ?? string.Empty;
+            var value = base.GetPropertyValue(content, alias, culture, segment, fallback) as string ?? string.Empty;
             return value + "...";
         }
     }
 
     public class ComplexTypeReturningPropertyValueGetter : DefaultPropertyValueGetter
     {
-        public override object GetPropertyValue(IPublishedContent content, string alias, bool recursive)
+        public override object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
         {
             return new GeoCoordinate
                 {

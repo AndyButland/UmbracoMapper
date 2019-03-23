@@ -1,9 +1,7 @@
 ﻿namespace TestWebApp.Models
 {
     using System;
-
-    using Zone.UmbracoMapper;
-    using Zone.UmbracoMapper.V7.BaseDestinationTypes;
+    using Zone.UmbracoMapper.Common.BaseDestinationTypes;
 
     public class CommentViewModel
     {

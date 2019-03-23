@@ -1,10 +1,12 @@
-﻿namespace Zone.UmbracoMapper.V7
+﻿namespace Zone.UmbracoMapper.V8
 {
     using System.Collections.Generic;
     using System.Linq;
-    using Umbraco.Core.Models;
+    using Umbraco.Core.Models.PublishedContent;
     using Umbraco.Web;
+    using Umbraco.Web.Composing;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
+    using Zone.UmbracoMapper.V8.Extensions;
 
     public static class PickedMediaMapper
     {
@@ -20,11 +22,12 @@
             string propName, bool isRecursive)
         {
             // If Umbraco Core Property Editor Converters will get IEnumerable<IPublishedContent>, so try that first
-            var mediaCollection = contentToMapFrom.GetPropertyValue<IEnumerable<IPublishedContent>>(propName, isRecursive, null);
+            var fallback = isRecursive.ToRecuriveFallback();
+            var mediaCollection = contentToMapFrom.Value<IEnumerable<IPublishedContent>>(propName, fallback: fallback);
             if (mediaCollection == null)
             {
                 // Also check for single IPublishedContent (which could get if multiple media disabled)
-                var media = contentToMapFrom.GetPropertyValue<IPublishedContent>(propName, isRecursive, null);
+                var media = contentToMapFrom.Value<IPublishedContent>(propName, fallback: fallback);
                 if (media != null)
                 {
                     mediaCollection = new List<IPublishedContent> { media };
@@ -33,14 +36,13 @@
                 if (mediaCollection == null)
                 {
                     // If Umbraco Core Property Editor Converters not installed, need to dig out the Ids
-                    var mediaIds = contentToMapFrom.GetPropertyValue<string>(propName, isRecursive, string.Empty);
+                    var mediaIds = contentToMapFrom.Value<string>(propName, fallback: fallback);
                     if (!string.IsNullOrEmpty(mediaIds))
                     {
-                        var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
                         mediaCollection = new List<IPublishedContent>();
                         foreach (var mediaId in mediaIds.Split(','))
                         {
-                            ((List<IPublishedContent>)mediaCollection).Add(umbracoHelper.TypedMedia(mediaId));
+                            ((List<IPublishedContent>)mediaCollection).Add(Current.UmbracoHelper.Media(mediaId));
                         }
                     }
                 }
@@ -61,15 +63,15 @@
             string propName, bool isRecursive)
         {
             // If Umbraco Core Property Editor Converters will get IPublishedContent, so try that first
-            var media = contentToMapFrom.GetPropertyValue<IPublishedContent>(propName, isRecursive, null);
+            var fallback = isRecursive.ToRecuriveFallback();
+            var media = contentToMapFrom.Value<IPublishedContent>(propName, fallback: fallback);
             if (media == null)
             {
                 // If Umbraco Core Property Editor Converters not installed, need to dig out the Id
-                var mediaId = contentToMapFrom.GetPropertyValue<string>(propName, isRecursive, string.Empty);
+                var mediaId = contentToMapFrom.Value<string>(propName, fallback: fallback);
                 if (!string.IsNullOrEmpty(mediaId))
                 {
-                    var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
-                    media = umbracoHelper.TypedMedia(mediaId);
+                    media = Current.UmbracoHelper.Media(mediaId);
                 }
             }
 
@@ -101,12 +103,12 @@
                 Name = media.Name,
                 Url = media.Url,
                 DomainWithUrl = rootUrl + media.Url,
-                DocumentTypeAlias = media.DocumentTypeAlias,
-                Width = media.GetPropertyValue<int>("umbracoWidth"),
-                Height = media.GetPropertyValue<int>("umbracoHeight"),
-                Size = media.GetPropertyValue<int>("umbracoBytes"),
-                FileExtension = media.GetPropertyValue<string>("umbracoExtension"),
-                AltText = media.GetPropertyValue<string>("altText")
+                DocumentTypeAlias = media.ContentType.Alias,
+                Width = media.Value<int>("umbracoWidth"),
+                Height = media.Value<int>("umbracoHeight"),
+                Size = media.Value<int>("umbracoBytes"),
+                FileExtension = media.Value<string>("umbracoExtension"),
+                AltText = media.Value<string>("altText")
             };
 
             return mediaFile;

@@ -1,7 +1,6 @@
-﻿namespace Zone.UmbracoMapper.V7.BaseDestinationTypes
+﻿namespace Zone.UmbracoMapper.Common.BaseDestinationTypes
 {
     using Zone.UmbracoMapper.Common.Attributes;
-    using Zone.UmbracoMapper.V7.Attributes;
 
     public class MediaFile
     {
