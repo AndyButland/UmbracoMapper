@@ -8,7 +8,9 @@
     using TestWebApp.Attributes;
 
     using Zone.UmbracoMapper;
-    
+    using Zone.UmbracoMapper.V7.Attributes;
+    using Zone.UmbracoMapper.V7.BaseDestinationTypes;
+
     public class UberDocTypeViewModelWithAttribute
     {
         public UberDocTypeViewModelWithAttribute()

@@ -738,6 +738,9 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Implemented the above via the `PropertyMapping` attribute
 - 2.0.9
     - Added support for the use of string concatenation and coalescing when using IMapFromAttribute
+- 3.0.0
+    - Bumped major version following internal refactoring into common project to support code re-use across Umbraco versions 7 and 8.
+	  No functional changes from previous version but has been some namespace updates, hence a breaking change.
 	
 ## Credits
 

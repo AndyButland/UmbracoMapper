@@ -9,6 +9,7 @@ namespace TestWebApp.App_Start
     using Ninject;
     using Ninject.Web.Common;
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7;
 
     public static class NinjectWebCommon 
     {

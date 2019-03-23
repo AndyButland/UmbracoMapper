@@ -3,6 +3,8 @@
     using System;
     using System.Reflection;
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7;
+    using Zone.UmbracoMapper.V7.Attributes;
 
     [AttributeUsage(AttributeTargets.Property)]
     public class MapPropertyValueToUpperCaseAttribute : Attribute, IMapFromAttribute

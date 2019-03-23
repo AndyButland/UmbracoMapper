@@ -7,7 +7,7 @@
     <ProjectGuid>{55B0188A-097C-4767-A297-28AE036AED7F}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zone.UmbracoMapper</RootNamespace>
+    <RootNamespace>Zone.UmbracoMapper.V7</RootNamespace>
     <AssemblyName>Zone.UmbracoMapper</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -249,24 +249,27 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\IMapFromAttribute.cs" />
+    <Compile Include="Attributes\PropertyMappingAttribute.cs" />
+    <Compile Include="BaseDestinationTypes\MediaFile.cs" />
     <Compile Include="IPropertyValueGetter.cs" />
     <Compile Include="PickedMediaMapper.cs" />
-    <Compile Include="Helpers\TypeExtensions.cs" />
-    <Compile Include="IPropertyMapping.cs" />
-    <Compile Include="Attributes\PropertyMappingAttribute.cs" />
-    <Compile Include="BaseDestinationTypes\BaseNodeViewModel.cs" />
     <Compile Include="CustomMapping.cs" />
     <Compile Include="IUmbracoMapper.cs" />
-    <Compile Include="BaseDestinationTypes\MediaFile.cs" />
-    <Compile Include="Enums.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="PropertyMapping.cs" />
+    <Compile Include="PropertyMappingDictionaryExtensions.cs" />
     <Compile Include="UmbracoMapper.cs" />
     <Compile Include="DefaultPropertyValueGetter.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="app.config" />
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Zone.UmbracoMapper.Common\Zone.UmbracoMapper.Common.csproj">
+      <Project>{1a7e8f4b-d6fc-430f-9a97-85dcdad32b88}</Project>
+      <Name>Zone.UmbracoMapper.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 

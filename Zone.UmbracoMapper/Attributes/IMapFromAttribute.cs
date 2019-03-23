@@ -1,4 +1,4 @@
-﻿namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper.V7.Attributes
 {
     using System.Reflection;
 

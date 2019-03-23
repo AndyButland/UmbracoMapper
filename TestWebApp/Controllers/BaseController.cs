@@ -5,6 +5,7 @@
     using Umbraco.Web.Mvc;
     using Zone.UmbracoMapper;
     using Zone.UmbracoMapper.DampCustomMapping;
+    using Zone.UmbracoMapper.V7;
 
     public abstract class BaseController : SurfaceController, IRenderMvcController
     {

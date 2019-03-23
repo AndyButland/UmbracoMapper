@@ -12,6 +12,7 @@
     using Umbraco.Web;
     using Umbraco.Web.Models;
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7;
 
     public class NewsLandingPageController : BaseController
     {

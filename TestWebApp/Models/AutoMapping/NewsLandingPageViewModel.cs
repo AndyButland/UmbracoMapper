@@ -4,6 +4,7 @@
     using System.Collections.Generic;
     using System.Web;
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7.Attributes;
 
     public class NewsLandingPageViewModel
     {

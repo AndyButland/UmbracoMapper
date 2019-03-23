@@ -5,7 +5,8 @@
     using System.Web;
     using Attributes;
     using Zone.UmbracoMapper;
-    
+    using Zone.UmbracoMapper.V7.BaseDestinationTypes;
+
     public class UberDocTypeViewModel
     {
         public UberDocTypeViewModel()

@@ -196,9 +196,13 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Zone.UmbracoMapper\Zone.UmbracoMapper.csproj">
+    <ProjectReference Include="..\Zone.UmbracoMapper.Common\Zone.UmbracoMapper.Common.csproj">
+      <Project>{1a7e8f4b-d6fc-430f-9a97-85dcdad32b88}</Project>
+      <Name>Zone.UmbracoMapper.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Zone.UmbracoMapper\Zone.UmbracoMapper.V7.csproj">
       <Project>{55b0188a-097c-4767-a297-28ae036aed7f}</Project>
-      <Name>Zone.UmbracoMapper</Name>
+      <Name>Zone.UmbracoMapper.V7</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

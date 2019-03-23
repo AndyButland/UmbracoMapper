@@ -1,9 +1,13 @@
-﻿namespace Zone.UmbracoMapper.V7.Attributes
+﻿namespace Zone.UmbracoMapper.Common
 {
     using System;
-    using Zone.UmbracoMapper.Common;
+    using System.Collections.Generic;
 
-    public class PropertyMappingAttribute : Attribute, IPropertyMapping
+    /// <summary>
+    /// Class defining the override to the mapping convention for a particular type.
+    /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: Dictionary<string, PropertyMapping>
+    /// </summary>
+    public abstract class PropertyMappingBase : IPropertyMapping
     {
         /// <summary>
         /// The name of the property on the source to map from.  If not passed, exact name match convention is used.
@@ -54,12 +58,14 @@
         public string[] SourcePropertiesForCoalescing { get; set; }
 
         /// <summary>
-        /// If assigned to a property it will be mapped recursively (provides an alternative to passing via the 
-        /// string array to the Map method).
-        /// It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 
-        /// 'StarRating', it'll look for an Umbraco property called 'starRating')
+        /// If provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
         /// </summary>
-        public bool MapRecursively { get; set; }
+        public KeyValuePair<string, string> MapIfPropertyMatches { get; set; }
+
+        /// <summary>
+        /// If provided, carries out the formatting transformation provided in the function on the mapped value
+        /// </summary>
+        public Func<string, string> StringValueFormatter { get; set; }
 
         /// <summary>
         /// Sets a default value for a property to be used if the mapped value cannot be found.
@@ -77,21 +83,10 @@
         public string DictionaryKey { get; set; }
 
         /// <summary>
-        /// Provides a type that must implement <see cref="IPropertyValueGetter"/> to be used when retrieving the property value from Umbraco.
+        /// Provides a type that must implement IPropertyValueGetter (defined in version specific assemblies) to be used when 
+        /// retrieving the property value from Umbraco.
         /// A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
         /// </summary>
         public Type PropertyValueGetter { get; set; }
-
-        /// <summary>
-        /// Provides an type containing <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
-        /// custom mapping that might be registered globally. 
-        /// </summary>
-        public Type CustomMappingType { get; set; }
-
-        /// <summary>
-        /// Provides the name of a method of type <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
-        /// custom mapping that might be registered globally. 
-        /// </summary>
-        public string CustomMappingMethod { get; set; }
     }
 }

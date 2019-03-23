@@ -1,4 +1,4 @@
-﻿namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper.Common
 {
     public enum MultiplePropertyMappingOperation
     {

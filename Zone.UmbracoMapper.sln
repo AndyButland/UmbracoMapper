@@ -1,17 +1,25 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 2013
-VisualStudioVersion = 12.0.40629.0
+# Visual Studio 15
+VisualStudioVersion = 15.0.27703.2026
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper", "Zone.UmbracoMapper\Zone.UmbracoMapper.csproj", "{55B0188A-097C-4767-A297-28AE036AED7F}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.V7", "Zone.UmbracoMapper\Zone.UmbracoMapper.V7.csproj", "{55B0188A-097C-4767-A297-28AE036AED7F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.Tests", "Zone.UmbracoMapper.Tests\Zone.UmbracoMapper.Tests.csproj", "{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.V7.Tests", "Zone.UmbracoMapper.Tests\Zone.UmbracoMapper.V7.Tests.csproj", "{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWebApp", "TestWebApp\TestWebApp.csproj", "{281FF889-A23D-4CFC-A88B-FB392A01C4DF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.DampCustomMapping", "Zone.UmbracoMapper.DampCustomMapping\Zone.UmbracoMapper.DampCustomMapping.csproj", "{C1D506FC-AA73-45F9-90C3-2764BF6E856E}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "TestWebApp74", "TestWebApp74\TestWebApp74.csproj", "{E66BF122-787E-4BDA-B289-C202CF56A3C9}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Zone.UmbracoMapper.Common", "Zone.UmbracoMapper.Common\Zone.UmbracoMapper.Common.csproj", "{1A7E8F4B-D6FC-430F-9A97-85DCDAD32B88}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WebApps", "WebApps", "{3DE43E0B-7EF1-4AA8-9C50-79B9E87D6827}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "CustomMappers", "CustomMappers", "{404A1828-A1FE-4207-935D-49E0F42AF14B}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tests", "Tests", "{E1CF3266-A431-43C8-9455-6A6780ED3C98}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -39,8 +47,21 @@ Global
 		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E66BF122-787E-4BDA-B289-C202CF56A3C9}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1A7E8F4B-D6FC-430F-9A97-85DCDAD32B88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1A7E8F4B-D6FC-430F-9A97-85DCDAD32B88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1A7E8F4B-D6FC-430F-9A97-85DCDAD32B88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1A7E8F4B-D6FC-430F-9A97-85DCDAD32B88}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1} = {E1CF3266-A431-43C8-9455-6A6780ED3C98}
+		{281FF889-A23D-4CFC-A88B-FB392A01C4DF} = {3DE43E0B-7EF1-4AA8-9C50-79B9E87D6827}
+		{C1D506FC-AA73-45F9-90C3-2764BF6E856E} = {404A1828-A1FE-4207-935D-49E0F42AF14B}
+		{E66BF122-787E-4BDA-B289-C202CF56A3C9} = {3DE43E0B-7EF1-4AA8-9C50-79B9E87D6827}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {C258ACE3-A5E3-4A79-9CEC-E0FC5A4DCF2F}
 	EndGlobalSection
 EndGlobal

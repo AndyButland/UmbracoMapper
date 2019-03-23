@@ -2,6 +2,8 @@
 {
     using Umbraco.Core.Models;
     using Umbraco.Web;
+    using Zone.UmbracoMapper.V7;
+    using Zone.UmbracoMapper.V7.BaseDestinationTypes;
     using DampModel = DAMP.PropertyEditorValueConverter.Model;
 
     public static class DampMapper

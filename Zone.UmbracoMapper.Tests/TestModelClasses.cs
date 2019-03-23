@@ -1,11 +1,12 @@
-﻿namespace Zone.UmbracoMapper.Tests
+﻿namespace Zone.UmbracoMapper.V7.Tests
 {
     using System;
     using System.Collections.Generic;
     using System.Web;
     using Umbraco.Core.Models;
-
-    using Zone.UmbracoMapper.Tests.Attributes;
+    using Zone.UmbracoMapper.V7;
+    using Zone.UmbracoMapper.V7.Attributes;
+    using Zone.UmbracoMapper.V7.Tests.Attributes;
 
     public class SimpleViewModel
     {

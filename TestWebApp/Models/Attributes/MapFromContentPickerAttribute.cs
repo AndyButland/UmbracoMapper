@@ -6,6 +6,8 @@ namespace TestWebApp.Models.Attributes
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7;
+    using Zone.UmbracoMapper.V7.Attributes;
 
     [AttributeUsage(AttributeTargets.Property)]
     public class MapFromContentPickerAttribute : Attribute, IMapFromAttribute

@@ -1,4 +1,4 @@
-﻿namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper.Common
 {
     using System;
 
@@ -68,7 +68,7 @@
         string DictionaryKey { get; set; }
 
         /// <summary>
-        /// Provides a type that must implement <see cref="IPropertyValueGetter"/> to be used when retrieving the property value from Umbraco.
+        /// Provides a type that must implement IPropertyValueGetter to be used when retrieving the property value from Umbraco.
         /// A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
         /// </summary>
         Type PropertyValueGetter { get; set; }

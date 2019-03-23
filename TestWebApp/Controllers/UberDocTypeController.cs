@@ -10,6 +10,7 @@
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7;
 
     public class UberDocTypeController : BaseController
     {

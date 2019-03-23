@@ -1,7 +1,9 @@
-﻿namespace Zone.UmbracoMapper.Tests.Attributes
+﻿namespace Zone.UmbracoMapper.V7.Tests.Attributes
 {
     using System;
     using System.Reflection;
+    using Zone.UmbracoMapper.V7;
+    using Zone.UmbracoMapper.V7.Attributes;
 
     [AttributeUsage(AttributeTargets.Property)]
     public class SimpleMapPropertyValueAttribute : Attribute, IMapFromAttribute

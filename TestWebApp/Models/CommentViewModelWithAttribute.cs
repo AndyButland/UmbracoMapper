@@ -3,6 +3,8 @@
     using System;
 
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.V7.Attributes;
+    using Zone.UmbracoMapper.V7.BaseDestinationTypes;
 
     public class CommentViewModelWithAttribute
     {

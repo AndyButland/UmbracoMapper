@@ -6,8 +6,8 @@
     <ProjectGuid>{2DF8D5AD-96E1-4FF5-AFFF-58E9301AE4F1}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Zone.UmbracoMapper.Tests</RootNamespace>
-    <AssemblyName>Zone.UmbracoMapper.Tests</AssemblyName>
+    <RootNamespace>Zone.UmbracoMapper.V7.Tests</RootNamespace>
+    <AssemblyName>Zone.UmbracoMapper.V7.Tests</AssemblyName>
     <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <ProjectTypeGuids>{3AC096D0-A1C2-E12C-1390-A8335801FDAB};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -282,9 +282,13 @@
     <Compile Include="UmbracoMapperTests.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Zone.UmbracoMapper\Zone.UmbracoMapper.csproj">
+    <ProjectReference Include="..\Zone.UmbracoMapper.Common\Zone.UmbracoMapper.Common.csproj">
+      <Project>{1a7e8f4b-d6fc-430f-9a97-85dcdad32b88}</Project>
+      <Name>Zone.UmbracoMapper.Common</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Zone.UmbracoMapper\Zone.UmbracoMapper.V7.csproj">
       <Project>{55b0188a-097c-4767-a297-28ae036aed7f}</Project>
-      <Name>Zone.UmbracoMapper</Name>
+      <Name>Zone.UmbracoMapper.V7</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

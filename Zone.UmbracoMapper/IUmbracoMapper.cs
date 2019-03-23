@@ -1,8 +1,9 @@
-﻿namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper.V7
 {
     using System.Collections.Generic;
     using System.Xml.Linq;
     using Umbraco.Core.Models;
+    using Zone.UmbracoMapper.Common;
 
     public interface IUmbracoMapper
     {

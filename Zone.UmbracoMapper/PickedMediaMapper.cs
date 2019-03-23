@@ -1,9 +1,10 @@
-﻿namespace Zone.UmbracoMapper
+﻿namespace Zone.UmbracoMapper.V7
 {
     using System.Collections.Generic;
     using System.Linq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
+    using Zone.UmbracoMapper.V7.BaseDestinationTypes;
 
     public static class PickedMediaMapper
     {

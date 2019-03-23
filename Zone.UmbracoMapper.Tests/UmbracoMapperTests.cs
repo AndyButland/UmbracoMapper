@@ -1,4 +1,4 @@
-﻿namespace Zone.UmbracoMapper.Tests
+﻿namespace Zone.UmbracoMapper.V7.Tests
 {
     using System;
     using System.Collections.Generic;
@@ -8,8 +8,9 @@
     using Moq;
     using Umbraco.Core.Models;
     using Umbraco.Web;
-
-    using Zone.UmbracoMapper.Tests.Attributes;
+    using Zone.UmbracoMapper.Common;
+    using Zone.UmbracoMapper.V7;
+    using Zone.UmbracoMapper.V7.Tests.Attributes;
 
     [TestClass]
     public class UmbracoMapperTests
