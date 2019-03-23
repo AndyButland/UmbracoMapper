@@ -1,4 +1,4 @@
-﻿namespace Zone.UmbracoMapper.V7.Attributes
+﻿namespace Zone.UmbracoMapper.Common.Attributes
 {
     using System;
     using Zone.UmbracoMapper.Common;
@@ -77,19 +77,20 @@
         public string DictionaryKey { get; set; }
 
         /// <summary>
-        /// Provides a type that must implement <see cref="IPropertyValueGetter"/> to be used when retrieving the property value from Umbraco.
+        /// Provides a type that must implement IPropertyValueGetter (defined in project specific versions) to be used when retrieving the 
+        /// property value from Umbraco.
         /// A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
         /// </summary>
         public Type PropertyValueGetter { get; set; }
 
         /// <summary>
-        /// Provides an type containing <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
+        /// Provides an type containing CustomMapping (defined in project specific versions) that will be used in preference to any named or unnamed
         /// custom mapping that might be registered globally. 
         /// </summary>
         public Type CustomMappingType { get; set; }
 
         /// <summary>
-        /// Provides the name of a method of type <see cref="CustomMapping"/> that will be used in preference to any named or unnamed
+        /// Provides the name of a method of type CustomMapping (defined in project specific versions) that will be used in preference to any named or unnamed
         /// custom mapping that might be registered globally. 
         /// </summary>
         public string CustomMappingMethod { get; set; }

@@ -9,6 +9,7 @@
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using Zone.UmbracoMapper.Common;
+    using Zone.UmbracoMapper.Common.Attributes;
     using Zone.UmbracoMapper.Common.Helpers;
     using Zone.UmbracoMapper.V7.Attributes;
     using Zone.UmbracoMapper.V7.BaseDestinationTypes;
@@ -98,7 +99,7 @@
                 var propertyMappingsBase = propertyMappings.AsBaseDictionary();
 
                 // Similarly, the recursive properties can be passed via string array or attribute
-                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties, propertyMappings);
+                recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties, propertyMappingsBase);
 
                 // Loop through all settable properties on model
                 foreach (var property in SettableProperties(model))
@@ -215,40 +216,7 @@
             // Cast dictionary to base type, which can then be used by methods in the "common" referenced project.
             var propertyMappingsBase = propertyMappings.AsBaseDictionary();
 
-            // Loop through all settable properties on model
-            foreach (var property in SettableProperties(model))
-            {
-                var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
-
-                // If element with mapped name found, map the value (check case insensitively)
-                var mappedElement = GetXElementCaseInsensitive(xml, propName);
-
-                if (mappedElement != null)
-                {
-                    // Check if we are looking for a child mapping
-                    if (propertyMappingsBase.IsMappingFromChildProperty(property.Name))
-                    {
-                        mappedElement = mappedElement.Element(propertyMappings[property.Name].SourceChildProperty);
-                    }
-
-                    if (mappedElement != null)
-                    {
-                        SetTypedPropertyValue(model, property, mappedElement.Value);
-                    }
-                }
-                else
-                {
-                    // Try to see if it's in an attribute too
-                    var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
-                    if (mappedAttribute != null)
-                    {
-                        SetTypedPropertyValue(model, property, mappedAttribute.Value);
-                    }
-                }
-
-                // If property value not set, and default value passed, use it
-                SetDefaultValueIfProvided(model, propertyMappings.AsBaseDictionary(), property);
-            }
+            MapFromXml(xml, model, propertyMappingsBase);
 
             return this;
         }
@@ -282,10 +250,13 @@
             // and update the dictionary to include keys provided via the attributes.
             propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
 
+            // Cast dictionary to base type, which can then be used by methods in the "common" referenced project.
+            var propertyMappingsBase = propertyMappings.AsBaseDictionary();
+
             // Loop through all settable properties on model
             foreach (var property in SettableProperties(model))
             {
-                var propName = GetMappedPropertyName(property.Name, propertyMappings);
+                var propName = GetMappedPropertyName(property.Name, propertyMappingsBase);
                     
                 // If element with mapped name found, map the value
                 if (dictionary.ContainsKey(propName))
@@ -379,33 +350,10 @@
             // and update the dictionary to include keys provided via the attributes.
             propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
 
-            // Parse JSON string to queryable object
-            var jsonObj = JObject.Parse(json);
-
             // Cast dictionary to base type, which can then be used by methods in the "common" referenced project.
             var propertyMappingsBase = propertyMappings.AsBaseDictionary();
 
-            // Loop through all settable properties on model
-            foreach (var property in SettableProperties(model))
-            {
-                var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
-
-                // If element with mapped name found, map the value
-                var childPropName = string.Empty;
-                if (propertyMappingsBase.IsMappingFromChildProperty(property.Name))
-                {
-                    childPropName = propertyMappings[property.Name].SourceChildProperty;
-                }
-
-                var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName, childPropName);
-                if (!string.IsNullOrEmpty(stringValue))
-                {
-                    SetTypedPropertyValue(model, property, stringValue);
-                }
-
-                // If property value not set, and default value passed, use it
-                SetDefaultValueIfProvided(model, propertyMappings.AsBaseDictionary(), property);
-            }
+            MapFromJson(json, model, propertyMappingsBase);
 
             return this;
         }
@@ -710,83 +658,30 @@
                 propertyMappings = new Dictionary<string, PropertyMapping>();
             }
 
+            var propertyMappingsBase = propertyMappings.AsBaseDictionary();
+
             foreach (var property in SettableProperties(model))
             {
                 var attribute = GetPropertyMappingAttribute(property);
-                if (attribute != null)
+                if (attribute == null)
                 {
-                    var propertyMapping = GetPropertyMappingAttributeAsPropertyMapping(attribute);
-                    if (propertyMappings.ContainsKey(property.Name))
+                    continue;
+                }
+
+                var propertyMapping = GetPropertyMappingAttributeAsPropertyMapping(attribute);
+                if (propertyMappings.ContainsKey(property.Name))
+                {
+                    MapPropertyMappingValuesFromAttributeToDictionaryIfNotAlreadySet(propertyMappingsBase, property, propertyMapping);
+
+                    if (propertyMappings[property.Name].CustomMapping == null)
                     {
-                        // Property mapping already exists on dictionary, so update the values not already set
-                        // (if for some reason on both, dictionary takes priority)
-                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceProperty))
-                        {
-                            propertyMappings[property.Name].SourceProperty = propertyMapping.SourceProperty;
-                        }
-
-                        if (propertyMappings[property.Name].LevelsAbove == 0)
-                        {
-                            propertyMappings[property.Name].LevelsAbove = propertyMapping.LevelsAbove;
-                        }
-
-                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceRelatedProperty))
-                        {
-                            propertyMappings[property.Name].SourceRelatedProperty = propertyMapping.SourceRelatedProperty;
-                        }
-
-                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceChildProperty))
-                        {
-                            propertyMappings[property.Name].SourceChildProperty = propertyMapping.SourceChildProperty;
-                        }
-
-                        if (propertyMappings[property.Name].SourcePropertiesForConcatenation == null)
-                        {
-                            propertyMappings[property.Name].SourcePropertiesForConcatenation = propertyMapping.SourcePropertiesForConcatenation;
-                        }
-
-                        if (!string.IsNullOrEmpty(propertyMappings[property.Name].ConcatenationSeperator))
-                        {
-                            propertyMappings[property.Name].ConcatenationSeperator = propertyMapping.ConcatenationSeperator;
-                        }
-
-                        if (propertyMappings[property.Name].SourcePropertiesForCoalescing == null)
-                        {
-                            propertyMappings[property.Name].SourcePropertiesForCoalescing = propertyMapping.SourcePropertiesForCoalescing;
-                        }
-
-                        if (propertyMappings[property.Name].MapIfPropertyMatches.Equals(default(KeyValuePair<string, string>)))
-                        {
-                            propertyMappings[property.Name].MapIfPropertyMatches = propertyMapping.MapIfPropertyMatches;
-                        }
-
-                        if (propertyMappings[property.Name].DefaultValue == null)
-                        {
-                            propertyMappings[property.Name].DefaultValue = propertyMapping.DefaultValue;
-                        }
-
-                        if (propertyMappings[property.Name].DictionaryKey == null)
-                        {
-                            propertyMappings[property.Name].DictionaryKey = propertyMapping.DictionaryKey;
-                        }
-
-                        propertyMappings[property.Name].Ignore = propertyMapping.Ignore;
-
-                        if (propertyMappings[property.Name].PropertyValueGetter == null)
-                        {
-                            propertyMappings[property.Name].PropertyValueGetter = propertyMapping.PropertyValueGetter;
-                        }
-
-                        if (propertyMappings[property.Name].CustomMapping == null)
-                        {
-                            propertyMappings[property.Name].CustomMapping = propertyMapping.CustomMapping;
-                        }
+                        propertyMappings[property.Name].CustomMapping = propertyMapping.CustomMapping;
                     }
-                    else
-                    {
-                        // Property mapping not found on dictionary, so add it
-                        propertyMappings.Add(property.Name, propertyMapping);
-                    }
+                }
+                else
+                {
+                    // Property mapping not found on dictionary, so add it
+                    propertyMappings.Add(property.Name, propertyMapping);
                 }
             }
 
@@ -803,7 +698,7 @@
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>String array of recursive properties</returns>
-        private string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, IReadOnlyDictionary<string, PropertyMapping> propertyMappings) where T : class
+        private string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings) where T : class
         {
             var recursivePropertiesAsList = new List<string>();
             if (recursiveProperties != null)
@@ -843,21 +738,10 @@
         /// <returns>PropertyMapping instance</returns>
         private static PropertyMapping GetPropertyMappingAttributeAsPropertyMapping(PropertyMappingAttribute attribute)
         {
-            return new PropertyMapping
-            {
-                SourceProperty = attribute.SourceProperty,
-                LevelsAbove = attribute.LevelsAbove,
-                SourceChildProperty = attribute.SourceChildProperty,
-                SourceRelatedProperty = attribute.SourceRelatedProperty,
-                ConcatenationSeperator = attribute.ConcatenationSeperator,
-                SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing,
-                SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation,
-                DefaultValue = attribute.DefaultValue,
-                DictionaryKey = attribute.DictionaryKey,
-                Ignore = attribute.Ignore,
-                PropertyValueGetter = attribute.PropertyValueGetter,
-                CustomMapping = InstantiateCustomMappingDelegateFromAttributeFields(attribute)
-            };
+            var mapping = new PropertyMapping();
+            MapBasePropertyValues(attribute, mapping);
+            mapping.CustomMapping = InstantiateCustomMappingDelegateFromAttributeFields(attribute);
+            return mapping;
         }
 
         private static CustomMapping InstantiateCustomMappingDelegateFromAttributeFields(PropertyMappingAttribute attribute)
@@ -885,50 +769,6 @@
         {
             return (IMapFromAttribute)property.GetCustomAttributes(false)
                 .FirstOrDefault(x => x is IMapFromAttribute);
-        }
-
-        /// <summary>
-        /// Helper to get the named custom mapping key (based on type and name)
-        /// </summary>
-        /// <param name="property">PropertyInfo to map to</param>
-        /// <returns>Name of custom mapping key</returns>
-        private static string GetNamedCustomMappingKey(PropertyInfo property)
-        {
-            return string.Concat(property.PropertyType.FullName, ".", property.Name);
-        }
-
-        /// <summary>
-        /// Helper to get the unnamed custom mapping key (based on type only)
-        /// </summary>
-        /// <param name="property">PropertyInfo to map to</param>
-        /// <returns>Name of custom mapping key</returns>
-        private static string GetUnnamedCustomMappingKey(PropertyInfo property)
-        {
-            return property.PropertyType.FullName;
-        }
-
-        /// <summary>
-        /// Helper method to find the property name to map to based on conventions (and/or overrides)
-        /// </summary>
-        /// <param name="propName">Name of property to map to</param>
-        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
-        /// <returns>Name of property to map from</returns>
-        private static string GetMappedPropertyName(string propName, IReadOnlyDictionary<string, PropertyMapping> propertyMappings, bool convertToCamelCase = false)
-        {
-            var mappedName = propName;
-            if (propertyMappings.ContainsKey(propName) &&
-                !string.IsNullOrEmpty(propertyMappings[propName].SourceProperty))
-            {
-                mappedName = propertyMappings[propName].SourceProperty;
-            }
-
-            if (convertToCamelCase)
-            {
-                mappedName = CamelCase(mappedName);
-            }
-
-            return mappedName;
         }
 
         /// <summary>
@@ -1005,7 +845,7 @@
             }
 
             // Set native IPublishedContent properties (using convention that names match exactly)
-            var propName = GetMappedPropertyName(property.Name, propertyMappings);
+            var propName = GetMappedPropertyName(property.Name, propertyMappingsBase);
             if (contentToMapFrom.GetType().GetProperty(propName) != null)
             {
                 MapNativeContentProperty(model, property, contentToMapFrom, propName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
@@ -1014,7 +854,7 @@
             
             // Set custom properties (using convention that names match but with camelCasing on IPublishedContent 
             // properties, unless override provided)
-            propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+            propName = GetMappedPropertyName(property.Name, propertyMappingsBase, true);
 
             // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
             var mapFromAttribute = GetMapFromAttribute(property);
@@ -1184,18 +1024,7 @@
                 return;
             }
 
-            // If mapping to a string, we should maniplate the mapped value to make use of the concatenation and coalescing settings, and the string value formatter, if provided.
-            if (concatenateToExistingValue)
-            {
-                var stringValue = GetStringValueOrEmpty(model, property);
-                var prefixValueWith = currentStringValue + concatenationSeperator;
-                property.SetValue(model, prefixValueWith + stringValue);
-            }
-            else if (coalesceWithExistingValue && string.IsNullOrWhiteSpace(currentStringValue))
-            {
-                var stringValue = GetStringValueOrEmpty(model, property);
-                property.SetValue(model, stringValue);
-            }
+            SetStringValueFromMapFromAttribute(model, property, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, currentStringValue);
         }
 
         /// <summary>

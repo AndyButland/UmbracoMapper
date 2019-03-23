@@ -8,6 +8,7 @@
     using System.Web;
     using System.Xml.Linq;
     using Newtonsoft.Json.Linq;
+    using Zone.UmbracoMapper.Common.Attributes;
 
     /// <summary>
     /// Base class for implementations of the main mapping class in Umbraco version specific assemblies.
@@ -71,6 +72,88 @@
             return model.GetType().GetProperties()
                 .Where(p => p.GetSetMethod() != null)
                 .ToList();
+        }
+
+        /// <summary>
+        /// Maps information held in an XML document
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="xml">XML document</param>
+        /// <param name="model">View model to map to</param>
+        /// <param name="propertyMappingsBase">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        protected void MapFromXml<T>(XElement xml, T model, Dictionary<string, PropertyMappingBase> propertyMappingsBase)
+            where T : class
+        {
+            // Loop through all settable properties on model
+            foreach (var property in SettableProperties(model))
+            {
+                var propName = GetMappedPropertyName(property.Name, propertyMappingsBase, false);
+
+                // If element with mapped name found, map the value (check case insensitively)
+                var mappedElement = GetXElementCaseInsensitive(xml, propName);
+
+                if (mappedElement != null)
+                {
+                    // Check if we are looking for a child mapping
+                    if (propertyMappingsBase.IsMappingFromChildProperty(property.Name))
+                    {
+                        mappedElement = mappedElement.Element(propertyMappingsBase[property.Name].SourceChildProperty);
+                    }
+
+                    if (mappedElement != null)
+                    {
+                        SetTypedPropertyValue(model, property, mappedElement.Value);
+                    }
+                }
+                else
+                {
+                    // Try to see if it's in an attribute too
+                    var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
+                    if (mappedAttribute != null)
+                    {
+                        SetTypedPropertyValue(model, property, mappedAttribute.Value);
+                    }
+                }
+
+                // If property value not set, and default value passed, use it
+                SetDefaultValueIfProvided(model, propertyMappingsBase, property);
+            }
+        }
+
+        /// <summary>
+        /// Maps information held in a JSON string
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="json">JSON string</param>
+        /// <param name="model">View model to map to</param>
+        /// <param name="propertyMappingsBase">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        protected void MapFromJson<T>(string json, T model, Dictionary<string, PropertyMappingBase> propertyMappingsBase)
+            where T : class
+        {
+            // Parse JSON string to queryable object
+            var jsonObj = JObject.Parse(json);
+
+            // Loop through all settable properties on model
+            foreach (var property in SettableProperties(model))
+            {
+                var propName = GetMappedPropertyName(property.Name, propertyMappingsBase, false);
+
+                // If element with mapped name found, map the value
+                var childPropName = string.Empty;
+                if (propertyMappingsBase.IsMappingFromChildProperty(property.Name))
+                {
+                    childPropName = propertyMappingsBase[property.Name].SourceChildProperty;
+                }
+
+                var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName, childPropName);
+                if (!string.IsNullOrEmpty(stringValue))
+                {
+                    SetTypedPropertyValue(model, property, stringValue);
+                }
+
+                // If property value not set, and default value passed, use it
+                SetDefaultValueIfProvided(model, propertyMappingsBase, property);
+            }
         }
 
         protected static bool AreMappingToString(PropertyInfo property)
@@ -420,6 +503,170 @@
         protected static Type GetGenericCollectionType(PropertyInfo property)
         {
             return property.PropertyType.GetTypeInfo().GenericTypeArguments[0];
+        }
+
+        /// <summary>
+        /// Helper to get the named custom mapping key (based on type and name)
+        /// </summary>
+        /// <param name="property">PropertyInfo to map to</param>
+        /// <returns>Name of custom mapping key</returns>
+        protected static string GetNamedCustomMappingKey(PropertyInfo property)
+        {
+            return string.Concat(property.PropertyType.FullName, ".", property.Name);
+        }
+
+        /// <summary>
+        /// Helper to get the unnamed custom mapping key (based on type only)
+        /// </summary>
+        /// <param name="property">PropertyInfo to map to</param>
+        /// <returns>Name of custom mapping key</returns>
+        protected static string GetUnnamedCustomMappingKey(PropertyInfo property)
+        {
+            return property.PropertyType.FullName;
+        }
+
+        /// <summary>
+        /// Helper to populate from attributes on the view model if that method is used for configuration of the mapping.
+        /// Property mapping already exists on dictionary, so update the values not already set
+        /// (if for some reason on both, dictionary takes priority)
+        /// </summary>
+        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="property">Property name</param>
+        /// <param name="propertyMapping">Property mapping to map from</param>
+        protected static void MapPropertyMappingValuesFromAttributeToDictionaryIfNotAlreadySet(Dictionary<string, PropertyMappingBase> propertyMappings,
+                                                                                               PropertyInfo property,
+                                                                                               PropertyMappingBase propertyMapping)
+        {
+            if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceProperty))
+            {
+                propertyMappings[property.Name].SourceProperty = propertyMapping.SourceProperty;
+            }
+
+            if (propertyMappings[property.Name].LevelsAbove == 0)
+            {
+                propertyMappings[property.Name].LevelsAbove = propertyMapping.LevelsAbove;
+            }
+
+            if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceRelatedProperty))
+            {
+                propertyMappings[property.Name].SourceRelatedProperty = propertyMapping.SourceRelatedProperty;
+            }
+
+            if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceChildProperty))
+            {
+                propertyMappings[property.Name].SourceChildProperty = propertyMapping.SourceChildProperty;
+            }
+
+            if (propertyMappings[property.Name].SourcePropertiesForConcatenation == null)
+            {
+                propertyMappings[property.Name].SourcePropertiesForConcatenation =
+                    propertyMapping.SourcePropertiesForConcatenation;
+            }
+
+            if (!string.IsNullOrEmpty(propertyMappings[property.Name].ConcatenationSeperator))
+            {
+                propertyMappings[property.Name].ConcatenationSeperator = propertyMapping.ConcatenationSeperator;
+            }
+
+            if (propertyMappings[property.Name].SourcePropertiesForCoalescing == null)
+            {
+                propertyMappings[property.Name].SourcePropertiesForCoalescing = propertyMapping.SourcePropertiesForCoalescing;
+            }
+
+            if (propertyMappings[property.Name].MapIfPropertyMatches.Equals(default(KeyValuePair<string, string>)))
+            {
+                propertyMappings[property.Name].MapIfPropertyMatches = propertyMapping.MapIfPropertyMatches;
+            }
+
+            if (propertyMappings[property.Name].DefaultValue == null)
+            {
+                propertyMappings[property.Name].DefaultValue = propertyMapping.DefaultValue;
+            }
+
+            if (propertyMappings[property.Name].DictionaryKey == null)
+            {
+                propertyMappings[property.Name].DictionaryKey = propertyMapping.DictionaryKey;
+            }
+
+            propertyMappings[property.Name].Ignore = propertyMapping.Ignore;
+
+            if (propertyMappings[property.Name].PropertyValueGetter == null)
+            {
+                propertyMappings[property.Name].PropertyValueGetter = propertyMapping.PropertyValueGetter;
+            }
+        }
+
+        /// <summary>
+        /// Maps values from attribute to mapping object
+        /// </summary>
+        /// <param name="attribute">Property mapping attribute</param>
+        /// <param name="mapping">Property mapping object</param>
+        protected static void MapBasePropertyValues(PropertyMappingAttribute attribute, IPropertyMapping mapping)
+        {
+            mapping.SourceProperty = attribute.SourceProperty;
+            mapping.LevelsAbove = attribute.LevelsAbove;
+            mapping.SourceChildProperty = attribute.SourceChildProperty;
+            mapping.SourceRelatedProperty = attribute.SourceRelatedProperty;
+            mapping.ConcatenationSeperator = attribute.ConcatenationSeperator;
+            mapping.SourcePropertiesForCoalescing = attribute.SourcePropertiesForCoalescing;
+            mapping.SourcePropertiesForConcatenation = attribute.SourcePropertiesForConcatenation;
+            mapping.DefaultValue = attribute.DefaultValue;
+            mapping.DictionaryKey = attribute.DictionaryKey;
+            mapping.Ignore = attribute.Ignore;
+            mapping.PropertyValueGetter = attribute.PropertyValueGetter;
+        }
+
+        /// <summary>
+        /// Helper method to find the property name to map to based on conventions (and/or overrides)
+        /// </summary>
+        /// <param name="propName">Name of property to map to</param>
+        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
+        /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
+        /// <returns>Name of property to map from</returns>
+        protected static string GetMappedPropertyName(string propName, IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, bool convertToCamelCase = false)
+        {
+            var mappedName = propName;
+            if (propertyMappings.ContainsKey(propName) &&
+                !string.IsNullOrEmpty(propertyMappings[propName].SourceProperty))
+            {
+                mappedName = propertyMappings[propName].SourceProperty;
+            }
+
+            if (convertToCamelCase)
+            {
+                mappedName = CamelCase(mappedName);
+            }
+
+            return mappedName;
+        }
+
+        /// <summary>
+        /// Helper method to set a string property value, maniplate the mapped value to 
+        /// make use of the concatenation and coalescing settings, and the string value formatter, if provided.
+        /// </summary>
+        /// <typeparam name="T">Type of view model</typeparam>
+        /// <param name="model">Instance of view model</param>
+        /// <param name="property">Property of view model to map to</param>
+        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
+        /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
+        /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
+        /// <param name="currentStringValue">Existing string value</param>
+        protected static void SetStringValueFromMapFromAttribute<T>(T model, PropertyInfo property,
+                                                                    bool concatenateToExistingValue, string concatenationSeperator,
+                                                                    bool coalesceWithExistingValue, string currentStringValue)
+        {
+            // If mapping to a string, we should maniplate the mapped value to make use of the concatenation and coalescing settings, and the string value formatter, if provided.
+            if (concatenateToExistingValue)
+            {
+                var stringValue = GetStringValueOrEmpty(model, property);
+                var prefixValueWith = currentStringValue + concatenationSeperator;
+                property.SetValue(model, prefixValueWith + stringValue);
+            }
+            else if (coalesceWithExistingValue && string.IsNullOrWhiteSpace(currentStringValue))
+            {
+                var stringValue = GetStringValueOrEmpty(model, property);
+                property.SetValue(model, stringValue);
+            }
         }
 
         /// <summary>

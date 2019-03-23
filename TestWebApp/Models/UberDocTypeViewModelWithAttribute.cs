@@ -8,6 +8,7 @@
     using TestWebApp.Attributes;
 
     using Zone.UmbracoMapper;
+    using Zone.UmbracoMapper.Common.Attributes;
     using Zone.UmbracoMapper.V7.Attributes;
     using Zone.UmbracoMapper.V7.BaseDestinationTypes;
 

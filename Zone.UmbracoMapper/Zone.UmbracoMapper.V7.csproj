@@ -249,7 +249,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\IMapFromAttribute.cs" />
-    <Compile Include="Attributes\PropertyMappingAttribute.cs" />
     <Compile Include="BaseDestinationTypes\MediaFile.cs" />
     <Compile Include="IPropertyValueGetter.cs" />
     <Compile Include="PickedMediaMapper.cs" />
