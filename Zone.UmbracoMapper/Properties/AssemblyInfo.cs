@@ -10,7 +10,7 @@ using System.Runtime.InteropServices;
 [assembly: AssemblyConfiguration("")]
 [assembly: AssemblyCompany("Zone")]
 [assembly: AssemblyProduct("Zone.UmbracoMapper")]
-[assembly: AssemblyCopyright("Copyright © 2013-14")]
+[assembly: AssemblyCopyright("Copyright © 2013-19")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 

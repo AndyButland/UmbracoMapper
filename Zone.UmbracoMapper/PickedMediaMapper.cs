@@ -45,12 +45,7 @@
                 }
             }
 
-            if (mediaCollection != null)
-            {
-                return GetMediaFileCollection(mediaCollection, mapper.AssetsRootUrl);
-            }
-
-            return null;
+            return mediaCollection != null ? GetMediaFileCollection(mediaCollection, mapper.AssetsRootUrl) : null;
         }
 
         /// <summary>
@@ -77,12 +72,7 @@
                 }
             }
 
-            if (media != null)
-            {
-                return GetMediaFile(media, mapper.AssetsRootUrl);
-            }
-
-            return null;
+            return media != null ? GetMediaFile(media, mapper.AssetsRootUrl) : null;
         }
 
         /// <summary>

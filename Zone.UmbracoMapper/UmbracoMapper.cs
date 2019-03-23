@@ -14,8 +14,6 @@
 
     public class UmbracoMapper : IUmbracoMapper
     {
-        #region Fields
-
         /// <summary>
         /// Provides a cache of view model settable properties, only need to use reflection once for each view model within the 
         /// application lifetime
@@ -24,10 +22,6 @@
 
         private readonly Dictionary<string, CustomMapping> _customMappings;
         private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
-
-        #endregion
-
-        #region Constructor
 
         public UmbracoMapper() 
             : this (new DefaultPropertyValueGetter())
@@ -44,10 +38,6 @@
             EnableCaching = true;
         }
 
-        #endregion
-
-        #region Properties
-
         /// <summary>
         /// Gets or sets the root URL from where assets are served from in order to populate
         /// absolute URLs for media files (and support CDN delivery)
@@ -63,10 +53,6 @@
         /// Defines the default method for retrieving values from a property
         /// </summary>
         public IPropertyValueGetter DefaultPropertyValueGetter { get; set; }
-
-        #endregion
-
-        #region Interface methods
 
         /// <summary>
         /// Allows the mapper to use a custom mapping for a specified type from IPublishedContent
@@ -145,8 +131,7 @@
 
                     // Get content to map from (check if we want to map to content at a level above the currently passed node) and also
                     // get the level above the current node that we are mapping from
-                    int levelsAbove;
-                    var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name, out levelsAbove);
+                    var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name, out int levelsAbove);
 
                     // Check if property is a complex type and is being asked to be mapped from a higher level in the node tree.
                     // If so, we need to trigger a separate mapping operation for this.
@@ -224,53 +209,55 @@
                                      Dictionary<string, PropertyMapping> propertyMappings = null)
             where T : class
         {
-            if (xml != null)
+            if (xml == null)
             {
-                // Ensure model is not null
-                if (model == null)
+                return this;
+            }
+
+            // Ensure model is not null
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Object to map to cannot be null");
+            }
+
+            // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+            // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+            // and update the dictionary to include keys provided via the attributes.
+            propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+
+            // Loop through all settable properties on model
+            foreach (var property in SettableProperties(model))
+            {
+                var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
+
+                // If element with mapped name found, map the value (check case insensitively)
+                var mappedElement = GetXElementCaseInsensitive(xml, propName);
+
+                if (mappedElement != null)
                 {
-                    throw new ArgumentNullException("model", "Object to map to cannot be null");
-                }
-
-                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
-                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
-                // and update the dictionary to include keys provided via the attributes.
-                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
-
-                // Loop through all settable properties on model
-                foreach (var property in SettableProperties(model))
-                {
-                    var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
-
-                    // If element with mapped name found, map the value (check case insensitively)
-                    var mappedElement = GetXElementCaseInsensitive(xml, propName);
+                    // Check if we are looking for a child mapping
+                    if (IsMappingFromChildProperty(propertyMappings, property.Name))
+                    {
+                        mappedElement = mappedElement.Element(propertyMappings[property.Name].SourceChildProperty);
+                    }
 
                     if (mappedElement != null)
                     {
-                        // Check if we are looking for a child mapping
-                        if (IsMappingFromChildProperty(propertyMappings, property.Name))
-                        {
-                            mappedElement = mappedElement.Element(propertyMappings[property.Name].SourceChildProperty);
-                        }
-
-                        if (mappedElement != null)
-                        {
-                            SetTypedPropertyValue(model, property, mappedElement.Value);
-                        }
+                        SetTypedPropertyValue(model, property, mappedElement.Value);
                     }
-                    else
-                    {
-                        // Try to see if it's in an attribute too
-                        var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
-                        if (mappedAttribute != null)
-                        {
-                            SetTypedPropertyValue(model, property, mappedAttribute.Value);
-                        }
-                    }
-
-                    // If property value not set, and default value passed, use it
-                    SetDefaultValueIfProvided(model, propertyMappings, property);
                 }
+                else
+                {
+                    // Try to see if it's in an attribute too
+                    var mappedAttribute = GetXAttributeCaseInsensitive(xml, propName);
+                    if (mappedAttribute != null)
+                    {
+                        SetTypedPropertyValue(model, property, mappedAttribute.Value);
+                    }
+                }
+
+                // If property value not set, and default value passed, use it
+                SetDefaultValueIfProvided(model, propertyMappings, property);
             }
 
             return this;
@@ -289,83 +276,85 @@
                                      Dictionary<string, PropertyMapping> propertyMappings = null)
             where T : class
         {
-            if (dictionary != null)
+            if (dictionary == null)
             {
-                // Ensure model is not null
-                if (model == null)
-                {
-                    throw new ArgumentNullException("model", "Object to map to cannot be null");
-                }
+                return this;
+            }
 
-                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
-                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
-                // and update the dictionary to include keys provided via the attributes.
-                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+            // Ensure model is not null
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Object to map to cannot be null");
+            }
 
-                // Loop through all settable properties on model
-                foreach (var property in SettableProperties(model))
-                {
-                    var propName = GetMappedPropertyName(property.Name, propertyMappings);
+            // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+            // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+            // and update the dictionary to include keys provided via the attributes.
+            propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+
+            // Loop through all settable properties on model
+            foreach (var property in SettableProperties(model))
+            {
+                var propName = GetMappedPropertyName(property.Name, propertyMappings);
                     
-                    // If element with mapped name found, map the value
-                    if (dictionary.ContainsKey(propName))
+                // If element with mapped name found, map the value
+                if (dictionary.ContainsKey(propName))
+                {
+                    // First check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
+                    var mapFromAttribute = GetMapFromAttribute(property);
+                    if (mapFromAttribute != null)
                     {
-                        // First check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
-                        var mapFromAttribute = GetMapFromAttribute(property);
-                        if (mapFromAttribute != null)
-                        {
-                            mapFromAttribute.SetPropertyValue(dictionary[propName], property, model, this);
-                            continue;
-                        }
-
-                        // Then check to see if we have a custom dictionary mapping defined
-                        var namedCustomMappingKey = GetNamedCustomMappingKey(property);
-                        var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property); 
-                        if (_customObjectMappings.ContainsKey(namedCustomMappingKey))
-                        {
-                            var value = _customObjectMappings[namedCustomMappingKey](this, dictionary[propName]);
-                            if (value != null)
-                            {
-                                property.SetValue(model, value);
-                            }
-                        }
-                        else if (_customObjectMappings.ContainsKey(unnamedCustomMappingKey))
-                        {
-                            var value = _customObjectMappings[unnamedCustomMappingKey](this, dictionary[propName]);
-                            if (value != null)
-                            {
-                                property.SetValue(model, value);
-                            }
-                        }
-                        else if (dictionary[propName] is IPublishedContent)
-                        {
-                            // Handle cases where the value object passed in the dictionary is actually an IPublishedContent
-                            // - if so, we'll fully map from that
-                            Map((IPublishedContent)dictionary[propName], property.GetValue(model), propertyMappings);
-                        }
-                        else if (dictionary[propName] is IEnumerable<IPublishedContent>)
-                        {
-                            // Handle cases where the value object passed in the dictionary is actually an IEnumerable<IPublishedContent> content
-                            // - if so, we'll fully map from that
-                            // Have to make this call using reflection as we don't know the type of the generic collection at compile time
-                            var propertyValue = property.GetValue(model);
-                            var collectionPropertyType = GetGenericCollectionType(property);
-                            typeof(UmbracoMapper)
-                                .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
-                                .MakeGenericMethod(collectionPropertyType)
-                                .Invoke(this, new object[] { (IEnumerable<IPublishedContent>)dictionary[propName], propertyValue, propertyMappings });
-                        }
-                        else
-                        {
-                            // Otherwise we just map the object as a simple type
-                            var stringValue = dictionary[propName] != null ? dictionary[propName].ToString() : string.Empty;
-                            SetTypedPropertyValue(model, property, stringValue);
-                        }
+                        mapFromAttribute.SetPropertyValue(dictionary[propName], property, model, this);
+                        continue;
                     }
 
-                    // If property value not set, and default value passed, use it
-                    SetDefaultValueIfProvided(model, propertyMappings, property);
+                    // Then check to see if we have a custom dictionary mapping defined
+                    var namedCustomMappingKey = GetNamedCustomMappingKey(property);
+                    var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property); 
+                    if (_customObjectMappings.ContainsKey(namedCustomMappingKey))
+                    {
+                        var value = _customObjectMappings[namedCustomMappingKey](this, dictionary[propName]);
+                        if (value != null)
+                        {
+                            property.SetValue(model, value);
+                        }
+                    }
+                    else if (_customObjectMappings.ContainsKey(unnamedCustomMappingKey))
+                    {
+                        var value = _customObjectMappings[unnamedCustomMappingKey](this, dictionary[propName]);
+                        if (value != null)
+                        {
+                            property.SetValue(model, value);
+                        }
+                    }
+                    else if (dictionary[propName] is IPublishedContent)
+                    {
+                        // Handle cases where the value object passed in the dictionary is actually an IPublishedContent
+                        // - if so, we'll fully map from that
+                        Map((IPublishedContent)dictionary[propName], property.GetValue(model), propertyMappings);
+                    }
+                    else if (dictionary[propName] is IEnumerable<IPublishedContent>)
+                    {
+                        // Handle cases where the value object passed in the dictionary is actually an IEnumerable<IPublishedContent> content
+                        // - if so, we'll fully map from that
+                        // Have to make this call using reflection as we don't know the type of the generic collection at compile time
+                        var propertyValue = property.GetValue(model);
+                        var collectionPropertyType = GetGenericCollectionType(property);
+                        typeof(UmbracoMapper)
+                            .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(collectionPropertyType)
+                            .Invoke(this, new object[] { (IEnumerable<IPublishedContent>)dictionary[propName], propertyValue, propertyMappings });
+                    }
+                    else
+                    {
+                        // Otherwise we just map the object as a simple type
+                        var stringValue = dictionary[propName] != null ? dictionary[propName].ToString() : string.Empty;
+                        SetTypedPropertyValue(model, property, stringValue);
+                    }
                 }
+
+                // If property value not set, and default value passed, use it
+                SetDefaultValueIfProvided(model, propertyMappings, property);
             }
 
             return this;
@@ -384,43 +373,45 @@
                                      Dictionary<string, PropertyMapping> propertyMappings = null)
             where T : class
         {
-            if (!string.IsNullOrEmpty(json))
+            if (string.IsNullOrEmpty(json))
             {
-                // Ensure model is not null
-                if (model == null)
+                return this;
+            }
+
+            // Ensure model is not null
+            if (model == null)
+            {
+                throw new ArgumentNullException(nameof(model), "Object to map to cannot be null");
+            }
+
+            // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
+            // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
+            // and update the dictionary to include keys provided via the attributes.
+            propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
+
+            // Parse JSON string to queryable object
+            var jsonObj = JObject.Parse(json);
+
+            // Loop through all settable properties on model
+            foreach (var property in SettableProperties(model))
+            {
+                var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
+
+                // If element with mapped name found, map the value
+                var childPropName = string.Empty;
+                if (IsMappingFromChildProperty(propertyMappings, property.Name))
                 {
-                    throw new ArgumentNullException("model", "Object to map to cannot be null");
+                    childPropName = propertyMappings[property.Name].SourceChildProperty;
                 }
 
-                // Property mapping overrides can be passed via the dictionary or via attributes on the view model.
-                // The subequent mapping code uses the dictionary only, so we need to reflect on the view model
-                // and update the dictionary to include keys provided via the attributes.
-                propertyMappings = EnsurePropertyMappingsAndUpdateFromModel(model, propertyMappings);
-
-                // Parse JSON string to queryable object
-                var jsonObj = JObject.Parse(json);
-
-                // Loop through all settable properties on model
-                foreach (var property in SettableProperties(model))
+                var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName, childPropName);
+                if (!string.IsNullOrEmpty(stringValue))
                 {
-                    var propName = GetMappedPropertyName(property.Name, propertyMappings, false);
-
-                    // If element with mapped name found, map the value
-                    var childPropName = string.Empty;
-                    if (IsMappingFromChildProperty(propertyMappings, property.Name))
-                    {
-                        childPropName = propertyMappings[property.Name].SourceChildProperty;
-                    }
-
-                    var stringValue = GetJsonFieldCaseInsensitive(jsonObj, propName, childPropName);
-                    if (!string.IsNullOrEmpty(stringValue))
-                    {
-                        SetTypedPropertyValue(model, property, stringValue);
-                    }
-
-                    // If property value not set, and default value passed, use it
-                    SetDefaultValueIfProvided(model, propertyMappings, property);
+                    SetTypedPropertyValue(model, property, stringValue);
                 }
+
+                // If property value not set, and default value passed, use it
+                SetDefaultValueIfProvided(model, propertyMappings, property);
             }
 
             return this;
@@ -445,45 +436,47 @@
                                                bool clearCollectionBeforeMapping = true)
             where T : class, new()
         {
-            if (contentCollection != null)
+            if (contentCollection == null)
             {
-                if (modelCollection == null)
+                return this;
+            }
+
+            if (modelCollection == null)
+            {
+                throw new ArgumentNullException(nameof(modelCollection), "Collection to map to can be empty, but not null");
+            }
+
+            // Check to see if the collection has any items already, if it does, clear it first (could have come about with an 
+            // explicit mapping called before the auto-mapping feature was introduced).  In any case, assuming collection is empty
+            // seems reasonable so this is the default behaviour.
+            if (clearCollectionBeforeMapping && modelCollection.Any())
+            {
+                modelCollection.Clear();
+            }
+
+            foreach (var content in contentCollection)
+            {
+                var itemToCreate = new T();
+
+                // Check for custom mappings for the type itself (in the Map() method we'll check for custom mappings on each property)
+                var customMappingKey = itemToCreate.GetType().FullName;
+                if (_customObjectMappings.ContainsKey(customMappingKey))
                 {
-                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
+                    itemToCreate = _customObjectMappings[customMappingKey](this, content) as T;
+                }
+                else if (_customMappings.ContainsKey(customMappingKey))
+                {
+                    // Any custom mappings used here cannot be based on a single property, as we don't have a property to map to to work out what this should be.
+                    // So we just pass an empty string into the custom mapping call
+                    itemToCreate = _customMappings[customMappingKey](this, content, string.Empty, false) as T;
+                }
+                else
+                {
+                    // Otherwise map the single content item as normal
+                    Map<T>(content, itemToCreate, propertyMappings, recursiveProperties, propertySet);
                 }
 
-                // Check to see if the collection has any items already, if it does, clear it first (could have come about with an 
-                // explicit mapping called before the auto-mapping feature was introduced).  In any case, assuming collection is empty
-                // seems reasonable so this is the default behaviour
-                if (clearCollectionBeforeMapping && modelCollection.Any())
-                {
-                    modelCollection.Clear();
-                }
-
-                foreach (var content in contentCollection)
-                {
-                    var itemToCreate = new T();
-
-                    // Check for custom mappings for the type itself (in the Map() method we'll check for custom mappings on each property)
-                    var customMappingKey = itemToCreate.GetType().FullName;
-                    if (_customObjectMappings.ContainsKey(customMappingKey))
-                    {
-                        itemToCreate = _customObjectMappings[customMappingKey](this, content) as T;
-                    }
-                    else if (_customMappings.ContainsKey(customMappingKey))
-                    {
-                        // Any custom mappings used here cannot be based on a single property, as we don't have a property to map to to work out what this should be.
-                        // So we just pass an empty string into the custom mapping call
-                        itemToCreate = _customMappings[customMappingKey](this, content, string.Empty, false) as T;
-                    }
-                    else
-                    {
-                        // Otherwise map the single content item as normal
-                        Map<T>(content, itemToCreate, propertyMappings, recursiveProperties, propertySet);
-                    }
-
-                    modelCollection.Add(itemToCreate);
-                }
+                modelCollection.Add(itemToCreate);
             }
 
             return this;
@@ -509,38 +502,42 @@
                                                string destIdentifyingPropName = "Id")
             where T : class, new()
         {
-            if (xml != null)
+            if (xml == null)
             {
-                if (modelCollection == null)
+                return this;
+            }
+
+            if (modelCollection == null)
+            {
+                throw new ArgumentNullException(nameof(modelCollection), "Collection to map to can be empty, but not null");
+            }
+
+            // Loop through each of the items defined in the XML
+            foreach (var element in xml.Elements(groupElementName))
+            {
+                // Check if item is already in the list by looking up provided unique key
+                T itemToUpdate = default(T);
+                if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                 {
-                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
+                    itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, element.Element(sourceIdentifyingPropName).Value);
                 }
 
-                // Loop through each of the items defined in the XML
-                foreach (var element in xml.Elements(groupElementName))
+                if (itemToUpdate != null)
                 {
-                    // Check if item is already in the list by looking up provided unique key
-                    T itemToUpdate = default(T);
-                    if (TypeHasProperty(typeof(T), destIdentifyingPropName))
+                    // Item found, so map it
+                    Map<T>(element, itemToUpdate, propertyMappings);
+                }
+                else
+                {
+                    // Item not found, so create if that was requested
+                    if (!createItemsIfNotAlreadyInList)
                     {
-                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, element.Element(sourceIdentifyingPropName).Value);
+                        continue;
                     }
 
-                    if (itemToUpdate != null)
-                    {
-                        // Item found, so map it
-                        Map<T>(element, itemToUpdate, propertyMappings);
-                    }
-                    else
-                    {
-                        // Item not found, so create if that was requested
-                        if (createItemsIfNotAlreadyInList)
-                        {
-                            var itemToCreate = new T();
-                            Map<T>(element, itemToCreate, propertyMappings);
-                            modelCollection.Add(itemToCreate);
-                        }
-                    }
+                    var itemToCreate = new T();
+                    Map(element, itemToCreate, propertyMappings);
+                    modelCollection.Add(itemToCreate);
                 }
             }
 
@@ -566,38 +563,42 @@
                                                string destIdentifyingPropName = "Id")
             where T : class, new()
         {
-            if (dictionaries != null)
+            if (dictionaries == null)
             {
-                if (modelCollection == null)
+                return this;
+            }
+
+            if (modelCollection == null)
+            {
+                throw new ArgumentNullException(nameof(modelCollection), "Collection to map to can be empty, but not null");
+            }
+
+            // Loop through each of the items defined in the dictionary
+            foreach (var dictionary in dictionaries)
+            {
+                // Check if item is already in the list by looking up provided unique key
+                T itemToUpdate = default(T);
+                if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                 {
-                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
+                    itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, dictionary[sourceIdentifyingPropName].ToString());
                 }
 
-                // Loop through each of the items defined in the dictionary
-                foreach (var dictionary in dictionaries)
+                if (itemToUpdate != null)
                 {
-                    // Check if item is already in the list by looking up provided unique key
-                    T itemToUpdate = default(T);
-                    if (TypeHasProperty(typeof(T), destIdentifyingPropName))
+                    // Item found, so map it
+                    Map<T>(dictionary, itemToUpdate, propertyMappings);
+                }
+                else
+                {
+                    // Item not found, so create if that was requested
+                    if (!createItemsIfNotAlreadyInList)
                     {
-                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, dictionary[sourceIdentifyingPropName].ToString());
+                        continue;
                     }
 
-                    if (itemToUpdate != null)
-                    {
-                        // Item found, so map it
-                        Map<T>(dictionary, itemToUpdate, propertyMappings);
-                    }
-                    else
-                    {
-                        // Item not found, so create if that was requested
-                        if (createItemsIfNotAlreadyInList)
-                        {
-                            var itemToCreate = new T();
-                            Map<T>(dictionary, itemToCreate, propertyMappings);
-                            modelCollection.Add(itemToCreate);
-                        }
-                    }
+                    var itemToCreate = new T();
+                    Map(dictionary, itemToCreate, propertyMappings);
+                    modelCollection.Add(itemToCreate);
                 }
             }
 
@@ -624,48 +625,48 @@
                                                string destIdentifyingPropName = "Id")
             where T : class, new()
         {
-            if (!string.IsNullOrEmpty(json))
+            if (string.IsNullOrEmpty(json))
             {
-                if (modelCollection == null)
+                return this;
+            }
+
+            if (modelCollection == null)
+            {
+                throw new ArgumentNullException(nameof(modelCollection), "Collection to map to can be empty, but not null");
+            }
+
+            // Loop through each of the items defined in the JSON
+            var jsonObject = JObject.Parse(json);
+            foreach (var element in jsonObject[rootElementName].Children())
+            {
+                // Check if item is already in the list by looking up provided unique key
+                var itemToUpdate = default(T);
+                if (TypeHasProperty(typeof(T), destIdentifyingPropName))
                 {
-                    throw new ArgumentNullException("modelCollection", "Collection to map to can be empty, but not null");
+                    itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, element[sourceIdentifyingPropName].Value<string>());
                 }
 
-                // Loop through each of the items defined in the JSON
-                var jsonObject = JObject.Parse(json);
-                foreach (var element in jsonObject[rootElementName].Children())
+                if (itemToUpdate != null)
                 {
-                    // Check if item is already in the list by looking up provided unique key
-                    T itemToUpdate = default(T);
-                    if (TypeHasProperty(typeof(T), destIdentifyingPropName))
+                    // Item found, so map it
+                    Map(element.ToString(), itemToUpdate, propertyMappings);
+                }
+                else
+                {
+                    // Item not found, so create if that was requested
+                    if (!createItemsIfNotAlreadyInList)
                     {
-                        itemToUpdate = GetExistingItemFromCollection(modelCollection, destIdentifyingPropName, element[sourceIdentifyingPropName].Value<string>());
+                        continue;
                     }
 
-                    if (itemToUpdate != null)
-                    {
-                        // Item found, so map it
-                        Map<T>(element.ToString(), itemToUpdate, propertyMappings);
-                    }
-                    else
-                    {
-                        // Item not found, so create if that was requested
-                        if (createItemsIfNotAlreadyInList)
-                        {
-                            var itemToCreate = new T();
-                            Map<T>(element.ToString(), itemToCreate, propertyMappings);
-                            modelCollection.Add(itemToCreate);
-                        }
-                    }
+                    var itemToCreate = new T();
+                    Map<T>(element.ToString(), itemToCreate, propertyMappings);
+                    modelCollection.Add(itemToCreate);
                 }
             }
 
             return this;
         }
-
-        #endregion
-
-        #region Helpers
 
         /// <summary>
         /// Sets up the default mappings of known types that will be handled automatically
@@ -820,11 +821,13 @@
             foreach (var property in SettableProperties(model))
             {
                 var attribute = GetPropertyMappingAttribute(property);
-                if (attribute != null && attribute.MapRecursively && !recursivePropertiesAsList.Contains(property.Name))
+                if (attribute == null || !attribute.MapRecursively || recursivePropertiesAsList.Contains(property.Name))
                 {
-                    var propName = GetMappedPropertyName(property.Name, propertyMappings, true);
-                    recursivePropertiesAsList.Add(propName);
+                    continue;
                 }
+
+                var propName = GetMappedPropertyName(property.Name, propertyMappings, true);
+                recursivePropertiesAsList.Add(propName);
             }
 
             return recursivePropertiesAsList.ToArray();
@@ -892,7 +895,6 @@
         /// <param name="property">Property to retrieve the attribute from</param>
         /// <returns>IMapFromAttribute marked on the property, or null if no such attribute is found</returns>
         private static IMapFromAttribute GetMapFromAttribute(PropertyInfo property)
-
         {
             return (IMapFromAttribute)property.GetCustomAttributes(false)
                 .FirstOrDefault(x => x is IMapFromAttribute);
@@ -906,18 +908,18 @@
         /// <returns>Enumerable of settable properties from the model</returns>
         private IList<PropertyInfo> SettableProperties<T>(T model) where T : class
         {
-            if (EnableCaching)
+            if (!EnableCaching)
             {
-                var cacheKey = model.GetType().FullName;
-                if (!_settableProperties.ContainsKey(cacheKey))
-                {
-                    _settableProperties[cacheKey] = SettablePropertiesFromObject(model);
-                }
-
-                return _settableProperties[cacheKey];
+                return SettablePropertiesFromObject(model);
             }
 
-            return SettablePropertiesFromObject(model);
+            var cacheKey = model.GetType().FullName;
+            if (!_settableProperties.ContainsKey(cacheKey))
+            {
+                _settableProperties[cacheKey] = SettablePropertiesFromObject(model);
+            }
+
+            return _settableProperties[cacheKey];
         }
 
         /// <summary>
@@ -926,7 +928,7 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="model">Instance of view model</param>
         /// <returns>Enumerable of settable properties from the model</returns>
-        private IList<PropertyInfo> SettablePropertiesFromObject<T>(T model) where T : class
+        private static IList<PropertyInfo> SettablePropertiesFromObject<T>(T model) where T : class
         {
             return model.GetType().GetProperties()
                 .Where(p => p.GetSetMethod() != null)
@@ -985,21 +987,25 @@
         /// <param name="propName">Name of property to map</param>
         /// <param name="levelsAbove">Output parameter indicating the levels above the current node we are mapping from</param>
         /// <returns>Instance of IPublishedContent to map from</returns>
-        private IPublishedContent GetContentToMapFrom(IPublishedContent content, IReadOnlyDictionary<string, PropertyMapping> propertyMappings, 
-            string propName, out int levelsAbove)
+        private static IPublishedContent GetContentToMapFrom(IPublishedContent content, 
+                                                             IReadOnlyDictionary<string, PropertyMapping> propertyMappings, 
+                                                             string propName, 
+                                                             out int levelsAbove)
         {
             levelsAbove = 0;
             var contentToMapFrom = content;
-            if (propertyMappings.ContainsKey(propName))
+            if (!propertyMappings.ContainsKey(propName))
             {
-                levelsAbove = propertyMappings[propName].LevelsAbove;
-                for (var i = 0; i < levelsAbove; i++)
+                return contentToMapFrom;
+            }
+
+            levelsAbove = propertyMappings[propName].LevelsAbove;
+            for (var i = 0; i < levelsAbove; i++)
+            {
+                contentToMapFrom = contentToMapFrom.Parent;
+                if (contentToMapFrom == null)
                 {
-                    contentToMapFrom = contentToMapFrom.Parent;
-                    if (contentToMapFrom == null)
-                    {
-                        break;
-                    }
+                    break;
                 }
             }
 
@@ -1068,8 +1074,7 @@
             var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
             var namedCustomMappingKey = GetNamedCustomMappingKey(property);
             var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property);
-            CustomMapping providedCustomMapping;
-            if (HasProvidedCustomMapping(propertyMappings, property.Name, out providedCustomMapping))
+            if (HasProvidedCustomMapping(propertyMappings, property.Name, out CustomMapping providedCustomMapping))
             {
                 SetValueFromCustomMapping(model, property, contentToMapFrom, providedCustomMapping, propName, isRecursiveProperty);
             }
@@ -1085,105 +1090,108 @@
             {
                 // Otherwise map types we can handle
                 var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, isRecursiveProperty);
-                if (value != null)
+                if (value == null)
                 {
-                    // Check if we are mapping to a related IPublishedContent
-                    if (IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
+                    return;
+                }
+
+                // Check if we are mapping to a related IPublishedContent
+                if (IsMappingSpecifiedAsFromRelatedProperty(propertyMappings, property.Name))
+                {
+                    // The value we have will either be:
+                    //  - an Id of a related IPublishedContent
+                    //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use
+                    //    and we have used a standard content picker)
+                    //  - or a list of related content (if the Umbraco Core Property Editor Converters are in use
+                    //    and we have used a multi-node picker with a single value)
+
+                    // So, try single IPublishedContent first
+                    var relatedContentToMapFrom = value as IPublishedContent;
+
+                    // If not, try a list and take the first if it exists
+                    if (relatedContentToMapFrom == null)
                     {
-                        // The value we have will either be:
-                        //  - an Id of a related IPublishedContent
-                        //  - or the related content itself (if the Umbraco Core Property Editor Converters are in use
-                        //    and we have used a standard content picker)
-                        //  - or a list of related content (if the Umbraco Core Property Editor Converters are in use
-                        //    and we have used a multi-node picker with a single value)
+                        var listOfRelatedContent = value as IEnumerable<IPublishedContent>;
+                        relatedContentToMapFrom = listOfRelatedContent?.FirstOrDefault();
+                    }
 
-                        // So, try single IPublishedContent first
-                        var relatedContentToMapFrom = value as IPublishedContent;
-
-                        // If not, try a list and take the first if it exists
-                        if (relatedContentToMapFrom == null)
+                    // If it's not already IPublishedContent, now check using Id
+                    if (relatedContentToMapFrom == null)
+                    {
+                        if (int.TryParse(value.ToString(), out int relatedId))
                         {
-                            var listOfRelatedContent = value as IEnumerable<IPublishedContent>;
-                            relatedContentToMapFrom = listOfRelatedContent?.FirstOrDefault();
-                        }
-
-                        // If it's not already IPublishedContent, now check using Id
-                        if (relatedContentToMapFrom == null)
-                        {
-                            int relatedId;
-                            if (int.TryParse(value.ToString(), out relatedId))
-                            {
-                                // Get the related content
-                                relatedContentToMapFrom = UmbracoContext.Current.ContentCache.GetById(relatedId);
-                            }
-                        }
-
-                        // If we have a related content item...
-                        if (relatedContentToMapFrom != null)
-                        {
-                            // Check to see if there's a condition that might mean we don't carry out the mapping (on the related content)
-                            if (IsMappingConditional(propertyMappings, property.Name) && 
-                                !IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
-                            {
-                                return;
-                            }
-
-                            var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
-
-                            // Get the mapped field from the related content
-                            if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
-                            {
-                                // Got a native field
-                                MapNativeContentProperty(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
-                            }
-                            else
-                            {
-                                // Otherwise look at a doc type field
-                                value = GetPropertyValue(relatedContentToMapFrom, propertyValueGetter, relatedPropName);
-                                if (value != null)
-                                {
-                                    // Map primitive types
-                                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
-                                }
-                            }
+                            // Get the related content
+                            relatedContentToMapFrom = UmbracoContext.Current.ContentCache.GetById(relatedId);
                         }
                     }
-                    else if (!property.PropertyType.IsSimpleType())
+
+                    // If we have a related content item...
+                    if (relatedContentToMapFrom == null)
                     {
-                        // If Umbraco Core Property Editor Converters (or other known property converters) are installed, we can get back IPublishedContent 
-                        // instances automatically.  If that's the case and we are mapping to a complex sub-type, we can "automap" it.
-                        // We have to use reflection to do this as the type parameter for the sub-type on the model is only known at run-time.
-                        // All mapping customisations are expected to to be implemented as attributes on the sub-type (as we can't pass them in
-                        // in the dictionary)
-                        if (value is IPublishedContent)
-                        {
-                            typeof(UmbracoMapper)
-                                .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
-                                .MakeGenericMethod(property.PropertyType)
-                                .Invoke(this, new[] {(IPublishedContent) value, property.GetValue(model)});
-                        }
-                        else if (value is IEnumerable<IPublishedContent> && property.PropertyType.GetInterface("IEnumerable") != null)
-                        {
-                            var collectionPropertyType = GetGenericCollectionType(property);
-                            typeof(UmbracoMapper)
-                                .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
-                                .MakeGenericMethod(collectionPropertyType)
-                                .Invoke(this, new[] {(IEnumerable<IPublishedContent>)value, property.GetValue(model), null});                            
-                        }
-                        else if (value.GetType().IsAssignableFrom(property.PropertyType))
-                        {
-                            // We could also have an instance of IPropertyValueGetter in use here.
-                            // If that returns a complex type and it matches the type of the view model, 
-                            // we can set it here.
-                            // See: https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter
-                            property.SetValue(model, value);
-                        }
+                        return;
+                    }
+
+                    // Check to see if there's a condition that might mean we don't carry out the mapping (on the related content)
+                    if (IsMappingConditional(propertyMappings, property.Name) &&
+                        !IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
+                    {
+                        return;
+                    }
+
+                    var relatedPropName = propertyMappings[property.Name].SourceRelatedProperty;
+
+                    // Get the mapped field from the related content
+                    if (relatedContentToMapFrom.GetType().GetProperty(relatedPropName) != null)
+                    {
+                        // Got a native field
+                        MapNativeContentProperty(model, property, relatedContentToMapFrom, relatedPropName, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
                     }
                     else
                     {
-                        // Map primitive types
-                        SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
+                        // Otherwise look at a doc type field
+                        value = GetPropertyValue(relatedContentToMapFrom, propertyValueGetter, relatedPropName);
+                        if (value != null)
+                        {
+                            // Map primitive types
+                            SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
+                        }
                     }
+                }
+                else if (!property.PropertyType.IsSimpleType())
+                {
+                    // If Umbraco Core Property Editor Converters (or other known property converters) are installed, we can get back IPublishedContent 
+                    // instances automatically.  If that's the case and we are mapping to a complex sub-type, we can "automap" it.
+                    // We have to use reflection to do this as the type parameter for the sub-type on the model is only known at run-time.
+                    // All mapping customisations are expected to to be implemented as attributes on the sub-type (as we can't pass them in
+                    // in the dictionary)
+                    if (value is IPublishedContent)
+                    {
+                        typeof(UmbracoMapper)
+                            .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(property.PropertyType)
+                            .Invoke(this, new[] { (IPublishedContent)value, property.GetValue(model) });
+                    }
+                    else if (value is IEnumerable<IPublishedContent> && property.PropertyType.GetInterface("IEnumerable") != null)
+                    {
+                        var collectionPropertyType = GetGenericCollectionType(property);
+                        typeof(UmbracoMapper)
+                            .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(collectionPropertyType)
+                            .Invoke(this, new[] { (IEnumerable<IPublishedContent>)value, property.GetValue(model), null });
+                    }
+                    else if (value.GetType().IsAssignableFrom(property.PropertyType))
+                    {
+                        // We could also have an instance of IPropertyValueGetter in use here.
+                        // If that returns a complex type and it matches the type of the view model, 
+                        // we can set it here.
+                        // See: https://our.umbraco.com/projects/developer-tools/umbraco-mapper/bugs-questions-suggestions/92608-setting-complex-model-properties-using-custom-ipropertyvaluegetter
+                        property.SetValue(model, value);
+                    }
+                }
+                else
+                {
+                    // Map primitive types
+                    SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
                 }
             }
         }
@@ -1257,7 +1265,9 @@
         /// <param name="propName">Name of property to map to</param>
         /// <param name="customMapping">Provided custom mapping returned via out parameter</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool HasProvidedCustomMapping(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName, out CustomMapping customMapping)
+        private static bool HasProvidedCustomMapping(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, 
+                                                     string propName, 
+                                                     out CustomMapping customMapping)
         {
             if (propertyMappings.ContainsKey(propName) && propertyMappings[propName].CustomMapping != null)
             {
@@ -1321,8 +1331,9 @@
         /// <param name="recursive">Flag for whether property should be recursively mapped</param>
         /// <returns>Property value</returns>
         private static object GetPropertyValue(IPublishedContent content, 
-            IPropertyValueGetter propertyValueGetter, 
-            string propName, bool recursive = false)
+                                               IPropertyValueGetter propertyValueGetter, 
+                                               string propName, 
+                                               bool recursive = false)
         {
             return propertyValueGetter.GetPropertyValue(content, propName, recursive);
         }
@@ -1334,7 +1345,9 @@
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="mapIfPropertyMatches">Property alias and value to match</param>
         /// <returns>True if mapping condition is met</returns>
-        private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, IPropertyValueGetter propertyValueGetter, KeyValuePair<string, string> mapIfPropertyMatches)
+        private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, 
+                                                  IPropertyValueGetter propertyValueGetter, 
+                                                  KeyValuePair<string, string> mapIfPropertyMatches)
         {
             var conditionalPropertyAlias = mapIfPropertyMatches.Key;
             var conditionalPropertyValue = GetPropertyValue(contentToMapFrom, propertyValueGetter, conditionalPropertyAlias, false);
@@ -1430,18 +1443,20 @@
         {
             var result = MultiplePropertyMappingOperation.None;
 
-            if (propertyMappings.ContainsKey(propName))
+            if (!propertyMappings.ContainsKey(propName))
             {
-                if (propertyMappings[propName].SourcePropertiesForConcatenation != null &&
-                   propertyMappings[propName].SourcePropertiesForConcatenation.Any())
-                {
-                    result = MultiplePropertyMappingOperation.Concatenate;
-                }
-                else if (propertyMappings[propName].SourcePropertiesForCoalescing != null &&
-                   propertyMappings[propName].SourcePropertiesForCoalescing.Any())
-                {
-                    result = MultiplePropertyMappingOperation.Coalesce;
-                }
+                return result;
+            }
+
+            if (propertyMappings[propName].SourcePropertiesForConcatenation != null &&
+                propertyMappings[propName].SourcePropertiesForConcatenation.Any())
+            {
+                result = MultiplePropertyMappingOperation.Concatenate;
+            }
+            else if (propertyMappings[propName].SourcePropertiesForCoalescing != null &&
+                     propertyMappings[propName].SourcePropertiesForCoalescing.Any())
+            {
+                result = MultiplePropertyMappingOperation.Coalesce;
             }
 
             return result;
@@ -1687,8 +1702,8 @@
         private bool TypeHasProperty(Type type, string propName)
         {
             return type
-                       .GetProperties()
-                       .SingleOrDefault(p => p.Name == propName) != null;
+                .GetProperties()
+                .SingleOrDefault(p => p.Name == propName) != null;
         }
 
         /// <summary>
@@ -1749,35 +1764,37 @@
         private string GetJsonFieldCaseInsensitive(JObject jsonObj, string propName, string childPropName)
         {
             var token = GetJToken(jsonObj, propName);
-            if (token != null)
+            if (token == null)
             {
-                if (!string.IsNullOrEmpty(childPropName))
+                return string.Empty;
+            }
+
+            if (!string.IsNullOrEmpty(childPropName))
+            {
+                // Looking up on child object
+                var childToken = token[childPropName];
+
+                // If not found, try with lower case
+                if (childToken == null)
                 {
-                    // Looking up on child object
-                    var childToken = token[childPropName];
-
-                    // If not found, try with lower case
-                    if (childToken == null)
-                    {
-                        childToken = token[childPropName.ToLowerInvariant()];
-                    }
-
-                    // If still not found, try with camel case
-                    if (childToken == null)
-                    {
-                        childToken = token[CamelCase(childPropName)];
-                    }
-
-                    if (childToken != null)
-                    {
-                        return (string)childToken;
-                    }
+                    childToken = token[childPropName.ToLowerInvariant()];
                 }
-                else
+
+                // If still not found, try with camel case
+                if (childToken == null)
                 {
-                    // Looking up directly on object
-                    return (string)token;
+                    childToken = token[CamelCase(childPropName)];
                 }
+
+                if (childToken != null)
+                {
+                    return (string)childToken;
+                }
+            }
+            else
+            {
+                // Looking up directly on object
+                return (string)token;
             }
 
             return string.Empty;
@@ -1791,21 +1808,8 @@
         /// <returns>JToken object, if found</returns>
         private JToken GetJToken(JObject jsonObj, string propName)
         {
-            var token = jsonObj[propName];
-
-            // If not found, try with lower case
-            if (token == null)
-            {
-                token = jsonObj[propName.ToLowerInvariant()];
-            }
-
-            // If still not found, try with camel case
-            if (token == null)
-            {
-                token = jsonObj[CamelCase(propName)];
-            }
-
-            return token;
+            // If not found, try with lower case, ff still not found, try with camel case
+            return (jsonObj[propName] ?? jsonObj[propName.ToLowerInvariant()]) ?? jsonObj[CamelCase(propName)];
         }
 
         /// <summary>
@@ -1820,12 +1824,14 @@
         /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
         /// by having multiple overloads.
         /// </remarks>
+#pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
         private IUmbracoMapper MapCollectionOfIPublishedContent<T>(IEnumerable<IPublishedContent> contentCollection,
             IList<T> modelCollection,
             Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
         {
             return MapCollection<T>(contentCollection, modelCollection, propertyMappings);
         }
+#pragma warning restore S1144 // Unused private types or members should be removedB
 
         /// <summary>
         /// Maps a single IPublishedContent to the passed view model
@@ -1838,10 +1844,12 @@
         /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
         /// by having multiple overloads.
         /// </remarks>
+#pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
         private IUmbracoMapper MapIPublishedContent<T>(IPublishedContent content, T model) where T : class, new()
         {
             return Map<T>(content, model);
         }
+#pragma warning restore S1144 // Unused private types or members should be removed
 
         /// <summary>
         /// Helper to set the value of a property from a dictionary key value
@@ -1872,42 +1880,6 @@
         }
 
         /// <summary>
-        /// Helper to check if a given value (reference or value type) is null or the default value
-        /// </summary>
-        /// <typeparam name="T">Type of argument</typeparam>
-        /// <param name="argument">Argument to check</param>
-        /// <returns>True if null or default</returns>
-        /// <remarks>See: http://stackoverflow.com/a/6553276/489433</remarks>
-        private static bool IsNullOrDefault<T>(T argument)
-        {
-            // Deal with normal scenarios
-            if (argument == null) return true;
-            if (object.Equals(argument, default(T))) return true;
-
-            // Handle empty string (we'll treat this as a default value for string even through strictly the default is null, as that's what Umbraco
-            // will return for an empty string property value)
-            var stringArgument = argument as string;
-            if (string.IsNullOrEmpty(stringArgument))
-            {
-                return true;
-            }
-
-            // Deal with non-null nullables
-            Type methodType = typeof(T);
-            if (Nullable.GetUnderlyingType(methodType) != null) return false;
-
-            // Deal with boxed value types
-            Type argumentType = argument.GetType();
-            if (argumentType.IsValueType && argumentType != methodType)
-            {
-                object obj = Activator.CreateInstance(argument.GetType());
-                return obj.Equals(argument);
-            }
-
-            return false;
-        }
-
-        /// <summary>
         /// Helper to determine the type of a generic collection
         /// </summary>
         /// <param name="property">Property info for collection</param>
@@ -1916,7 +1888,5 @@
         {
             return property.PropertyType.GetTypeInfo().GenericTypeArguments[0];
         }
-
-        #endregion
     }
 }

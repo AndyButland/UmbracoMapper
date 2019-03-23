@@ -17,15 +17,16 @@
             return
                 type.IsValueType ||
                 type.IsPrimitive ||
-                new Type[] { 
-				typeof(String),
-                typeof(IHtmlString),
-				typeof(Decimal),
-				typeof(DateTime),
-				typeof(DateTimeOffset),
-				typeof(TimeSpan),
-				typeof(Guid)
-			}.Contains(type) ||
+                new[] 
+                    {
+                        typeof(string),
+                        typeof(IHtmlString),
+                        typeof(decimal),
+                        typeof(DateTime),
+                        typeof(DateTimeOffset),
+                        typeof(TimeSpan),
+                        typeof(Guid)
+                    }.Contains(type) ||
                 Convert.GetTypeCode(type) != TypeCode.Object;
         }
     }

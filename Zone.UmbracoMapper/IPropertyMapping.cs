@@ -1,7 +1,6 @@
 ﻿namespace Zone.UmbracoMapper
 {
     using System;
-    using System.Collections.Generic;
 
     public interface IPropertyMapping
     {
