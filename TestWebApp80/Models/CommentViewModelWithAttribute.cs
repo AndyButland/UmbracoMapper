@@ -10,7 +10,7 @@
 
         public string Text { get; set; }
 
-        public DateTime CreatedOn { get; set; }
+        public DateTime CreateDate { get; set; }
 
         public string Author { get; set; }
 
@@ -21,7 +21,7 @@
         public string Country { get; set; }
 
         [PropertyMapping(MapRecursively = true)]
-        public MediaFile MainImage { get; set; }
+        public MediaFile MediaPickedImage { get; set; }
 
         public string Heading { get; set; }
 
