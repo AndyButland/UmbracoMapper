@@ -1,0 +1,148 @@
+﻿@inherits Umbraco.Web.Mvc.UmbracoViewPage<TestWebApp80.Models.UberDocTypeViewModel>
+
+@{
+    Layout = null;
+}
+
+<div><em>Using Property Mapping Dictionary</em></div>
+<h1>@Model.Heading</h1>
+<p>Upper-cased heading: @Model.UpperCaseHeading</p>
+<p>Created on: @Model.CreatedOn, formatted date: @Model.FormattedCreatedOnDate</p>
+<div>Body text: @Html.Raw(Model.BodyText)</div>
+<p>Rating: @Model.StarRating stars</p>
+<p>Approved: @(Model.IsApproved ? "Yes" : "No")</p>
+<p>Average Score: @Model.AverageScore</p>
+<p>Concatenated value (heading, star rating, Id and URL): @Model.ConcatenatedValue</p>
+<p>Conditional value (met, should display): @Model.ConditionalValueMet</p>
+<p>Conditional value (not met, should not display): @Model.ConditionalValueNotMet</p>
+<p>Coalesced value (should take node name): @Model.CoalescedValue</p>
+<p>Default value (from null): @Model.NonMapped</p>
+<p>Default value (from empty string): @Model.NonMappedFromEmptyString</p>
+<p>Default value (from populated field, so default should not be used): @Model.HeadingWithDefaultValue</p>
+<p>Ignored value: @Model.DocumentTypeAlias (should NOT be populated)</p>
+<p>Date with set value: @(Model.Date1.HasValue ? "Has value - " + Model.Date1.Value.ToString("d-MMM-yyyy") : "No value")</p>
+<p>Date with no value set: @(Model.Date2.HasValue ? "Has value - " + Model.Date2.Value.ToString("d-MMM-yyyy") : "No value")</p>
+<p>Dictionary value: @Model.DictionaryValue</p>
+
+@if (Model.MediaPickedImage != null)
+{
+    <div>Media picker image:</div>
+    <img src="@Model.MediaPickedImage.Url" width="@Model.MediaPickedImage.Width" height="@Model.MediaPickedImage.Width" />
+}
+
+@if (Model.MultipleMediaPickedImages != null)
+{
+    <div>Multiple media picker images:</div>
+    foreach (var media in Model.MultipleMediaPickedImages)
+    {
+        <img src="@media.Url" width="@media.Width" height="@media.Width" />
+    }
+}
+
+@if (Model.MainImage != null)
+{
+    <div>DAMP image:</div>
+    <img src="@Model.MainImage.Url" />
+}
+
+<h2>Comments</h2>
+
+<p>Selected comment: <strong>@Model.SelectedComment</strong> (Id: @Model.SelectedCommentId)</p>
+<p>Selected comment from map from attribute: <strong>@Model.SelectedCommentModel.Text</strong> (Id: @Model.SelectedCommentModel.Id)</p>
+
+@if (Model.Comments.Any())
+{
+    foreach (var comment in Model.Comments)
+    {
+        <p>@comment.Text | <em>@comment.Author from @comment.Country on @comment.CreateDate.ToString("d-MMM-yyyy HH:mm")</em></p>
+        <p>Parent page: @comment.ParentPage</p>
+        <p>
+            Image from parent page: 
+            @if (comment.MediaPickedImage != null)
+            {
+                <img src="@comment.MediaPickedImage.Url" />
+            }
+            else
+            {
+                <text>Not found</text>
+            }
+        </p>
+        <p>
+            Recursive star rating: @comment.StarRating
+        </p>    
+    }
+}
+else
+{
+    <p>There are no comments.</p>
+}
+
+<h2>Countries</h2>
+
+@if (Model.Countries.Any())
+{
+    <p>Count: @Model.Countries.Count()</p>
+    <ul>
+        @foreach (var country in Model.Countries)
+        {
+            <li>@country.Name</li>
+        }
+    </ul>
+}
+else
+{
+    <p>There are no countries.</p>
+}
+
+<h2>Related Links</h2>
+
+@if (Model.RelatedLinks.Any())
+{
+    <ul>
+        @foreach (var link in Model.RelatedLinks)
+        {
+            <li><a href="@link.Link" target="_@(link.NewWindow ? "blank" : "self")">@link.Title</a></li>
+        }
+    </ul>
+}
+else
+{
+    <p>There are no related link.</p>
+}
+
+<h2>More Random Things</h2>
+
+<p>Single value from XML: @Model.SingleValueFromXml</p>
+
+<p>XML collection: @string.Join(", ", Model.CollectionFromXml.Select(x => x.Name).ToArray())</p>
+
+<p>Single value from Dictionary: @Model.SingleValueFromDictionary</p>
+
+<p>Dictionary collection: @string.Join(", ", Model.CollectionFromDictionary.Select(x => x.Name).ToArray())</p>
+
+<p>Single value from JSON: @Model.SingleValueFromJson</p>
+
+<p>JSON collection: @string.Join(", ", Model.CollectionFromJson.Select(x => x.Name).ToArray())</p>
+
+<h2>Sub-Model</h2>
+
+@if (Model.SubModel != null)
+{
+    <p>Id: @Model.SubModel.Id, Heading: @Model.SubModel.Heading</p>
+}
+else
+{
+    <p>Sub-model is null</p>
+}
+
+<h2>Auto-Mapping</h2>
+
+<p>Single country: @Model.AutoMapSingle.Name (@Model.AutoMapSingle.Currency)</p>
+
+<p>Multiple countries:</p>
+<ul>
+    @foreach (var country in Model.AutoMapMultiple)
+    {
+        <li>@country.Name (@country.Currency)</li>
+    }
+</ul>

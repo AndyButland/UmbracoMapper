@@ -1,6 +1,5 @@
 ﻿namespace Zone.UmbracoMapper.V8
 {
-    using Umbraco.Core.Models;
     using Umbraco.Core.Models.PublishedContent;
 
     public interface IPropertyValueGetter
