@@ -167,17 +167,6 @@
         }
 
         /// <summary>
-        /// Helper to check whether given property is defined as recursive
-        /// </summary>
-        /// <param name="recursiveProperties">Array of recursive property names</param>
-        /// <param name="propertyName">Name of property</param>
-        /// <returns>True if in list of recursive properties</returns>
-        protected static bool IsRecursiveProperty(string[] recursiveProperties, string propertyName)
-        {
-            return recursiveProperties != null && recursiveProperties.Contains(propertyName);
-        }
-
-        /// <summary>
         /// Helper method to convert a string value to an appropriate type for setting via reflection
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
@@ -637,6 +626,8 @@
             {
                 propertyMappings[property.Name].PropertyValueGetter = propertyMapping.PropertyValueGetter;
             }
+
+            propertyMappings[property.Name].MapRecursively = propertyMapping.MapRecursively;
         }
 
         /// <summary>
@@ -657,6 +648,7 @@
             mapping.DictionaryKey = attribute.DictionaryKey;
             mapping.Ignore = attribute.Ignore;
             mapping.PropertyValueGetter = attribute.PropertyValueGetter;
+            mapping.MapRecursively = attribute.MapRecursively;
         }
 
         /// <summary>

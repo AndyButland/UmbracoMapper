@@ -58,6 +58,13 @@
         public string[] SourcePropertiesForCoalescing { get; set; }
 
         /// <summary>
+        /// If assigned to a property it will be mapped recursively.
+        /// It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 
+        /// 'StarRating', it'll look for an Umbraco property called 'starRating')
+        /// </summary>
+        public bool MapRecursively { get; set; }
+
+        /// <summary>
         /// If provided, mapping is only carried out if the property provided in the key contains the value provided in the value.
         /// </summary>
         public KeyValuePair<string, string> MapIfPropertyMatches { get; set; }

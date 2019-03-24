@@ -9,7 +9,6 @@
     using TestWebApp.Models;
     using Umbraco.Core.Models;
     using Umbraco.Web;
-    using Zone.UmbracoMapper;
     using Zone.UmbracoMapper.V7;
 
     public class UberDocTypeController : BaseController
@@ -146,9 +145,20 @@
                                     { 
                                         SourceRelatedProperty = "Name", 
                                     } 
-                            }, 
-                        },
-                    new string[] { "mainImage", "starRating" })
+                            },
+                            {
+                                "MainImage", new PropertyMapping
+                                    {
+                                        MapRecursively = true
+                                    }
+                            },
+                            {
+                                "StarRating", new PropertyMapping
+                                    {
+                                        MapRecursively = true
+                                    }
+                            }
+                        })
                 .MapCollection(countryNodes, model.Countries)
                 .MapCollection(relatedLinksXml, model.RelatedLinks, null, "link")
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })

@@ -112,5 +112,16 @@
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].Ignore;
         }
+
+        /// <summary>
+        /// Helper to check if particular property should be mapped recursively
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if mapping should be from child property</returns>
+        public static bool IsMappingRecursive(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        {
+            return propertyMappings.ContainsKey(propName) && propertyMappings[propName].MapRecursively;
+        }
     }
 }

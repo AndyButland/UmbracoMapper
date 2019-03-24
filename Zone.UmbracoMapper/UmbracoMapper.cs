@@ -72,13 +72,11 @@
         /// <param name="content">Instance of IPublishedContent</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(IPublishedContent content,
                                      T model,
                                      Dictionary<string, PropertyMapping> propertyMappings = null,
-                                     string[] recursiveProperties = null,
                                      PropertySet propertySet = PropertySet.All)
             where T : class
         {
@@ -100,9 +98,6 @@
                 
             // Cast dictionary to base type, which can then be used by methods in the "common" referenced project.
             var propertyMappingsBase = propertyMappings.AsBaseDictionary();
-
-            // Similarly, the recursive properties can be passed via string array or attribute
-            recursiveProperties = EnsureRecursivePropertiesAndUpdateFromModel(model, recursiveProperties, propertyMappingsBase);
 
             // Loop through all settable properties on model
             foreach (var property in SettableProperties(model))
@@ -156,7 +151,7 @@
                             // Call the mapping function, passing in each source property to use, and flag to contatenate
                             // on all but the first
                             propertyMappings[property.Name].SourceProperty = sourceProp;
-                            MapContentProperty(model, property, contentToMapFrom, propertyMappings, propertyMappingsBase, recursiveProperties,
+                            MapContentProperty(model, property, contentToMapFrom, propertyMappings, propertyMappingsBase,
                                 concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                             isFirst = false;
                         }
@@ -170,7 +165,7 @@
                             // Call the mapping function, passing in each source property to use, and flag to coalesce
                             // on all but the first
                             propertyMappings[property.Name].SourceProperty = sourceProp;
-                            MapContentProperty(model, property, contentToMapFrom, propertyMappings, propertyMappingsBase, recursiveProperties,
+                            MapContentProperty(model, property, contentToMapFrom, propertyMappings, propertyMappingsBase,
                                 coalesceWithExistingValue: true, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                         }
 
@@ -178,7 +173,7 @@
                     default:
 
                         // Map the single property
-                        MapContentProperty(model, property, contentToMapFrom, propertyMappings, propertyMappingsBase, recursiveProperties, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
+                        MapContentProperty(model, property, contentToMapFrom, propertyMappings, propertyMappingsBase, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                         break;
                 }
             }
@@ -367,14 +362,12 @@
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection,
                                                IList<T> modelCollection,
                                                Dictionary<string, PropertyMapping> propertyMappings = null,
-                                               string[] recursiveProperties = null,
                                                PropertySet propertySet = PropertySet.All, 
                                                bool clearCollectionBeforeMapping = true)
             where T : class, new()
@@ -416,7 +409,7 @@
                 else
                 {
                     // Otherwise map the single content item as normal
-                    Map<T>(content, itemToCreate, propertyMappings, recursiveProperties, propertySet);
+                    Map(content, itemToCreate, propertyMappings, propertySet);
                 }
 
                 modelCollection.Add(itemToCreate);
@@ -761,7 +754,7 @@
             }
 
             return contentToMapFrom;
-        }        
+        }
 
         /// <summary>
         /// Maps a given IPublished content field (either native or from document type) to property on view model
@@ -771,8 +764,7 @@
         /// <param name="property">Property of view model to map to</param>
         /// <param name="contentToMapFrom">IPublished content to map from</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
-        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
+        /// <param name="propertyMappingsBase">Optional set of property mappings cast to the base type, for use when convention mapping based on name is not sufficient</param>        /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         /// <param name="stringValueFormatter">A function for transformation of the string value, if passed</param>
@@ -780,7 +772,6 @@
         private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
                                            Dictionary<string, PropertyMapping> propertyMappings,
                                            Dictionary<string, PropertyMappingBase> propertyMappingsBase, 
-                                           string[] recursiveProperties = null,
                                            bool concatenateToExistingValue = false, string concatenationSeperator = "",
                                            bool coalesceWithExistingValue = false, 
                                            Func<string, string> stringValueFormatter = null, 
@@ -815,16 +806,18 @@
             // properties, unless override provided)
             propName = GetMappedPropertyName(property.Name, propertyMappingsBase, true);
 
+            // Check to see if property should be mapped recursively
+            var isRecursiveProperty = propertyMappingsBase.IsMappingRecursive(property.Name);
+
             // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
             var mapFromAttribute = GetMapFromAttribute(property);
             if (mapFromAttribute != null)
             {
-                SetValueFromMapFromAttribute(model, property, contentToMapFrom, mapFromAttribute, propName, recursiveProperties, propertyValueGetter, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
+                SetValueFromMapFromAttribute(model, property, contentToMapFrom, mapFromAttribute, propName, isRecursiveProperty, propertyValueGetter, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                 return;
             }
 
             // Map properties, first checking for custom mappings
-            var isRecursiveProperty = IsRecursiveProperty(recursiveProperties, propName);
             var namedCustomMappingKey = GetNamedCustomMappingKey(property);
             var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property);
             if (HasProvidedCustomMapping(propertyMappings, property.Name, out CustomMapping providedCustomMapping))
@@ -954,18 +947,18 @@
         /// <param name="contentToMapFrom">IPublished content to map from</param>
         /// <param name="mapFromAttribute">Instance of <see cref="IMapFromAttribute"/> to use for mapping</param>
         /// <param name="propName">Name of property to map to</param>
-        /// <param name="recursiveProperties">List of recursive properties</param>
+        /// <param name="isRecursiveProperty">Flag for if property should be mapped of recursively properties</param>
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         private void SetValueFromMapFromAttribute<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
                                                      IMapFromAttribute mapFromAttribute, string propName,
-                                                     string[] recursiveProperties, IPropertyValueGetter propertyValueGetter,
+                                                     bool isRecursiveProperty, IPropertyValueGetter propertyValueGetter,
                                                      bool concatenateToExistingValue, string concatenationSeperator,
                                                      bool coalesceWithExistingValue)
         {
-            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, IsRecursiveProperty(recursiveProperties, propName));
+            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, isRecursiveProperty);
 
             // If mapping to a string, we should manipulate the mapped value to make use of the concatenation and coalescing 
             // settings, if provided.

@@ -144,9 +144,20 @@
                                     { 
                                         SourceRelatedProperty = "Name", 
                                     } 
-                            }, 
-                        },
-                    new string[] { "mediaPickedImage", "starRating" })
+                            },
+                            {
+                                "MediaPickedImage", new PropertyMapping
+                                    {
+                                        MapRecursively = true
+                                    }
+                            },
+                            {
+                                "StarRating", new PropertyMapping
+                                    {
+                                        MapRecursively = true
+                                    }
+                            } 
+                        })
                 .MapCollection(countryNodes, model.Countries)
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
                 .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")

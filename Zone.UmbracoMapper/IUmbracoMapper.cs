@@ -45,13 +45,11 @@
         /// <param name="content">Instance of IPublishedContent</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper Map<T>(IPublishedContent content,
                               T model,
                               Dictionary<string, PropertyMapping> propertyMappings = null,
-                              string[] recursiveProperties = null,
                               PropertySet propertySet = PropertySet.All)
             where T : class;
 
@@ -101,14 +99,12 @@
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection,
                                         IList<T> modelCollection,
                                         Dictionary<string, PropertyMapping> propertyMappings = null,
-                                        string[] recursiveProperties = null,
                                         PropertySet propertySet = PropertySet.All, 
                                         bool clearCollectionBeforeMapping = true)
             where T : class, new();

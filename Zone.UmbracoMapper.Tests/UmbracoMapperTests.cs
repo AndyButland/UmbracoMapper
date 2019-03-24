@@ -2426,7 +2426,7 @@
 
                 subModelValuesContentMock.Setup(c => c.PropertyTypeAlias).Returns("subModelValue");
                 subModelValuesContentMock.Setup(c => c.Value)
-                    .Returns(new List<IPublishedContent> {MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object});
+                    .Returns(new List<IPublishedContent>{ MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object });
             }
 
             var parentContentMock = new Mock<IPublishedContent>();

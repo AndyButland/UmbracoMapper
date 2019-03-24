@@ -77,8 +77,6 @@ To override conventions for property mapping, you can provide a Dictionary of pr
         }, 
       });
       
-The **recursiveProperties** parameter allows you to pass a string array of Umbraco property aliases that should be mapped recursively (i.e. if not found on the current page, look on the parent, and the parent's parent, and so on until it is found).  See below for an attribute based alternative to using this parameter.
-
 The **propertySet** is a simple enum based flag to allow to you map just all native properties of IPublishedContent (Id, Name etc.) OR just all custom properties (all the ones put on document types).  The default if not provided is to map both. 
 
 ##### From Collections of IPublishedContent
@@ -192,6 +190,8 @@ The **StringValueFormatter** is a field that can be set to a function to transfo
 
 **DictionaryKey** can be added with a string value of a dictionary key, which will be mapped to it's value
 
+**MapsRecursively** can be added to a field and if set to true, the property will be mapped recursively.  It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 'StarRating', it'll look for an Umbraco property called 'starRating').
+
 #### Mapping Using Attributes
 
 A newer feature that has been added to the package is the ability to configure your mappings using attributes on the view model, instead of passing in these overrides to the default mapping behaviour via the Dictionary parameter of the Map() method.         
@@ -221,9 +221,7 @@ Simplifying the mapping call to:
 
     mapper.MapCollection(CurrentPage.Children, model.Comments);   
     
-In addition to the use of this attribute to replace the Dictionary parameter, it can also be used instead of the recursiveProperties string array that is used to pass a list of Umbraco document type aliases that should be mapped recursively.  It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 'StarRating', it'll look for an Umbraco property called 'starRating').
-
-It's used like this:
+To map recursively up the ancestors of the tree, use:
 
     [PropertyMapping(MapRecursively = true)]
     public int StarRating { get; set; }
@@ -740,7 +738,9 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Added support for the use of string concatenation and coalescing when using IMapFromAttribute
 - 3.0.0
     - Bumped major version following internal refactoring into common project to support code re-use across Umbraco versions 7 and 8.
-	  No functional changes from previous version but has been some namespace updates, hence a breaking change.
+	  Considera a breaking change due to:
+        - Removal of the `recuriveProperties` string array parameter (not needed/consistent as can use attribute or property mapping dictionary)
+        - Namespace changes.		
 	
 ## Credits
 
