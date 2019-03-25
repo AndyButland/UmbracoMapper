@@ -277,7 +277,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "HeadingAndBodyText", 
@@ -317,7 +317,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "SummaryText", 
@@ -356,7 +356,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "SummaryText", 
@@ -395,7 +395,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "BodyText", 
@@ -419,7 +419,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "BodyText", 
@@ -443,7 +443,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "ParentId", 
@@ -586,9 +586,10 @@
                     {
                         "GeoCoordinate",
                         new PropertyMapping
-                        {
-                            CustomMapping = MapGeoCoordinate,
-                        }
+                            {
+                                CustomMappingType = typeof(UmbracoMapperTests),
+                                CustomMappingMethod = nameof(MapGeoCoordinate)
+                            }
                     }
                 });
 
@@ -632,9 +633,10 @@
                     {
                         "GeoCoordinate",
                         new PropertyMapping
-                        {
-                            CustomMapping = MapInversedGeoCoordinate,
-                        }
+                            {
+                                CustomMappingType = typeof(UmbracoMapperTests),
+                                CustomMappingMethod = nameof(MapInversedGeoCoordinate)
+                            }
                     }
                 });
 
@@ -755,7 +757,7 @@
             var content = MockPublishedContent(bodyTextValue: null);
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
             { 
                 { 
                     "BodyText", 
@@ -803,7 +805,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> 
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
             { 
                 { 
                     "NonMapped", 

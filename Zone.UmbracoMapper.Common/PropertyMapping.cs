@@ -5,9 +5,9 @@
 
     /// <summary>
     /// Class defining the override to the mapping convention for a particular type.
-    /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: Dictionary<string, PropertyMapping>
+    /// Will be passed in a Dictionary indicating the destination property on the view model, i.e.: Dictionary'string, PropertyMapping
     /// </summary>
-    public abstract class PropertyMappingBase : IPropertyMapping
+    public class PropertyMapping : IPropertyMapping
     {
         /// <summary>
         /// The name of the property on the source to map from.  If not passed, exact name match convention is used.
@@ -95,5 +95,17 @@
         /// A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
         /// </summary>
         public Type PropertyValueGetter { get; set; }
+
+        /// <summary>
+        /// Provides a type that must implement be of type CustomMapping (defined in version specific assemblies) to be used
+        /// in preference to any named or unnamed custom mapping that might be registered globally. 
+        /// </summary>
+        public Type CustomMappingType { get; set; }
+
+        /// <summary>
+        /// Provides the name of a method of type CustomMapping (defined in project specific versions) that will be used in preference to any named or unnamed
+        /// custom mapping that might be registered globally. 
+        /// </summary>
+        public string CustomMappingMethod { get; set; }
     }
 }

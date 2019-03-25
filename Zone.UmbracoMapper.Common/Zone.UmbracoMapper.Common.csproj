@@ -48,10 +48,11 @@
     <Compile Include="BaseDestinationTypes\BaseNodeViewModel.cs" />
     <Compile Include="BaseDestinationTypes\MediaFile.cs" />
     <Compile Include="Enums.cs" />
+    <Compile Include="Extensions\TypeExtensions.cs" />
     <Compile Include="Helpers\TypeExtensions.cs" />
     <Compile Include="IPropertyMapping.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PropertyMappingBase.cs" />
+    <Compile Include="PropertyMapping.cs" />
     <Compile Include="PropertyMappingDictionaryExtensions.cs" />
     <Compile Include="UmbracoMapperBase.cs" />
   </ItemGroup>

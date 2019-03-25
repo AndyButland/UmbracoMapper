@@ -33,12 +33,6 @@
         /// </summary>
         public bool EnableCaching { get; set; }
 
-        protected static MethodInfo GetCustomMappingMethod(IReflect type, string methodName)
-        {
-            return type.GetMethod(methodName,
-                BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic);
-        }
-
         /// <summary>
         /// Helper to get the settable properties from a model for mapping from the cache or the model object
         /// </summary>
@@ -81,7 +75,7 @@
         /// <param name="xml">XML document</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappingsBase">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        protected void MapFromXml<T>(XElement xml, T model, Dictionary<string, PropertyMappingBase> propertyMappingsBase)
+        protected void MapFromXml<T>(XElement xml, T model, Dictionary<string, PropertyMapping> propertyMappingsBase)
             where T : class
         {
             // Loop through all settable properties on model
@@ -127,7 +121,7 @@
         /// <param name="json">JSON string</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappingsBase">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        protected void MapFromJson<T>(string json, T model, Dictionary<string, PropertyMappingBase> propertyMappingsBase)
+        protected void MapFromJson<T>(string json, T model, Dictionary<string, PropertyMapping> propertyMappingsBase)
             where T : class
         {
             // Parse JSON string to queryable object
@@ -388,7 +382,7 @@
         /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>String array of recursive properties</returns>
-        protected string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings) where T : class
+        protected string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, IReadOnlyDictionary<string, PropertyMapping> propertyMappings) where T : class
         {
             var recursivePropertiesAsList = new List<string>();
             if (recursiveProperties != null)
@@ -565,9 +559,9 @@
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="property">Property name</param>
         /// <param name="propertyMapping">Property mapping to map from</param>
-        protected static void MapPropertyMappingValuesFromAttributeToDictionaryIfNotAlreadySet(Dictionary<string, PropertyMappingBase> propertyMappings,
+        protected static void MapPropertyMappingValuesFromAttributeToDictionaryIfNotAlreadySet(Dictionary<string, PropertyMapping> propertyMappings,
                                                                                                PropertyInfo property,
-                                                                                               PropertyMappingBase propertyMapping)
+                                                                                               PropertyMapping propertyMapping)
         {
             if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceProperty))
             {
@@ -628,6 +622,28 @@
             }
 
             propertyMappings[property.Name].MapRecursively = propertyMapping.MapRecursively;
+
+            if (propertyMappings[property.Name].CustomMappingType == null)
+            {
+                propertyMappings[property.Name].CustomMappingType = propertyMapping.CustomMappingType;
+            }
+
+            if (propertyMappings[property.Name].CustomMappingMethod == null)
+            {
+                propertyMappings[property.Name].CustomMappingMethod = propertyMapping.CustomMappingMethod;
+            }
+        }
+
+        /// <summary>
+        /// Helper to convert the values of a property mapping attribute to an instance of PropertyMapping
+        /// </summary>
+        /// <param name="attribute">Attribute added to a view model property</param>
+        /// <returns>PropertyMapping instance</returns>
+        protected static PropertyMapping GetPropertyMappingAttributeAsPropertyMapping(PropertyMappingAttribute attribute)
+        {
+            var mapping = new PropertyMapping();
+            MapBasePropertyValues(attribute, mapping);
+            return mapping;
         }
 
         /// <summary>
@@ -635,7 +651,7 @@
         /// </summary>
         /// <param name="attribute">Property mapping attribute</param>
         /// <param name="mapping">Property mapping object</param>
-        protected static void MapBasePropertyValues(PropertyMappingAttribute attribute, IPropertyMapping mapping)
+        private static void MapBasePropertyValues(PropertyMappingAttribute attribute, IPropertyMapping mapping)
         {
             mapping.SourceProperty = attribute.SourceProperty;
             mapping.LevelsAbove = attribute.LevelsAbove;
@@ -649,6 +665,8 @@
             mapping.Ignore = attribute.Ignore;
             mapping.PropertyValueGetter = attribute.PropertyValueGetter;
             mapping.MapRecursively = attribute.MapRecursively;
+            mapping.CustomMappingType = attribute.CustomMappingType;
+            mapping.CustomMappingMethod = attribute.CustomMappingMethod;
         }
 
         /// <summary>
@@ -658,7 +676,7 @@
         /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="convertToCamelCase">Flag for whether to convert property name to camel casing before attempting mapping</param>
         /// <returns>Name of property to map from</returns>
-        protected static string GetMappedPropertyName(string propName, IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, bool convertToCamelCase = false)
+        protected static string GetMappedPropertyName(string propName, IReadOnlyDictionary<string, PropertyMapping> propertyMappings, bool convertToCamelCase = false)
         {
             var mappedName = propName;
             if (propertyMappings.ContainsKey(propName) &&
@@ -711,7 +729,7 @@
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="property">Property of view model to map to</param>
-        protected static void SetDefaultValueIfProvided<T>(T model, IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, PropertyInfo property)
+        protected static void SetDefaultValueIfProvided<T>(T model, IReadOnlyDictionary<string, PropertyMapping> propertyMappings, PropertyInfo property)
         {
             if (HasDefaultValue(propertyMappings, property.Name))
             {
@@ -725,7 +743,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        private static bool HasDefaultValue(IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        private static bool HasDefaultValue(IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].DefaultValue != null;
         }

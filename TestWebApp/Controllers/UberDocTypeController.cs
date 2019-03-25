@@ -9,6 +9,7 @@
     using TestWebApp.Models;
     using Umbraco.Core.Models;
     using Umbraco.Web;
+    using Zone.UmbracoMapper.Common;
     using Zone.UmbracoMapper.V7;
 
     public class UberDocTypeController : BaseController

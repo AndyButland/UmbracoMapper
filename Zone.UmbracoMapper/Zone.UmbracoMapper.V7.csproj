@@ -255,8 +255,6 @@
     <Compile Include="CustomMapping.cs" />
     <Compile Include="IUmbracoMapper.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="PropertyMapping.cs" />
-    <Compile Include="PropertyMappingDictionaryExtensions.cs" />
     <Compile Include="UmbracoMapper.cs" />
     <Compile Include="DefaultPropertyValueGetter.cs" />
   </ItemGroup>

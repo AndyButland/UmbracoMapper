@@ -572,7 +572,8 @@
                         "GeoCoordinate",
                         new PropertyMapping
                         {
-                            CustomMapping = MapGeoCoordinate,
+                            CustomMappingType = typeof(UmbracoMapperTests),
+                            CustomMappingMethod = nameof(MapGeoCoordinate)
                         }
                     }
                 });
@@ -618,7 +619,8 @@
                         "GeoCoordinate",
                         new PropertyMapping
                         {
-                            CustomMapping = MapInversedGeoCoordinate,
+                            CustomMappingType = typeof(UmbracoMapperTests),
+                            CustomMappingMethod = nameof(MapInversedGeoCoordinate)
                         }
                     }
                 });

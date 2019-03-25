@@ -12,7 +12,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        public static bool IsMappingConditional(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static bool IsMappingConditional(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].MapIfPropertyMatches.Key);
@@ -24,7 +24,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        public static bool IsMappingSpecifiedAsFromRelatedProperty(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static bool IsMappingSpecifiedAsFromRelatedProperty(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceRelatedProperty);
@@ -36,7 +36,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        public static bool IsMappingFromChildProperty(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static bool IsMappingFromChildProperty(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) &&
                    !string.IsNullOrEmpty(propertyMappings[propName].SourceChildProperty);
@@ -48,7 +48,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        public static bool IsMappingFromDictionaryValue(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static bool IsMappingFromDictionaryValue(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && !string.IsNullOrEmpty(propertyMappings[propName].DictionaryKey);
         }
@@ -59,7 +59,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>Formatting function if found, otherwise null</returns>
-        public static Func<string, string> GetStringValueFormatter(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static Func<string, string> GetStringValueFormatter(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             if (propertyMappings != null &&
                 propertyMappings.ContainsKey(propName) &&
@@ -78,8 +78,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>Type of multiple mapping operation</returns>
-        public static MultiplePropertyMappingOperation GetMultiplePropertyMappingOperation(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings,
-                                                                                              string propName)
+        public static MultiplePropertyMappingOperation GetMultiplePropertyMappingOperation(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             var result = MultiplePropertyMappingOperation.None;
 
@@ -108,7 +107,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if ignored</returns>
-        public static bool IsPropertyIgnored(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static bool IsPropertyIgnored(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].Ignore;
         }
@@ -119,7 +118,7 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        public static bool IsMappingRecursive(this IReadOnlyDictionary<string, PropertyMappingBase> propertyMappings, string propName)
+        public static bool IsMappingRecursive(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
             return propertyMappings.ContainsKey(propName) && propertyMappings[propName].MapRecursively;
         }
