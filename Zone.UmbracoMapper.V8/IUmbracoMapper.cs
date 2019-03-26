@@ -44,11 +44,13 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="content">Instance of IPublishedContent</param>
         /// <param name="model">View model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper Map<T>(IPublishedContent content,
                               T model,
+                              string culture = "",
                               Dictionary<string, PropertyMapping> propertyMappings = null,
                               PropertySet propertySet = PropertySet.All)
             where T : class;
@@ -72,10 +74,12 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="dictionary">Dictionary of property name/value pairs</param>
         /// <param name="model">View model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper Map<T>(Dictionary<string, object> dictionary,
                               T model,
+                              string culture = "",
                               Dictionary<string, PropertyMapping> propertyMappings = null)
             where T : class;
 
@@ -98,12 +102,14 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection,
                                         IList<T> modelCollection,
+                                        string culture = "",
                                         Dictionary<string, PropertyMapping> propertyMappings = null,
                                         PropertySet propertySet = PropertySet.All, 
                                         bool clearCollectionBeforeMapping = true)
@@ -135,6 +141,7 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="dictionaries">Collection of custom data containing a list of dictionary of property name/value pairs.  One of these keys provides a lookup for the existing collection.</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
         /// <param name="destIdentifyingPropName">When updating existing items in a collection, this property name is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").</param>
@@ -142,6 +149,7 @@
         /// <returns>Instance of IUmbracoMapper</returns>
         IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries,
                                         IList<T> modelCollection,
+                                        string culture = "",
                                         Dictionary<string, PropertyMapping> propertyMappings = null,
                                         bool createItemsIfNotAlreadyInList = true,
                                         string sourceIdentifyingPropName = "Id",

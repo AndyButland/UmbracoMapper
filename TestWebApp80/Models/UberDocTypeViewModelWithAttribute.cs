@@ -21,11 +21,14 @@
             SubModel = new SubModel();
             AutoMapSingle = new CountryViewModel();
             AutoMapMultiple = new List<CountryViewModel>();
+            WelcomeTextEnglish = new CultureSpecificModel();
+            WelcomeTextItalian = new CultureSpecificModel();
         }
 
         public int Id { get; set; }
 
         public string Heading { get; set; }
+
 
         public string UpperCaseHeading { get; set; }
 
@@ -116,5 +119,9 @@
 
         [PropertyMapping(DictionaryKey = "testKey")]
         public string DictionaryValue { get; set; }
+
+        public CultureSpecificModel WelcomeTextEnglish { get; set; }
+
+        public CultureSpecificModel WelcomeTextItalian { get; set; }
     }
 }

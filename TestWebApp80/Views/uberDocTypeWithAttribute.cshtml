@@ -7,6 +7,8 @@
 <div><em>Using Property Mapping Attribute</em></div>
 <h1>@Model.Heading</h1>
 <p>Upper-cased heading: @Model.UpperCaseHeading</p>
+<p>Welcome text (English): @Model.WelcomeTextEnglish.WelcomeText</p>
+<p>Welcome text (Italian): @Model.WelcomeTextItalian.WelcomeText</p>
 <p>Created on: @Model.CreatedOn, formatted date: @Model.FormattedCreatedOnDate</p>
 <div>Body text: @Html.Raw(Model.BodyText)</div>
 <p>Rating: @Model.StarRating stars</p>
@@ -58,7 +60,7 @@
         <p>@comment.Text | <em>@comment.Author from @comment.Country on @comment.CreateDate.ToString("d-MMM-yyyy HH:mm")</em></p>
         <p>Parent page: @comment.ParentPage</p>
         <p>
-            Image from parent page: 
+            Image from parent page:
             @if (comment.MediaPickedImage != null)
             {
                 <img src="@comment.MediaPickedImage.Url" />
@@ -70,7 +72,7 @@
         </p>
         <p>
             Recursive star rating: @comment.StarRating
-        </p>        
+        </p>
     }
 }
 else

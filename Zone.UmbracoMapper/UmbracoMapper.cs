@@ -9,7 +9,6 @@
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using Zone.UmbracoMapper.Common;
-    using Zone.UmbracoMapper.Common.Attributes;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
     using Zone.UmbracoMapper.Common.Extensions;
     using Zone.UmbracoMapper.Common.Helpers;
@@ -1042,7 +1041,7 @@
                                                   KeyValuePair<string, string> mapIfPropertyMatches)
         {
             var conditionalPropertyAlias = mapIfPropertyMatches.Key;
-            var conditionalPropertyValue = GetPropertyValue(contentToMapFrom, propertyValueGetter, conditionalPropertyAlias, false);
+            var conditionalPropertyValue = GetPropertyValue(contentToMapFrom, propertyValueGetter, conditionalPropertyAlias);
             return conditionalPropertyValue != null && 
                 string.Equals(conditionalPropertyValue.ToString(), mapIfPropertyMatches.Value, StringComparison.InvariantCultureIgnoreCase);
         }

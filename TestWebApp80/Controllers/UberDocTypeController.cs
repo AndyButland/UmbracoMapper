@@ -26,7 +26,7 @@
 
             // Create view model and run mapping
             var model = new UberDocTypeViewModel();
-            Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> 
+            Mapper.Map(CurrentPage, model, propertyMappings: new Dictionary<string, PropertyMapping> 
                     { 
                         { 
                             "CreatedOn", new PropertyMapping 
@@ -131,7 +131,7 @@
                         }, 
                     })
                 .MapCollection(CurrentPage.Children.Where(x => x.IsDocumentType("Comment")), model.Comments,
-                    new Dictionary<string, PropertyMapping>
+                    propertyMappings: new Dictionary<string, PropertyMapping>
                         { 
                             { 
                                 "ParentPage", new PropertyMapping 
@@ -162,11 +162,13 @@
                 .MapCollection(countryNodes, model.Countries)
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
                 .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")
-                .Map(GetSingleDictionary(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
+                .Map(GetSingleDictionary(), model, propertyMappings: new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
                 .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
                 .Map(GetSingleJson(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromJson", new PropertyMapping { SourceProperty = "Name" } }, })
                 .MapCollection(GetCollectionJson(), model.CollectionFromJson)
-                .Map(CurrentPage, model.SubModel);
+                .Map(CurrentPage, model.SubModel)
+                .Map(CurrentPage, model.WelcomeTextEnglish)
+                .Map(CurrentPage, model.WelcomeTextItalian, "it");
 
             return CurrentTemplate(model);
         }
@@ -185,7 +187,7 @@
 
         private void MapToViewModelWithAttributes(IEnumerable<IPublishedContent> countryNodes, UberDocTypeViewModelWithAttribute model)
         {
-            Mapper.Map(CurrentPage, model, new Dictionary<string, PropertyMapping> 
+            Mapper.Map(CurrentPage, model, propertyMappings: new Dictionary<string, PropertyMapping> 
                     { 
                         { 
                             "ConditionalValueMet", new PropertyMapping 
@@ -226,11 +228,13 @@
                 .MapCollection(countryNodes, model.Countries)
                 .Map(GetSingleXml(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromXml", new PropertyMapping { SourceProperty = "Day" } }, })
                 .MapCollection(GetCollectionXml(), model.CollectionFromXml, null, "Month")
-                .Map(GetSingleDictionary(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
+                .Map(GetSingleDictionary(), model, propertyMappings: new Dictionary<string, PropertyMapping> { { "SingleValueFromDictionary", new PropertyMapping { SourceProperty = "Animal" } }, })
                 .MapCollection(GetCollectionDictionary(), model.CollectionFromDictionary)
                 .Map(GetSingleJson(), model, new Dictionary<string, PropertyMapping> { { "SingleValueFromJson", new PropertyMapping { SourceProperty = "Name" } }, })
                 .MapCollection(GetCollectionJson(), model.CollectionFromJson)
-                .Map(CurrentPage, model.SubModel);
+                .Map(CurrentPage, model.SubModel)
+                .Map(CurrentPage, model.WelcomeTextEnglish)
+                .Map(CurrentPage, model.WelcomeTextItalian, "it");
         }
 
         public ActionResult UberDocTypeWithAttributeAndDiagnostics()

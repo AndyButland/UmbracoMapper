@@ -19,6 +19,8 @@
             SubModel = new SubModel();
             AutoMapSingle = new CountryViewModel();
             AutoMapMultiple = new List<CountryViewModel>();
+            WelcomeTextEnglish = new CultureSpecificModel();
+            WelcomeTextItalian = new CultureSpecificModel();
         }
 
         public int Id { get; set; }
@@ -97,6 +99,10 @@
         public IEnumerable<CountryViewModel> AutoMapMultiple { get; set; }
 
         public string DictionaryValue { get; set; }
+
+        public CultureSpecificModel WelcomeTextEnglish { get; set; }
+
+        public CultureSpecificModel WelcomeTextItalian { get; set; }
     }
 
     public class SubModel
@@ -111,5 +117,10 @@
         public int Id { get; set; }
 
         public string Text { get; set; }
+    }
+
+    public class CultureSpecificModel
+    {
+        public string WelcomeText { get; set; }
     }
 }

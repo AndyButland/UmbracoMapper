@@ -7,7 +7,7 @@
     {
         public virtual object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
         {
-            return content.Value(alias, culture, segment, fallback);
+            return content.Value(alias, string.IsNullOrEmpty(culture) ? null : culture, segment, fallback);
         }
     }
 }

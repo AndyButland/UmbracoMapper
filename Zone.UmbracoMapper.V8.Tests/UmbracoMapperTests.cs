@@ -57,7 +57,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "Author", new PropertyMapping { SourceProperty = "CreatorName", } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "Author", new PropertyMapping { SourceProperty = "CreatorName", } } });
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -74,7 +74,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); }, } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); }, } } });
 
             // Assert
             Assert.AreEqual("TEST CONTENT", model.Name);
@@ -106,7 +106,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "SomeOtherProperty", new PropertyMapping { SourceProperty = "SomeOtherSourceProperty", } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "SomeOtherProperty", new PropertyMapping { SourceProperty = "SomeOtherSourceProperty", } } });
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -123,7 +123,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { Ignore = true, } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { Ignore = true, } } });
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -173,7 +173,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyCopy", new PropertyMapping { SourceProperty = "bodyText", } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "BodyCopy", new PropertyMapping { SourceProperty = "bodyText", } } });
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -190,7 +190,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
 
             // Assert
             Assert.AreEqual("THIS IS THE BODY TEXT", model.BodyText);
@@ -222,7 +222,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { Ignore = true, } } });
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { Ignore = true, } } });
 
             // Assert
             Assert.AreEqual(1000, model.Id);
@@ -277,7 +277,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "HeadingAndBodyText", 
@@ -317,7 +317,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "SummaryText", 
@@ -356,7 +356,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "SummaryText", 
@@ -395,7 +395,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "BodyText", 
@@ -419,7 +419,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "BodyText", 
@@ -443,7 +443,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 { 
                     { 
                         "ParentId", 
@@ -469,7 +469,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 {
                     {
                         "ParentId",
@@ -581,7 +581,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 {
                     {
                         "GeoCoordinate",
@@ -628,7 +628,7 @@
             mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
                 {
                     {
                         "GeoCoordinate",
@@ -757,7 +757,7 @@
             var content = MockPublishedContent(bodyTextValue: null);
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
             { 
                 { 
                     "BodyText", 
@@ -805,7 +805,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
             { 
                 { 
                     "NonMapped", 
@@ -848,7 +848,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
             {
                 {
                     "MappedFromZero",
@@ -877,7 +877,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
             {
                 {
                     "MappedFromFalse",
@@ -939,7 +939,7 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, 
+            mapper.Map(content.Object, model, null,
                 new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { PropertyValueGetter = typeof(SuffixAddingPropertyValueGetter), } } });
 
             // Assert
@@ -1005,13 +1005,43 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model,
+            mapper.Map(content.Object, model, null,
                 new Dictionary<string, PropertyMapping> { { "GeoCoordinate", new PropertyMapping { PropertyValueGetter = typeof(ComplexTypeReturningPropertyValueGetter), } } });
 
             // Assert
             Assert.AreEqual("Test content", model.Name);
             Assert.IsNotNull(model.GeoCoordinate);
             Assert.AreEqual(1.9M, model.GeoCoordinate.Latitude);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithDefaultCulture()
+        {
+            // Arrange
+            var model = new SimpleViewModel10();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, "en-GB");
+
+            // Assert
+            Assert.AreEqual("Welcome", model.WelcomeText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsWithAlternateCulture()
+        {
+            // Arrange
+            var model = new SimpleViewModel10();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, "it");
+
+            // Assert
+            Assert.AreEqual("Benvenuto", model.WelcomeText);
         }
 
         #endregion
@@ -1124,7 +1154,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(dictionary, model);
+            mapper.Map(dictionary, model, null);
 
             // Assert
             Assert.AreEqual(1, model.Id);
@@ -1144,10 +1174,11 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(dictionary, model, new Dictionary<string, PropertyMapping> { 
-                { "Name", new PropertyMapping { SourceProperty = "Name2" } },
-                { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
-            });
+            mapper.Map(dictionary, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                { 
+                    { "Name", new PropertyMapping { SourceProperty = "Name2" } },
+                    { "RegisteredOn", new PropertyMapping { SourceProperty = "RegistrationDate" } } 
+                });
 
             // Assert
             Assert.AreEqual(1, model.Id);
@@ -1698,7 +1729,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments, new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn" } } });
+            mapper.MapCollection(dictionary, model.Comments, propertyMappings: new Dictionary<string, PropertyMapping> { { "CreatedOn", new PropertyMapping { SourceProperty = "RecordedOn" } } });
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -1729,7 +1760,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments, null, false);
+            mapper.MapCollection(dictionary, model.Comments, null, null, false);
 
             // Assert
             Assert.AreEqual(1, model.Comments.Count);
@@ -1757,7 +1788,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments, null, true);
+            mapper.MapCollection(dictionary, model.Comments);
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -1791,7 +1822,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.MapCollection(dictionary, model.Comments, null, false, "Identifier", "Id");
+            mapper.MapCollection(dictionary, model.Comments, null, null, false, "Identifier", "Id");
 
             // Assert
             Assert.AreEqual(2, model.Comments.Count);
@@ -2377,7 +2408,7 @@
 
         #region Mocks
 
-        private Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
+        private static Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
             string bodyTextValue = "This is the body text",
             bool recursiveCall = false,
             bool mockParent = true)
@@ -2386,6 +2417,12 @@
             summaryTextPropertyMock.Setup(c => c.Alias).Returns("summaryText");
             summaryTextPropertyMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
             summaryTextPropertyMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>())).Returns("This is the summary text");
+
+            var welcomeTextPropertyMock = new Mock<IPublishedProperty>();
+            welcomeTextPropertyMock.Setup(c => c.Alias).Returns("localizableSummaryText");
+            welcomeTextPropertyMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            welcomeTextPropertyMock.Setup(c => c.GetValue(It.Is<string>(y => y == "en-GB"), It.IsAny<string>())).Returns("Welcome");
+            welcomeTextPropertyMock.Setup(c => c.GetValue(It.Is<string>(y => y == "it"), It.IsAny<string>())).Returns("Benvenuto");
 
             var emptyTextPropertyMock = new Mock<IPublishedProperty>();
             emptyTextPropertyMock.Setup(c => c.Alias).Returns("emptyText");
@@ -2477,6 +2514,7 @@
             contentMock.Setup(c => c.Name).Returns("Test content");
             contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "summaryText"))).Returns(summaryTextPropertyMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "welcomeText"))).Returns(welcomeTextPropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "emptyText"))).Returns(emptyTextPropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "bodyText"))).Returns(bodyTextPropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "bodyText2"))).Returns(bodyText2PropertyMock.Object);

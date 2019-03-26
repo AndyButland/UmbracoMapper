@@ -9,7 +9,7 @@
     public interface IMapFromAttribute
     {
         /// <summary>
-        /// Defines how a property value should be set
+        /// Defines how a property value should be mapped
         /// </summary>
         /// <typeparam name="T">Model type</typeparam>
         /// <param name="fromObject">Data from which to obtain the property value</param>

@@ -73,11 +73,13 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="content">Instance of IPublishedContent</param>
         /// <param name="model">View model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(IPublishedContent content,
                                      T model,
+                                     string culture = "",
                                      Dictionary<string, PropertyMapping> propertyMappings = null,
                                      PropertySet propertySet = PropertySet.All)
             where T : class
@@ -125,7 +127,7 @@
                     typeof(UmbracoMapper)
                         .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                         .MakeGenericMethod(property.PropertyType)
-                        .Invoke(this, new[] { contentToMapFrom, property.GetValue(model) });
+                        .Invoke(this, new[] { contentToMapFrom, property.GetValue(model), culture });
                     continue;
                 }
 
@@ -150,7 +152,7 @@
                             // Call the mapping function, passing in each source property to use, and flag to contatenate
                             // on all but the first
                             propertyMappings[property.Name].SourceProperty = sourceProp;
-                            MapContentProperty(model, property, contentToMapFrom, propertyMappings,
+                            MapContentProperty(model, property, contentToMapFrom, culture, propertyMappings,
                                 concatenateToExistingValue: !isFirst, concatenationSeperator: concatenationSeperator, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                             isFirst = false;
                         }
@@ -164,7 +166,7 @@
                             // Call the mapping function, passing in each source property to use, and flag to coalesce
                             // on all but the first
                             propertyMappings[property.Name].SourceProperty = sourceProp;
-                            MapContentProperty(model, property, contentToMapFrom, propertyMappings,
+                            MapContentProperty(model, property, contentToMapFrom, culture, propertyMappings,
                                 coalesceWithExistingValue: true, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                         }
 
@@ -172,7 +174,7 @@
                     default:
 
                         // Map the single property
-                        MapContentProperty(model, property, contentToMapFrom, propertyMappings, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
+                        MapContentProperty(model, property, contentToMapFrom, culture, propertyMappings, stringValueFormatter: stringValueFormatter, propertySet: propertySet);
                         break;
                 }
             }
@@ -219,11 +221,13 @@
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="dictionary">Dictionary of property name/value pairs</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="model">View model to map to</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper Map<T>(Dictionary<string, object> dictionary,
                                      T model,
+                                     string culture = "",
                                      Dictionary<string, PropertyMapping> propertyMappings = null)
             where T : class
         {
@@ -282,7 +286,7 @@
                     {
                         // Handle cases where the value object passed in the dictionary is actually an IPublishedContent
                         // - if so, we'll fully map from that
-                        Map((IPublishedContent)dictionary[propName], property.GetValue(model), propertyMappings);
+                        Map((IPublishedContent)dictionary[propName], property.GetValue(model), culture, propertyMappings);
                     }
                     else if (dictionary[propName] is IEnumerable<IPublishedContent>)
                     {
@@ -294,7 +298,7 @@
                         typeof(UmbracoMapper)
                             .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                             .MakeGenericMethod(collectionPropertyType)
-                            .Invoke(this, new object[] { (IEnumerable<IPublishedContent>)dictionary[propName], propertyValue, propertyMappings });
+                            .Invoke(this, new object[] { (IEnumerable<IPublishedContent>)dictionary[propName], propertyValue, culture, propertyMappings });
                     }
                     else
                     {
@@ -354,12 +358,14 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <param name="propertySet">Set of properties to map</param>
         /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection,
                                                IList<T> modelCollection,
+                                               string culture = "",
                                                Dictionary<string, PropertyMapping> propertyMappings = null,
                                                PropertySet propertySet = PropertySet.All, 
                                                bool clearCollectionBeforeMapping = true)
@@ -402,7 +408,7 @@
                 else
                 {
                     // Otherwise map the single content item as normal
-                    Map<T>(content, itemToCreate, propertyMappings, propertySet);
+                    Map<T>(content, itemToCreate, culture, propertyMappings, propertySet);
                 }
 
                 modelCollection.Add(itemToCreate);
@@ -479,6 +485,7 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="dictionaries">Collection of custom data containing a list of dictionary of property name/value pairs.  One of these keys provides a lookup for the existing collection.</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="createItemsIfNotAlreadyInList">Flag indicating whether to create items if they don't already exist in the collection, or to just map to existing ones</param>
         /// <param name="sourceIdentifyingPropName">When updating existing items in a collection, this dictionary key is considered unique and used for look-ups to identify and update the correct item (defaults to "Id").  Case insensitive.</param>
@@ -486,6 +493,7 @@
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<Dictionary<string, object>> dictionaries,
                                                IList<T> modelCollection,
+                                               string culture = "",
                                                Dictionary<string, PropertyMapping> propertyMappings = null,
                                                bool createItemsIfNotAlreadyInList = true,
                                                string sourceIdentifyingPropName = "Id",
@@ -515,7 +523,7 @@
                 if (itemToUpdate != null)
                 {
                     // Item found, so map it
-                    Map(dictionary, itemToUpdate, propertyMappings);
+                    Map(dictionary, itemToUpdate, culture, propertyMappings);
                 }
                 else
                 {
@@ -526,7 +534,7 @@
                     }
 
                     var itemToCreate = new T();
-                    Map(dictionary, itemToCreate, propertyMappings);
+                    Map(dictionary, itemToCreate, culture, propertyMappings);
                     modelCollection.Add(itemToCreate);
                 }
             }
@@ -720,6 +728,7 @@
         /// <param name="model">Instance of view model</param>
         /// <param name="property">Property of view model to map to</param>
         /// <param name="contentToMapFrom">IPublished content to map from</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
@@ -727,6 +736,7 @@
         /// <param name="stringValueFormatter">A function for transformation of the string value, if passed</param>
         /// <param name="propertySet">Set of properties to map</param>
         private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
+                                           string culture,
                                            IReadOnlyDictionary<string, PropertyMapping> propertyMappings,
                                            bool concatenateToExistingValue = false, string concatenationSeperator = "",
                                            bool coalesceWithExistingValue = false, 
@@ -745,7 +755,7 @@
             // First check to see if there's a condition that might mean we don't carry out the mapping
             if (propertyMappings.IsMappingConditional(property.Name) && 
                 !propertyMappings.IsMappingSpecifiedAsFromRelatedProperty(property.Name) && 
-                !IsMappingConditionMet(contentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
+                !IsMappingConditionMet(contentToMapFrom, propertyValueGetter, culture, propertyMappings[property.Name].MapIfPropertyMatches))
             {
                 return;
             }
@@ -769,7 +779,9 @@
             var mapFromAttribute = GetMapFromAttribute(property);
             if (mapFromAttribute != null)
             {
-                SetValueFromMapFromAttribute(model, property, contentToMapFrom, mapFromAttribute, propName, isRecursiveProperty, propertyValueGetter, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
+                SetValueFromMapFromAttribute(model, property, contentToMapFrom, mapFromAttribute, 
+                    propName, culture, isRecursiveProperty, 
+                    propertyValueGetter, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                 return;
             }
 
@@ -791,7 +803,7 @@
             else
             {
                 // Otherwise map types we can handle
-                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, isRecursiveProperty);
+                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, culture, isRecursiveProperty);
                 if (value == null)
                 {
                     return;
@@ -831,7 +843,7 @@
 
                     // Check to see if there's a condition that might mean we don't carry out the mapping (on the related content)
                     if (propertyMappings.IsMappingConditional(property.Name) &&
-                        !IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, propertyMappings[property.Name].MapIfPropertyMatches))
+                        !IsMappingConditionMet(relatedContentToMapFrom, propertyValueGetter, culture, propertyMappings[property.Name].MapIfPropertyMatches))
                     {
                         return;
                     }
@@ -847,7 +859,7 @@
                     else
                     {
                         // Otherwise look at a doc type field
-                        value = GetPropertyValue(relatedContentToMapFrom, propertyValueGetter, relatedPropName);
+                        value = GetPropertyValue(relatedContentToMapFrom, propertyValueGetter, relatedPropName, culture);
                         if (value != null)
                         {
                             // Map primitive types
@@ -867,7 +879,7 @@
                         typeof(UmbracoMapper)
                             .GetMethod("MapIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                             .MakeGenericMethod(property.PropertyType)
-                            .Invoke(this, new[] { (IPublishedContent)value, property.GetValue(model) });
+                            .Invoke(this, new[] { (IPublishedContent)value, property.GetValue(model), culture });
                     }
                     else if (value is IEnumerable<IPublishedContent> && property.PropertyType.GetInterface("IEnumerable") != null)
                     {
@@ -875,7 +887,7 @@
                         typeof(UmbracoMapper)
                             .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                             .MakeGenericMethod(collectionPropertyType)
-                            .Invoke(this, new[] { (IEnumerable<IPublishedContent>)value, property.GetValue(model), null });
+                            .Invoke(this, new[] { (IEnumerable<IPublishedContent>)value, property.GetValue(model), culture, null });
                     }
                     else if (value.GetType().IsAssignableFrom(property.PropertyType))
                     {
@@ -903,6 +915,7 @@
         /// <param name="contentToMapFrom">IPublished content to map from</param>
         /// <param name="mapFromAttribute">Instance of <see cref="IMapFromAttribute"/> to use for mapping</param>
         /// <param name="propName">Name of property to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="isRecursiveProperty">Flag for if property should be mapped of recursively properties</param>
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
@@ -910,11 +923,12 @@
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         private void SetValueFromMapFromAttribute<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
                                                      IMapFromAttribute mapFromAttribute, string propName,
+                                                     string culture,
                                                      bool isRecursiveProperty, IPropertyValueGetter propertyValueGetter,
                                                      bool concatenateToExistingValue, string concatenationSeperator,
                                                      bool coalesceWithExistingValue)
         {
-            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, isRecursiveProperty);
+            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, culture, isRecursiveProperty);
 
             // If mapping to a string, we should manipulate the mapped value to make use of the concatenation and coalescing 
             // settings, if provided.
@@ -1024,14 +1038,16 @@
         /// <param name="content">IPublished content to map from</param>
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="propName">Property alias</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="recursive">Flag for whether property should be recursively mapped</param>
         /// <returns>Property value</returns>
         private static object GetPropertyValue(IPublishedContent content, 
                                                IPropertyValueGetter propertyValueGetter, 
                                                string propName, 
+                                               string culture,
                                                bool recursive = false)
         {
-            return propertyValueGetter.GetPropertyValue(content, propName, null, null, recursive.ToRecuriveFallback());
+            return propertyValueGetter.GetPropertyValue(content, propName, culture, null, recursive.ToRecuriveFallback());
         }
 
         /// <summary>
@@ -1039,14 +1055,16 @@
         /// </summary>
         /// <param name="contentToMapFrom">IPublished content to map from</param>
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="mapIfPropertyMatches">Property alias and value to match</param>
         /// <returns>True if mapping condition is met</returns>
         private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, 
                                                   IPropertyValueGetter propertyValueGetter, 
+                                                  string culture, 
                                                   KeyValuePair<string, string> mapIfPropertyMatches)
         {
             var conditionalPropertyAlias = mapIfPropertyMatches.Key;
-            var conditionalPropertyValue = GetPropertyValue(contentToMapFrom, propertyValueGetter, conditionalPropertyAlias, false);
+            var conditionalPropertyValue = GetPropertyValue(contentToMapFrom, propertyValueGetter, conditionalPropertyAlias, culture);
             return conditionalPropertyValue != null && 
                 string.Equals(conditionalPropertyValue.ToString(), mapIfPropertyMatches.Value, StringComparison.InvariantCultureIgnoreCase);
         }
@@ -1089,6 +1107,7 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="contentCollection">Collection of IPublishedContent</param>
         /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         /// <remarks>
@@ -1098,9 +1117,10 @@
 #pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
         private IUmbracoMapper MapCollectionOfIPublishedContent<T>(IEnumerable<IPublishedContent> contentCollection,
                                                                    IList<T> modelCollection,
+                                                                   string culture,
                                                                    Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
         {
-            return MapCollection<T>(contentCollection, modelCollection, propertyMappings);
+            return MapCollection<T>(contentCollection, modelCollection, culture, propertyMappings);
         }
 #pragma warning restore S1144 // Unused private types or members should be removedB
 
@@ -1110,15 +1130,16 @@
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="content">Single IPublishedContent</param>
         /// <param name="model">Model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         /// <remarks>
         /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
         /// by having multiple overloads.
         /// </remarks>
 #pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
-        private IUmbracoMapper MapIPublishedContent<T>(IPublishedContent content, T model) where T : class, new()
+        private IUmbracoMapper MapIPublishedContent<T>(IPublishedContent content, T model, string culture) where T : class, new()
         {
-            return Map<T>(content, model);
+            return Map<T>(content, model, culture);
         }
 #pragma warning restore S1144 // Unused private types or members should be removed
 

@@ -2362,7 +2362,7 @@
 
         #region Mocks
 
-        private Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
+        private static Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
             string bodyTextValue = "This is the body text",
             bool recursiveCall = false,
             bool mockParent = true)

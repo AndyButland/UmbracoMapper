@@ -738,8 +738,9 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Added support for the use of string concatenation and coalescing when using IMapFromAttribute
 - 3.0.0
     - Bumped major version following internal refactoring into common project to support code re-use across Umbraco versions 7 and 8.
-	  Considera a breaking change due to:
-        - Removal of the `recuriveProperties` string array parameter (not needed/consistent as can use attribute or property mapping dictionary)
+	  Considered a breaking change due to:
+        - Removal of the `recuriveProperties` string array parameter (not needed/consistent as can use attribute or property mapping dictionary).
+		- Change of the passing of a property specific custom mapping to a type and method rather than a `CustomMapping` instance (aligns with use on attribute, and improves internal code re-use as version specific Umbraco dependency is removed).
         - Namespace changes.		
 	
 ## Credits

@@ -215,6 +215,11 @@
         public string Test { get; set; }
     }
 
+    public class SimpleViewModel10 : SimpleViewModel
+    {
+        public string WelcomeText { get; set; }
+    }
+
     public class SimpleViewModelWithCollection : SimpleViewModel
     {
         public SimpleViewModelWithCollection()
