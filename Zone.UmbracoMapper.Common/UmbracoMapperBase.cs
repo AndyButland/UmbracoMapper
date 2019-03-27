@@ -373,39 +373,6 @@
         }
 
         /// <summary>
-        /// Helper to recursive properties are not null even if not provided via the string array.
-        /// Also to populate from attributes on the view model if that method is used for configuration of the mapping
-        /// operation.
-        /// </summary>
-        /// <typeparam name="T">View model type</typeparam>
-        /// <param name="model">Instance of view model</param>
-        /// <param name="recursiveProperties">Optional list of properties that should be treated as recursive for mapping</param>
-        /// <param name="propertyMappings">Set of property mappings, for use when convention mapping based on name is not sufficient</param>
-        /// <returns>String array of recursive properties</returns>
-        protected string[] EnsureRecursivePropertiesAndUpdateFromModel<T>(T model, string[] recursiveProperties, IReadOnlyDictionary<string, PropertyMapping> propertyMappings) where T : class
-        {
-            var recursivePropertiesAsList = new List<string>();
-            if (recursiveProperties != null)
-            {
-                recursivePropertiesAsList.AddRange(recursiveProperties);
-            }
-
-            foreach (var property in SettableProperties(model))
-            {
-                var attribute = GetPropertyMappingAttribute(property);
-                if (attribute == null || !attribute.MapRecursively || recursivePropertiesAsList.Contains(property.Name))
-                {
-                    continue;
-                }
-
-                var propName = GetMappedPropertyName(property.Name, propertyMappings, true);
-                recursivePropertiesAsList.Add(propName);
-            }
-
-            return recursivePropertiesAsList.ToArray();
-        }
-
-        /// <summary>
         /// Helper to extract the PropertyMappingAttribute from a property of the model
         /// </summary>
         /// <param name="property">Property to check for attribute on</param>
@@ -623,6 +590,11 @@
 
             propertyMappings[property.Name].MapRecursively = propertyMapping.MapRecursively;
 
+            if (propertyMappings[property.Name].FallbackMethods == null)
+            {
+                propertyMappings[property.Name].FallbackMethods = propertyMapping.FallbackMethods;
+            }
+
             if (propertyMappings[property.Name].CustomMappingType == null)
             {
                 propertyMappings[property.Name].CustomMappingType = propertyMapping.CustomMappingType;
@@ -665,6 +637,7 @@
             mapping.Ignore = attribute.Ignore;
             mapping.PropertyValueGetter = attribute.PropertyValueGetter;
             mapping.MapRecursively = attribute.MapRecursively;
+            mapping.FallbackMethods = attribute.FallbackMethods;
             mapping.CustomMappingType = attribute.CustomMappingType;
             mapping.CustomMappingMethod = attribute.CustomMappingMethod;
         }

@@ -5,6 +5,7 @@
     using System.Web;
     using Attributes;
     using TestWebApp80.Attributes;
+    using Umbraco.Core.Models.PublishedContent;
     using Zone.UmbracoMapper.Common.Attributes;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
 
@@ -21,8 +22,8 @@
             SubModel = new SubModel();
             AutoMapSingle = new CountryViewModel();
             AutoMapMultiple = new List<CountryViewModel>();
-            WelcomeTextEnglish = new CultureSpecificModel();
-            WelcomeTextItalian = new CultureSpecificModel();
+            WelcomeTextEnglish = new CultureSpecificModelWithAttribute();
+            WelcomeTextItalian = new CultureSpecificModelWithAttribute();
         }
 
         public int Id { get; set; }
@@ -120,8 +121,16 @@
         [PropertyMapping(DictionaryKey = "testKey")]
         public string DictionaryValue { get; set; }
 
-        public CultureSpecificModel WelcomeTextEnglish { get; set; }
+        public CultureSpecificModelWithAttribute WelcomeTextEnglish { get; set; }
 
-        public CultureSpecificModel WelcomeTextItalian { get; set; }
+        public CultureSpecificModelWithAttribute WelcomeTextItalian { get; set; }
+    }
+
+    public class CultureSpecificModelWithAttribute
+    {
+        public string WelcomeText { get; set; }
+
+        [PropertyMapping(FallbackMethods = new[] { Fallback.Ancestors })]
+        public string HelloText { get; set; }
     }
 }

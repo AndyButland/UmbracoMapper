@@ -122,5 +122,7 @@
     public class CultureSpecificModel
     {
         public string WelcomeText { get; set; }
+
+        public string HelloText { get; set; }
     }
 }

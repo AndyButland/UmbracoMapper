@@ -190,7 +190,61 @@ The **StringValueFormatter** is a field that can be set to a function to transfo
 
 **DictionaryKey** can be added with a string value of a dictionary key, which will be mapped to it's value
 
-**MapsRecursively** can be added to a field and if set to true, the property will be mapped recursively.  It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 'StarRating', it'll look for an Umbraco property called 'starRating').
+**MapRecursively** can be added to a field and if set to true, the property will be mapped recursively.  It will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 'StarRating', it'll look for an Umbraco property called 'starRating').
+
+**FallbackMethods** has been added from version 3 onwards, supporting the more flexible fall-back methods provided in version 8.  If provided, this will override any setting provided on **MapRecursively**.
+
+To fall-back recursively, you would provide:
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+      { 
+        { 
+          "BodyText", new PropertyMapping 
+            { 
+              FallbackMethods = new List<int> { 2 }, 
+            } 
+        }, 
+      });
+	  
+Via fall-back language:
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+      { 
+        { 
+          "BodyText", new PropertyMapping 
+            { 
+              FallbackMethods = new List<int> { 3 }, 
+            } 
+        }, 
+      });
+	  
+And via language first, then recurively: 
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+      { 
+        { 
+          "BodyText", new PropertyMapping 
+            { 
+              FallbackMethods = new List<int> { 3, 2 }, 
+            } 
+        }, 
+      });
+	  
+The "magic numbers" can (and should) be replaced by those defined in Umbraco 8's `Umbraco.Core.Models.PublishedContent.Fallback` struct, and the are also defined in the package, at `UmbracoMapper.Common.Constants, e.g. 
+
+    mapper.Map(CurrentPage, model,
+      new Dictionary<string, PropertyMapping> 
+      { 
+        { 
+          "BodyText", new PropertyMapping 
+            { 
+              FallbackMethods = Fallback.ToLanguage.ToArray() 
+            } 
+        }, 
+      });
 
 #### Mapping Using Attributes
 
@@ -224,6 +278,11 @@ Simplifying the mapping call to:
 To map recursively up the ancestors of the tree, use:
 
     [PropertyMapping(MapRecursively = true)]
+    public int StarRating { get; set; }
+	
+Or - to support the more flexible fall-back methods provided via version 8:
+
+    [PropertyMapping(FallbackMethods = new[] { Fallback.Ancestors })]
     public int StarRating { get; set; }
     
 #### "Auto-mapping" related content
@@ -335,6 +394,10 @@ Firstly for mapping from IPublishedContent:
 And secondly when mapping from a dictionary object value:
 
     delegate object CustomObjectMapping(IUmbracoMapper mapper, object value);
+	
+> When working with Umbraco 8 (Umbraco Mapper package version 4.0 and above), the first signature is slightly different, as we have support of more flexible fall-back methods (such as via language variant, in addition to recursive retrieval up the content free):
+
+    delegate object CustomMapping(IUmbracoMapper mapper, IPublishedContent content, string propertyName, Fallback fallback);
     
 The add-on package provides this method, **DampMapper.MapMediaFile**, for the purposes of mapping from the DAMP model to the standard MediaFile class provided with the mapper. If you want to use this in your project you'll just need to add it to the custom mappings like this:
 
@@ -741,6 +804,7 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 	  Considered a breaking change due to:
         - Removal of the `recuriveProperties` string array parameter (not needed/consistent as can use attribute or property mapping dictionary).
 		- Change of the passing of a property specific custom mapping to a type and method rather than a `CustomMapping` instance (aligns with use on attribute, and improves internal code re-use as version specific Umbraco dependency is removed).
+		- Addition of the FallBackMethods property mapping override and attribute.
         - Namespace changes.		
 	
 ## Credits

@@ -11,7 +11,6 @@
     using Umbraco.Web;
     using Zone.UmbracoMapper.Common;
     using Zone.UmbracoMapper.V8;
-    using Zone.UmbracoMapper.V8.Extensions;
     using Zone.UmbracoMapper.V8.Tests.Attributes;
     using Current = Umbraco.Core.Composing.Current;
 
@@ -2352,20 +2351,20 @@
 
         #region Custom mappings
 
-        internal static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive) 
+        internal static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, Fallback fallback) 
         {
-            return GetGeoCoordinate(contentToMapFrom.Value(propName, fallback: isRecursive.ToRecuriveFallback()).ToString());
+            return GetGeoCoordinate(contentToMapFrom.Value(propName, fallback: fallback).ToString());
         }
 
-        private static object MapInversedGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive)
+        private static object MapInversedGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, Fallback fallback)
         {
-            var value = GetGeoCoordinate(contentToMapFrom.Value(propName, fallback: isRecursive.ToRecuriveFallback()).ToString());
+            var value = GetGeoCoordinate(contentToMapFrom.Value(propName, fallback: fallback).ToString());
             value.Latitude = -value.Latitude;
             value.Longitude = -value.Longitude;
             return value;
         }
 
-        private static object MapGeoCoordinateForCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, bool isRecursive)
+        private static object MapGeoCoordinateForCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, Fallback fallback)
         {
             return GetGeoCoordinate(contentToMapFrom.Value("geoCoordinate").ToString());
         }

@@ -6,7 +6,6 @@
     using Umbraco.Web;
     using Umbraco.Web.Composing;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
-    using Zone.UmbracoMapper.V8.Extensions;
 
     public static class PickedMediaMapper
     {
@@ -16,13 +15,12 @@
         /// <param name="mapper">The mapper</param>
         /// <param name="contentToMapFrom">Umbraco content item to map from</param>
         /// <param name="propName">Name of the property to map</param>
-        /// <param name="isRecursive">Flag to indicate if property should be retrieved recursively up the tree</param>
+        /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <returns>MediaFile instance</returns>
         public static object MapMediaFileCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom,
-            string propName, bool isRecursive)
+            string propName, Fallback fallback)
         {
             // If Umbraco Core Property Editor Converters will get IEnumerable<IPublishedContent>, so try that first
-            var fallback = isRecursive.ToRecuriveFallback();
             var mediaCollection = contentToMapFrom.Value<IEnumerable<IPublishedContent>>(propName, fallback: fallback);
             if (mediaCollection == null)
             {
@@ -57,13 +55,12 @@
         /// <param name="mapper">The mapper</param>
         /// <param name="contentToMapFrom">Umbraco content item to map from</param>
         /// <param name="propName">Name of the property to map</param>
-        /// <param name="isRecursive">Flag to indicate if property should be retrieved recursively up the tree</param>
+        /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <returns>MediaFile instance</returns>
         public static object MapMediaFile(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, 
-            string propName, bool isRecursive)
+            string propName, Fallback fallback)
         {
             // If Umbraco Core Property Editor Converters will get IPublishedContent, so try that first
-            var fallback = isRecursive.ToRecuriveFallback();
             var media = contentToMapFrom.Value<IPublishedContent>(propName, fallback: fallback);
             if (media == null)
             {

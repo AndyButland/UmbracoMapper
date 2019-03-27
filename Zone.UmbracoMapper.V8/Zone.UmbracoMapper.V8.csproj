@@ -232,7 +232,6 @@
     <Compile Include="Attributes\IMapFromAttribute.cs" />
     <Compile Include="CustomMapping.cs" />
     <Compile Include="DefaultPropertyValueGetter.cs" />
-    <Compile Include="Extensions\BoolExtensions.cs" />
     <Compile Include="IPropertyValueGetter.cs" />
     <Compile Include="IUmbracoMapper.cs" />
     <Compile Include="PickedMediaMapper.cs" />

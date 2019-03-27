@@ -9,12 +9,10 @@
     using Umbraco.Core.Models.PublishedContent;
     using Umbraco.Web.Composing;
     using Zone.UmbracoMapper.Common;
-    using Zone.UmbracoMapper.Common.Attributes;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
     using Zone.UmbracoMapper.Common.Extensions;
     using Zone.UmbracoMapper.Common.Helpers;
     using Zone.UmbracoMapper.V8.Attributes;
-    using Zone.UmbracoMapper.V8.Extensions;
 
     public class UmbracoMapper : UmbracoMapperBase, IUmbracoMapper
     {
@@ -402,8 +400,8 @@
                 else if (_customMappings.ContainsKey(customMappingKey))
                 {
                     // Any custom mappings used here cannot be based on a single property, as we don't have a property to map to to work out what this should be.
-                    // So we just pass an empty string into the custom mapping call
-                    itemToCreate = _customMappings[customMappingKey](this, content, string.Empty, false) as T;
+                    // So we just pass an empty string into the custom mapping call.
+                    itemToCreate = _customMappings[customMappingKey](this, content, string.Empty, default(Fallback)) as T;
                 }
                 else
                 {
@@ -772,15 +770,15 @@
             // properties, unless override provided)
             propName = GetMappedPropertyName(property.Name, propertyMappings, true);
 
-            // Check to see if property should be mapped recursively
-            var isRecursiveProperty = propertyMappings.IsMappingRecursive(property.Name);
+            // Check to see if property should be mapped using a fall-back method.
+            var fallback = Fallback.To(propertyMappings.GetMappingFallbackMethod(property.Name).ToArray());
 
             // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
             var mapFromAttribute = GetMapFromAttribute(property);
             if (mapFromAttribute != null)
             {
                 SetValueFromMapFromAttribute(model, property, contentToMapFrom, mapFromAttribute, 
-                    propName, culture, isRecursiveProperty, 
+                    propName, culture, fallback, 
                     propertyValueGetter, concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue);
                 return;
             }
@@ -790,20 +788,20 @@
             var unnamedCustomMappingKey = GetUnnamedCustomMappingKey(property);
             if (HasProvidedCustomMapping(propertyMappings, property.Name, out CustomMapping providedCustomMapping))
             {
-                SetValueFromCustomMapping(model, property, contentToMapFrom, providedCustomMapping, propName, isRecursiveProperty);
+                SetValueFromCustomMapping(model, property, contentToMapFrom, providedCustomMapping, propName, fallback);
             }
             else if (_customMappings.ContainsKey(namedCustomMappingKey))
             {
-                SetValueFromCustomMapping(model, property, contentToMapFrom, _customMappings[namedCustomMappingKey], propName, isRecursiveProperty);
+                SetValueFromCustomMapping(model, property, contentToMapFrom, _customMappings[namedCustomMappingKey], propName, fallback);
             }
             else if (_customMappings.ContainsKey(unnamedCustomMappingKey))
             {
-                SetValueFromCustomMapping(model, property, contentToMapFrom, _customMappings[unnamedCustomMappingKey], propName, isRecursiveProperty);
+                SetValueFromCustomMapping(model, property, contentToMapFrom, _customMappings[unnamedCustomMappingKey], propName, fallback);
             }
             else
             {
                 // Otherwise map types we can handle
-                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, culture, isRecursiveProperty);
+                var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, culture, fallback);
                 if (value == null)
                 {
                     return;
@@ -916,7 +914,7 @@
         /// <param name="mapFromAttribute">Instance of <see cref="IMapFromAttribute"/> to use for mapping</param>
         /// <param name="propName">Name of property to map to</param>
         /// <param name="culture">Culture to use when retrieving content</param>
-        /// <param name="isRecursiveProperty">Flag for if property should be mapped of recursively properties</param>
+        /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
@@ -924,11 +922,11 @@
         private void SetValueFromMapFromAttribute<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
                                                      IMapFromAttribute mapFromAttribute, string propName,
                                                      string culture,
-                                                     bool isRecursiveProperty, IPropertyValueGetter propertyValueGetter,
+                                                     Fallback fallback, IPropertyValueGetter propertyValueGetter,
                                                      bool concatenateToExistingValue, string concatenationSeperator,
                                                      bool coalesceWithExistingValue)
         {
-            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, culture, isRecursiveProperty);
+            var value = GetPropertyValue(contentToMapFrom, propertyValueGetter, propName, culture, fallback);
 
             // If mapping to a string, we should manipulate the mapped value to make use of the concatenation and coalescing 
             // settings, if provided.
@@ -998,11 +996,11 @@
         /// <param name="contentToMapFrom">IPublished content to map from</param>
         /// <param name="customMapping">Instance of <see cref="CustomMapping"/> to use for mapping</param>
         /// <param name="propName">Name of property to map to</param>
-        /// <param name="isRecursiveProperty">Flag for whether to map property recurisively</param>
+        /// <param name="fallback">Fallback method(s) to use when content not found</param>
         private void SetValueFromCustomMapping<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
-                                                  CustomMapping customMapping, string propName, bool isRecursiveProperty)
+                                                  CustomMapping customMapping, string propName, Fallback fallback)
         {
-            var value = customMapping(this, contentToMapFrom, propName, isRecursiveProperty);
+            var value = customMapping(this, contentToMapFrom, propName, fallback);
             if (value != null)
             {
                 property.SetValue(model, value);
@@ -1039,15 +1037,15 @@
         /// <param name="propertyValueGetter">Type implementing <see cref="IPropertyValueGetter"/> with method to get property value</param>
         /// <param name="propName">Property alias</param>
         /// <param name="culture">Culture to use when retrieving content</param>
-        /// <param name="recursive">Flag for whether property should be recursively mapped</param>
+        /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <returns>Property value</returns>
         private static object GetPropertyValue(IPublishedContent content, 
                                                IPropertyValueGetter propertyValueGetter, 
                                                string propName, 
                                                string culture,
-                                               bool recursive = false)
+                                               Fallback fallback = default(Fallback))
         {
-            return propertyValueGetter.GetPropertyValue(content, propName, culture, null, recursive.ToRecuriveFallback());
+            return propertyValueGetter.GetPropertyValue(content, propName, culture, null, fallback);
         }
 
         /// <summary>

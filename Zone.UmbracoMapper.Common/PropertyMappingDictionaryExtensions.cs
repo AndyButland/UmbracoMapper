@@ -118,9 +118,26 @@
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
         /// <param name="propName">Name of property to map to</param>
         /// <returns>True if mapping should be from child property</returns>
-        public static bool IsMappingRecursive(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
+        public static IEnumerable<int> GetMappingFallbackMethod(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
         {
-            return propertyMappings.ContainsKey(propName) && propertyMappings[propName].MapRecursively;
+            if (!propertyMappings.ContainsKey(propName))
+            {
+                return Enumerable.Empty<int>();
+            }
+
+            // If using the more flexible FallBackMethods, this takes priority.
+            if (propertyMappings[propName].FallbackMethods != null && propertyMappings[propName].FallbackMethods.Any())
+            {
+                return propertyMappings[propName].FallbackMethods;
+            }
+
+            // Otherwise we use MapRecursively
+            if (propertyMappings[propName].MapRecursively)
+            {
+                return new List<int> { Constants.FallbackToAncestors };
+            }
+
+            return Enumerable.Empty<int>();
         }
     }
 }

@@ -758,7 +758,7 @@
             propName = GetMappedPropertyName(property.Name, propertyMappings, true);
 
             // Check to see if property should be mapped recursively
-            var isRecursiveProperty = propertyMappings.IsMappingRecursive(property.Name);
+            var isRecursiveProperty = propertyMappings.GetMappingFallbackMethod(property.Name).Contains(Constants.FallbackToAncestors);
 
             // Check to see if property is marked with an attribute that implements IMapFromAttribute - if so, use that
             var mapFromAttribute = GetMapFromAttribute(property);

@@ -168,7 +168,15 @@
                 .MapCollection(GetCollectionJson(), model.CollectionFromJson)
                 .Map(CurrentPage, model.SubModel)
                 .Map(CurrentPage, model.WelcomeTextEnglish)
-                .Map(CurrentPage, model.WelcomeTextItalian, "it");
+                .Map(CurrentPage, model.WelcomeTextItalian, "it",
+                    new Dictionary<string, PropertyMapping>
+                        {
+                            { "HelloText", new PropertyMapping 
+                                { 
+                                    FallbackMethods = Fallback.ToLanguage.ToArray() 
+                                } 
+                            }
+                        });
 
             return CurrentTemplate(model);
         }

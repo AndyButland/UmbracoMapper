@@ -1,6 +1,7 @@
 ﻿namespace Zone.UmbracoMapper.Common.Attributes
 {
     using System;
+    using System.Collections.Generic;
     using Zone.UmbracoMapper.Common;
 
     public class PropertyMappingAttribute : Attribute, IPropertyMapping
@@ -60,6 +61,17 @@
         /// 'StarRating', it'll look for an Umbraco property called 'starRating')
         /// </summary>
         public bool MapRecursively { get; set; }
+
+        /// <summary>
+        /// Accepts an array of integers defining methods of fall-back when content is not found.
+        /// See Umbraco 8's Umbraco.Core.Models.PublishedContent.Fallback class.
+        /// If mapping recursively it will use Umbraco default camel-case naming convention (i.e. if assigned to a view model property called 
+        /// 'StarRating', it'll look for an Umbraco property called 'starRating')
+        /// </summary>
+        /// <remarks>
+        /// If provided, this will take precedence over a value provided in MapRecursively.
+        /// </remarks>
+        public int[] FallbackMethods { get; set; }
 
         /// <summary>
         /// Sets a default value for a property to be used if the mapped value cannot be found.

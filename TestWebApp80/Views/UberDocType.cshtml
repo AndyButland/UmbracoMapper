@@ -9,6 +9,8 @@
 <p>Upper-cased heading: @Model.UpperCaseHeading</p>
 <p>Welcome text (English): @Model.WelcomeTextEnglish.WelcomeText</p>
 <p>Welcome text (Italian): @Model.WelcomeTextItalian.WelcomeText</p>
+<p>Hello text (English): @Model.WelcomeTextEnglish.HelloText</p>
+<p>Hello text (Italian - should fall back): @Model.WelcomeTextItalian.HelloText</p>
 <p>Created on: @Model.CreatedOn, formatted date: @Model.FormattedCreatedOnDate</p>
 <div>Body text: @Html.Raw(Model.BodyText)</div>
 <p>Rating: @Model.StarRating stars</p>
