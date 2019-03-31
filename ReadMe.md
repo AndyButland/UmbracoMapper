@@ -4,6 +4,8 @@
 
 Umbraco Mapper has been developed to support a more pure MVC approach to building Umbraco applications.
 
+It supports Umbraco versions 6, 7 and 8.
+
 With MVC in Umbraco, there are broadly three approaches:
 
 1. As with 'traditional' Umbraco using WebForms, place a lot of data access and business logic in the views
