@@ -64,6 +64,10 @@ Given an instance of UmbracoMapper you can map a the properties of a particular 
     
 This will map all view model properties it can find an exact name match for, either from the standard IPublishedContent properties (like Id, Name etc.), or from the document type fields.
 
+From version 4.0 onwards - supporting Umbraco 8 - you can optionally provide a culture string, in order to map view model properties to the language variant indicated by the culture string:
+
+    mapper.Map(CurrentPage, model, "en-GB");
+
 To override conventions for property mapping, you can provide a Dictionary of property mappings via the **propertyMappings** parameter (or with more recent versions, use attributes - see 'Mapping Using Attributes' below).  In this example we are mapping a document type field called 'bodyText' to a view model field called 'Copy':
 
     mapper.Map(CurrentPage, model,
@@ -573,6 +577,10 @@ The type you use here must implement `IPropertyValueGetter`.  Here's an example 
             return content.GetPropertyValue(alias, recursive);
         }
     }
+	
+If using this technique when working with a version of the package supporting Umbraco 8, the signature is slightly different:
+
+    object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
 
 ## Classes, Properties and Methods
 
@@ -594,6 +602,13 @@ Full signature of delegates are as follows:
                          IPublishedContent content,
                          string propertyName,
                          bool recursive)
+						 
+And for versions targetting Umbraco 8:
+
+    object CustomMapping(IUmbracoMapper mapper,
+                         IPublishedContent content,
+                         string propertyName,
+                         Fallback fallback)			
 
 Full signature of mapping methods are as follows:
 
@@ -603,8 +618,8 @@ Full signature of mapping methods are as follows:
 
     IUmbracoMapper Map<T>(IPublishedContent content, 
         T model, 
+		string culture, 	// versions supporting Umbraco 8 only
         Dictionary<string, PropertyMapping> propertyMappings = null,
-        string[] recursiveProperties = null,
         PropertySet propertySet = PropertySet.All);
 
     IUmbracoMapper Map<T>(XElement xml, 
@@ -621,8 +636,8 @@ Full signature of mapping methods are as follows:
 
     IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
         IList<T> modelCollection,
+		string culture, 	// versions supporting Umbraco 8 only
         Dictionary<string, PropertyMapping> propertyMappings = null,
-        string[] recursiveProperties = null,
         PropertySet propertySet = PropertySet.All, 
         bool clearCollectionBeforeMapping = true) where T : new();
 
@@ -676,6 +691,10 @@ Class defining the override to the mapping convention for property to a particul
 **Ignore** (bool) - can be added to a field and if set to true, it will not be mapped and retain it's default or previously set value
 
 **DictionaryKey** (string) - if set property will be mapped from the given Umbraco dictionary key
+
+**PropertyValueGetter** (Type) - a type that must implement `IPropertyValueGetter` to be used when retrieving the property value from Umbraco.  A use case for this is to use Vorto, where we want to call GetVortoValue instead of GetPropertyValue.
+
+**CustomMappingType** (Type) and **CustomMappingMethod** (string) - a type that must implement be of delegate CustomMapping, and a method to be used in preference to any named or unnamed custom mapping that might be registered globally.
 
 ### BaseNodeViewModel
 
@@ -805,7 +824,11 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
         - Removal of the `recuriveProperties` string array parameter (not needed/consistent as can use attribute or property mapping dictionary).
 		- Change of the passing of a property specific custom mapping to a type and method rather than a `CustomMapping` instance (aligns with use on attribute, and improves internal code re-use as version specific Umbraco dependency is removed).
 		- Addition of the FallBackMethods property mapping override and attribute.
-        - Namespace changes.		
+        - Namespace changes.
+- 4.0.0
+    - Support of Umbraco version 8
+    - Changed mapping signature to allow the passing of a culture string, such that properties are mapping using the language variant indicated by the culture code.	
+	- Added support for fallback methods using language as well as recursive calls to ancestors in the content tree
 	
 ## Credits
 

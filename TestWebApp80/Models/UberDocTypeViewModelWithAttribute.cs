@@ -130,7 +130,7 @@
     {
         public string WelcomeText { get; set; }
 
-        [PropertyMapping(FallbackMethods = new[] { Fallback.Ancestors })]
+        [PropertyMapping(FallbackMethods = new[] { Fallback.Language })]
         public string HelloText { get; set; }
     }
 }
