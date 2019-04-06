@@ -827,10 +827,14 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 		- Change of the passing of a property specific custom mapping to a type and method rather than a `CustomMapping` instance (aligns with use on attribute, and improves internal code re-use as version specific Umbraco dependency is removed).
 		- Addition of the FallBackMethods property mapping override and attribute.
         - Namespace changes.
+- 3.0.1
+    - Allowed the direct mapping of a List collection type to an IEnumerable rather than requiring the view model use a List too
 - 4.0.0
     - Support of Umbraco version 8 (read more at this [blog post](https://web-matters.blogspot.com/2019/03/umbraco-mapper-new-releases-supporting-v8.html)
     - Changed mapping signature to allow the passing of a culture string, such that properties are mapping using the language variant indicated by the culture code.	
 	- Added support for fallback methods using language as well as recursive calls to ancestors in the content tree
+- 4.0.1
+    - Allowed the direct mapping of a List collection type to an IEnumerable rather than requiring the view model use a List too
 	
 ## Credits
 
