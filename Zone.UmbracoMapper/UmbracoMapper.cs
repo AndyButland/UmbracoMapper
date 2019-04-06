@@ -872,7 +872,7 @@
                             .MakeGenericMethod(collectionPropertyType)
                             .Invoke(this, new[] { (IEnumerable<IPublishedContent>)value, property.GetValue(model), null });
                     }
-                    else if (value.GetType().IsAssignableFrom(property.PropertyType))
+                    else if (property.PropertyType.IsInstanceOfType(value))
                     {
                         // We could also have an instance of IPropertyValueGetter in use here.
                         // If that returns a complex type and it matches the type of the view model, 

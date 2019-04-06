@@ -1043,6 +1043,27 @@
             Assert.AreEqual("Benvenuto", model.WelcomeText);
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsLinksCollection()
+        {
+            // Arrange
+            var model = new SimpleViewModel11();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.IsNotNull(model.LinksAsList);
+            Assert.AreEqual(2, model.LinksAsList.Count);
+            Assert.AreEqual("Link 1", model.LinksAsList[0].Name);
+            Assert.IsNotNull(model.LinksAsEnumerable);
+            Assert.AreEqual(2, model.LinksAsEnumerable.Count());
+            Assert.AreEqual("Link 1", model.LinksAsEnumerable.First().Name);
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -2497,6 +2518,25 @@
                     .Returns(new List<IPublishedContent> {MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object});
             }
 
+            var linksContentMock = new Mock<IPublishedProperty>();
+            linksContentMock.Setup(c => c.Alias).Returns("links");
+            linksContentMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
+            linksContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(new List<Umbraco.Web.Models.Link>
+                    {
+                        new Umbraco.Web.Models.Link
+                            {
+                                Name = "Link 1",
+                                Url = "https://example.com/test.html"
+                            },
+                        new Umbraco.Web.Models.Link
+                            {
+                                Name = "Link 2",
+                                Url = "https://example.com/test2.html"
+                            }
+                    });
+
+
             var parentContentMock = new Mock<IPublishedContent>();
             parentContentMock.Setup(c => c.Id).Returns(1001);
 
@@ -2528,6 +2568,7 @@
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subHeading"))).Returns(subHeadingContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValue"))).Returns(subModelValueContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValues"))).Returns(subModelValuesContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "links"))).Returns(linksContentMock.Object);
 
             return contentMock;
         }

@@ -867,8 +867,8 @@
                 }
                 else if (!property.PropertyType.IsSimpleType())
                 {
-                    // If Umbraco Core Property Editor Converters (or other known property converters) are installed, we can get back IPublishedContent 
-                    // instances automatically.  If that's the case and we are mapping to a complex sub-type, we can "automap" it.
+                    // Via property converters, we can get back IPublishedContent instances automatically.
+                    // If that's the case and we are mapping to a complex sub-type, we can "automap" it.
                     // We have to use reflection to do this as the type parameter for the sub-type on the model is only known at run-time.
                     // All mapping customisations are expected to to be implemented as attributes on the sub-type (as we can't pass them in
                     // in the dictionary)
@@ -887,7 +887,7 @@
                             .MakeGenericMethod(collectionPropertyType)
                             .Invoke(this, new[] { (IEnumerable<IPublishedContent>)value, property.GetValue(model), culture, null });
                     }
-                    else if (value.GetType().IsAssignableFrom(property.PropertyType))
+                    else if (property.PropertyType.IsInstanceOfType(value))
                     {
                         // We could also have an instance of IPropertyValueGetter in use here.
                         // If that returns a complex type and it matches the type of the view model, 

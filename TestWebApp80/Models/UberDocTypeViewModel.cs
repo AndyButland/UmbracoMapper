@@ -21,6 +21,7 @@
             AutoMapMultiple = new List<CountryViewModel>();
             WelcomeTextEnglish = new CultureSpecificModel();
             WelcomeTextItalian = new CultureSpecificModel();
+            Links = new List<Umbraco.Web.Models.Link>();
         }
 
         public int Id { get; set; }
@@ -103,6 +104,8 @@
         public CultureSpecificModel WelcomeTextEnglish { get; set; }
 
         public CultureSpecificModel WelcomeTextItalian { get; set; }
+
+        public IEnumerable<Umbraco.Web.Models.Link> Links { get; set; }
     }
 
     public class SubModel

@@ -999,6 +999,27 @@
             Assert.AreEqual(1.9M, model.GeoCoordinate.Latitude);
         }
 
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsLinksCollection()
+        {
+            // Arrange
+            var model = new SimpleViewModel11();
+            var mapper = GetMapper();
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.IsNotNull(model.LinksAsList);
+            Assert.AreEqual(2, model.LinksAsList.Count);
+            Assert.AreEqual("Link 1", model.LinksAsList[0].Name);
+            Assert.IsNotNull(model.LinksAsEnumerable);
+            Assert.AreEqual(2, model.LinksAsEnumerable.Count());
+            Assert.AreEqual("Link 1", model.LinksAsEnumerable.First().Name);
+        }
+
         #endregion
 
         #region Tests - Single Maps From XML
@@ -2428,8 +2449,25 @@
 
                 subModelValuesContentMock.Setup(c => c.PropertyTypeAlias).Returns("subModelValue");
                 subModelValuesContentMock.Setup(c => c.Value)
-                    .Returns(new List<IPublishedContent>{ MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object });
+                    .Returns(new List<IPublishedContent> { MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object });
             }
+
+            var linksContentMock = new Mock<IPublishedProperty>();
+            linksContentMock.Setup(c => c.PropertyTypeAlias).Returns("links");
+            linksContentMock.Setup(c => c.Value)
+                .Returns(new List<LinksPropertyModel>
+                    {
+                        new LinksPropertyModel
+                            {
+                                Name = "Link 1",
+                                Url = "https://example.com/test.html"
+                            },
+                        new LinksPropertyModel
+                            {
+                                Name = "Link 2",
+                                Url = "https://example.com/test2.html"
+                            }
+                    });
 
             var parentContentMock = new Mock<IPublishedContent>();
             parentContentMock.Setup(c => c.Id).Returns(1001);
@@ -2444,6 +2482,7 @@
             {
                 contentMock.Setup(c => c.Parent).Returns((IPublishedContent)null);
             }
+
             contentMock.Setup(c => c.Name).Returns("Test content");
             contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "summaryText"), It.IsAny<bool>())).Returns(summaryTextPropertyMock.Object);
@@ -2461,6 +2500,7 @@
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subHeading"), It.IsAny<bool>())).Returns(subHeadingContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValue"), It.IsAny<bool>())).Returns(subModelValueContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValues"), It.IsAny<bool>())).Returns(subModelValuesContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "links"), It.IsAny<bool>())).Returns(linksContentMock.Object);
 
             return contentMock;
         }

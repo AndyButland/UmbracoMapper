@@ -215,6 +215,22 @@
         public string Test { get; set; }
     }
 
+    public class SimpleViewModel11 : SimpleViewModel
+    {
+        [PropertyMapping(SourceProperty = "links")]
+        public List<LinksPropertyModel> LinksAsList { get; set; }
+
+        [PropertyMapping(SourceProperty = "links")]
+        public IEnumerable<LinksPropertyModel> LinksAsEnumerable { get; set; }
+    }
+
+    public class LinksPropertyModel
+    {
+        public string Name { get; set; }
+
+        public string Url { get; set; }
+    }
+
     public class SimpleViewModelWithCollection : SimpleViewModel
     {
         public SimpleViewModelWithCollection()

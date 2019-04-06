@@ -29,6 +29,16 @@
 <p>Date with no value set: @(Model.Date2.HasValue ? "Has value - " + Model.Date2.Value.ToString("d-MMM-yyyy") : "No value")</p>
 <p>Dictionary value: @Model.DictionaryValue</p>
 
+<div>
+    Picked links:
+    <ul>
+        @foreach (var link in Model.Links)
+        {
+            <li><a href="@link.Url">@link.Name</a></li>
+        }
+    </ul>
+</div>
+
 @if (Model.MediaPickedImage != null)
 {
     <div>Media picker image:</div>

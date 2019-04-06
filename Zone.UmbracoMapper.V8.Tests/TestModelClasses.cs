@@ -220,6 +220,15 @@
         public string WelcomeText { get; set; }
     }
 
+    public class SimpleViewModel11 : SimpleViewModel
+    {
+        [PropertyMapping(SourceProperty = "links")]
+        public List<Umbraco.Web.Models.Link> LinksAsList { get; set; }
+
+        [PropertyMapping(SourceProperty = "links")]
+        public IEnumerable<Umbraco.Web.Models.Link> LinksAsEnumerable { get; set; }
+    }
+
     public class SimpleViewModelWithCollection : SimpleViewModel
     {
         public SimpleViewModelWithCollection()
