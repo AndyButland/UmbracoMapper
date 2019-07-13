@@ -835,6 +835,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 	- Added support for fallback methods using language as well as recursive calls to ancestors in the content tree
 - 4.0.1
     - Allowed the direct mapping of a List collection type to an IEnumerable rather than requiring the view model use a List too
+- 4.1.0
+    - Upgraded dependencies for version targetting Umbraco V7 to use 8.1
 	
 ## Credits
 
