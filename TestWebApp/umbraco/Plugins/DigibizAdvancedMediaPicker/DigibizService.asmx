@@ -1,1 +1,0 @@
-﻿<%@ WebService language="C#" class="DigibizTree.Shared.Tree.DigibizService" %>
