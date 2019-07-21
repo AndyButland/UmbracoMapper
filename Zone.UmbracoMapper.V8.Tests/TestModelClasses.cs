@@ -5,6 +5,7 @@
     using System.Web;
     using Umbraco.Core.Models.PublishedContent;
     using Zone.UmbracoMapper.Common.Attributes;
+    using Zone.UmbracoMapper.Common.BaseDestinationTypes;
     using Zone.UmbracoMapper.V8;
     using Zone.UmbracoMapper.V8.Tests.Attributes;
 
@@ -227,6 +228,13 @@
 
         [PropertyMapping(SourceProperty = "links")]
         public IEnumerable<Umbraco.Web.Models.Link> LinksAsEnumerable { get; set; }
+    }
+
+    public class SimpleViewModel12 : SimpleViewModel
+    {
+        public MediaFile MainImage { get; set; }
+
+        public IEnumerable<MediaFile> MoreImages { get; set; }
     }
 
     public class SimpleViewModelWithCollection : SimpleViewModel

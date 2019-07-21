@@ -4,7 +4,6 @@
     using System.Linq;
     using Umbraco.Core.Models.PublishedContent;
     using Umbraco.Web;
-    using Umbraco.Web.Composing;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
 
     public static class PickedMediaMapper
@@ -20,7 +19,7 @@
         public static object MapMediaFileCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom,
             string propName, Fallback fallback)
         {
-            // If Umbraco Core Property Editor Converters will get IEnumerable<IPublishedContent>, so try that first
+            // With V8 will get IPublishedContent
             var mediaCollection = contentToMapFrom.Value<IEnumerable<IPublishedContent>>(propName, fallback: fallback);
             if (mediaCollection == null)
             {
@@ -29,20 +28,6 @@
                 if (media != null)
                 {
                     mediaCollection = new List<IPublishedContent> { media };
-                }
-
-                if (mediaCollection == null)
-                {
-                    // If Umbraco Core Property Editor Converters not installed, need to dig out the Ids
-                    var mediaIds = contentToMapFrom.Value<string>(propName, fallback: fallback);
-                    if (!string.IsNullOrEmpty(mediaIds))
-                    {
-                        mediaCollection = new List<IPublishedContent>();
-                        foreach (var mediaId in mediaIds.Split(','))
-                        {
-                            ((List<IPublishedContent>)mediaCollection).Add(Current.UmbracoHelper.Media(mediaId));
-                        }
-                    }
                 }
             }
 
@@ -60,18 +45,8 @@
         public static object MapMediaFile(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, 
             string propName, Fallback fallback)
         {
-            // If Umbraco Core Property Editor Converters will get IPublishedContent, so try that first
+            // With V8 will get IPublishedContent
             var media = contentToMapFrom.Value<IPublishedContent>(propName, fallback: fallback);
-            if (media == null)
-            {
-                // If Umbraco Core Property Editor Converters not installed, need to dig out the Id
-                var mediaId = contentToMapFrom.Value<string>(propName, fallback: fallback);
-                if (!string.IsNullOrEmpty(mediaId))
-                {
-                    media = Current.UmbracoHelper.Media(mediaId);
-                }
-            }
-
             return media != null ? GetMediaFile(media, mapper.AssetsRootUrl) : null;
         }
 

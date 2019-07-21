@@ -1,7 +1,9 @@
 ﻿namespace Zone.UmbracoMapper.V7
 {
     using System.Collections.Generic;
+    using System.Configuration;
     using System.Linq;
+    using System.Reflection;
     using Umbraco.Core.Models;
     using Umbraco.Web;
     using Zone.UmbracoMapper.Common.BaseDestinationTypes;
@@ -20,7 +22,7 @@
             string propName, bool isRecursive)
         {
             // If Umbraco Core Property Editor Converters will get IEnumerable<IPublishedContent>, so try that first
-            var mediaCollection = contentToMapFrom.GetPropertyValue<IEnumerable<IPublishedContent>>(propName, isRecursive, null);
+            var mediaCollection = GetTypedMediaFromPropertyValue<IEnumerable<IPublishedContent>>(contentToMapFrom, propName, isRecursive);
             if (mediaCollection == null)
             {
                 // Also check for single IPublishedContent (which could get if multiple media disabled)
@@ -49,6 +51,11 @@
             return mediaCollection != null ? GetMediaFileCollection(mediaCollection, mapper.AssetsRootUrl) : null;
         }
 
+        private static T GetTypedMediaFromPropertyValue<T>(IPublishedContent contentToMapFrom, string propName, bool isRecursive)
+        {
+            return contentToMapFrom.GetPropertyValue<T>(propName, isRecursive);
+        }
+
         /// <summary>
         /// Native mapper for mapping a media picker property
         /// </summary>
@@ -61,11 +68,11 @@
             string propName, bool isRecursive)
         {
             // If Umbraco Core Property Editor Converters will get IPublishedContent, so try that first
-            var media = contentToMapFrom.GetPropertyValue<IPublishedContent>(propName, isRecursive, null);
+            var media = GetTypedMediaFromPropertyValue<IPublishedContent>(contentToMapFrom, propName, isRecursive);
             if (media == null)
             {
                 // If Umbraco Core Property Editor Converters not installed, need to dig out the Id
-                var mediaId = contentToMapFrom.GetPropertyValue<string>(propName, isRecursive, string.Empty);
+                var mediaId = contentToMapFrom.GetPropertyValue(propName, isRecursive, string.Empty);
                 if (!string.IsNullOrEmpty(mediaId))
                 {
                     var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);

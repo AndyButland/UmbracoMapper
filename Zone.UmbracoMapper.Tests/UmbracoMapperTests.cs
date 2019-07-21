@@ -7,6 +7,7 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using Umbraco.Core.Models;
+    using Umbraco.Core.Models.PublishedContent;
     using Umbraco.Web;
     using Zone.UmbracoMapper.Common;
     using Zone.UmbracoMapper.V7;
@@ -1018,6 +1019,46 @@
             Assert.IsNotNull(model.LinksAsEnumerable);
             Assert.AreEqual(2, model.LinksAsEnumerable.Count());
             Assert.AreEqual("Link 1", model.LinksAsEnumerable.First().Name);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapMediaFiles()
+        {
+            // Arrange
+            var model = new SimpleViewModel12();
+            var mapper = GetMapper();
+            mapper.AssetsRootUrl = "http://www.mysite.com";
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNotNull(model.MainImage);
+            Assert.AreEqual(2000, model.MainImage.Id);
+            Assert.AreEqual("/media/test.jpg", model.MainImage.Url);
+            Assert.AreEqual("http://www.mysite.com/media/test.jpg", model.MainImage.DomainWithUrl);
+            Assert.AreEqual("Test image", model.MainImage.Name);
+            Assert.AreEqual("Test image alt text", model.MainImage.AltText);
+            Assert.AreEqual(100, model.MainImage.Width);
+            Assert.AreEqual(200, model.MainImage.Height);
+            Assert.AreEqual(1000, model.MainImage.Size);
+            Assert.AreEqual(".jpg", model.MainImage.FileExtension);
+            Assert.AreEqual("Image", model.MainImage.DocumentTypeAlias);
+
+            Assert.IsNotNull(model.MoreImages);
+            Assert.AreEqual(2, model.MoreImages.Count());
+            var firstImage = model.MoreImages.First();
+            Assert.AreEqual(2000, firstImage.Id);
+            Assert.AreEqual("/media/test.jpg", firstImage.Url);
+            Assert.AreEqual("http://www.mysite.com/media/test.jpg", firstImage.DomainWithUrl);
+            Assert.AreEqual("Test image", firstImage.Name);
+            Assert.AreEqual("Test image alt text", firstImage.AltText);
+            Assert.AreEqual(100, firstImage.Width);
+            Assert.AreEqual(200, firstImage.Height);
+            Assert.AreEqual(1000, firstImage.Size);
+            Assert.AreEqual(".jpg", firstImage.FileExtension);
+            Assert.AreEqual("Image", model.MainImage.DocumentTypeAlias);
         }
 
         #endregion
@@ -2469,6 +2510,14 @@
                             }
                     });
 
+            var mainImageMock = new Mock<IPublishedProperty>();
+            mainImageMock.Setup(c => c.PropertyTypeAlias).Returns("mainImage");
+            mainImageMock.Setup(c => c.Value).Returns(MockImage());
+
+            var moreImagesMock = new Mock<IPublishedProperty>();
+            moreImagesMock.Setup(c => c.PropertyTypeAlias).Returns("moreImages");
+            moreImagesMock.Setup(c => c.Value).Returns(new List<IPublishedContent> { MockImage(), MockImage() });
+
             var parentContentMock = new Mock<IPublishedContent>();
             parentContentMock.Setup(c => c.Id).Returns(1001);
 
@@ -2501,8 +2550,46 @@
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValue"), It.IsAny<bool>())).Returns(subModelValueContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "subModelValues"), It.IsAny<bool>())).Returns(subModelValuesContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "links"), It.IsAny<bool>())).Returns(linksContentMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "mainImage"), It.IsAny<bool>())).Returns(mainImageMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "moreImages"), It.IsAny<bool>())).Returns(moreImagesMock.Object);
 
             return contentMock;
+        }
+
+        private static IPublishedContent MockImage()
+        {
+            var widthPropertyMock = new Mock<IPublishedProperty>();
+            widthPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("umbracoWidth");
+            widthPropertyMock.Setup(c => c.Value).Returns(100);
+
+            var heightPropertyMock = new Mock<IPublishedProperty>();
+            heightPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("umbracoHeight");
+            heightPropertyMock.Setup(c => c.Value).Returns(200);
+
+            var sizePropertyMock = new Mock<IPublishedProperty>();
+            sizePropertyMock.Setup(c => c.PropertyTypeAlias).Returns("umbracoBytes");
+            sizePropertyMock.Setup(c => c.Value).Returns(1000);
+
+            var extensionPropertyMock = new Mock<IPublishedProperty>();
+            extensionPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("umbracoExtension");
+            extensionPropertyMock.Setup(c => c.Value).Returns(".jpg");
+
+            var altTextPropertyMock = new Mock<IPublishedProperty>();
+            altTextPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("altText");
+            altTextPropertyMock.Setup(c => c.Value).Returns("Test image alt text");
+
+            var imageMock = new Mock<IPublishedContent>();
+            imageMock.Setup(c => c.Id).Returns(2000);
+            imageMock.Setup(c => c.Name).Returns("Test image");
+            imageMock.Setup(c => c.Url).Returns("/media/test.jpg");
+            imageMock.Setup(c => c.DocumentTypeAlias).Returns("Image");
+            imageMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "umbracoWidth"), It.IsAny<bool>())).Returns(widthPropertyMock.Object);
+            imageMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "umbracoHeight"), It.IsAny<bool>())).Returns(heightPropertyMock.Object);
+            imageMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "umbracoBytes"), It.IsAny<bool>())).Returns(sizePropertyMock.Object);
+            imageMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "umbracoExtension"), It.IsAny<bool>())).Returns(extensionPropertyMock.Object);
+            imageMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "altText"), It.IsAny<bool>())).Returns(altTextPropertyMock.Object);
+
+            return imageMock.Object;
         }
 
         #endregion
