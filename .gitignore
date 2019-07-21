@@ -30,7 +30,6 @@ ExamineIndexes/
 */media/created-packages/
 TestWebApp/App_Data/Logs/UmbracoTraceLog.txt
 TestWebApp/media
-TestWebApp74/
 
 # NuGet Packages
 *.nupkg
@@ -42,7 +41,7 @@ TestWebApp74/
 # VS.Net 2015
 .vs/
 
-
-
-
-
+# Solution
+**/TestWebApp/*
+**/TestWebApp74/*
+**/TestWebApp80/*
