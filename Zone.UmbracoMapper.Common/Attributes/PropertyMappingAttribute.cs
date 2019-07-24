@@ -14,7 +14,7 @@
         /// <summary>
         /// Defines the number of levels above the current content to map the value from.  If not passed, 0 (the current
         /// level) is assumed.
-        /// Only for IPublishedContent mappings.
+        /// Only for IPublishedContent (NOT IPublishedElement - V8 - if provided will be ignored) mappings.
         /// </summary>
         public int LevelsAbove { get; set; }
 
@@ -22,7 +22,7 @@
         /// If passed, the source property is assumed to be a structure that has related content (e.g. a Content Picker that
         /// contains an integer Id for another IPublishedContent).  The mapping is then done from the named property of 
         /// that child element.
-        /// Only for IPublishedContent mappings.
+        /// Only for IPublishedContent (or IPublishedElement - V8) mappings.
         /// </summary>
         public string SourceRelatedProperty { get; set; }
 
@@ -36,21 +36,21 @@
         /// <summary>
         /// The names of the properties on the source to map from and concatenate.
         /// If not passed, exact name match convention or single match on SourceProperty is used.
-        /// Only for IPublishedContent mappings.
+        /// Only for IPublishedContent (or IPublishedElement - V8) mappings.
         /// </summary>
         public string[] SourcePropertiesForConcatenation { get; set; }
 
         /// <summary>
         /// When SourcePropertiesForConcatenation is used, the separator string used to concatenate the items.
         /// If not passed, no separator is assumed.
-        /// Only for IPublishedContent mappings.
+        /// Only for IPublishedContent (or IPublishedElement - V8) mappings.
         /// </summary>
         public string ConcatenationSeperator { get; set; }
 
         /// <summary>
         /// The names of the properties on the source to map from and coalesce (take the take the first non null, empty or whitespace property)
         /// If not passed, exact name match convention or single match on SourceProperty is used.
-        /// Only for IPublishedContent mappings.
+        /// Only for IPublishedContent (or IPublishedElement - V8) mappings.
         /// </summary>
         public string[] SourcePropertiesForCoalescing { get; set; }
 

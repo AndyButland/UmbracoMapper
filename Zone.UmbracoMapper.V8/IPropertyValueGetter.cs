@@ -4,6 +4,6 @@
 
     public interface IPropertyValueGetter
     {
-        object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback);
+        object GetPropertyValue(IPublishedElement content, string alias, string culture, string segment, Fallback fallback);
     }
 }

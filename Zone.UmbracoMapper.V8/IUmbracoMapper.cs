@@ -56,6 +56,23 @@
             where T : class;
 
         /// <summary>
+        /// Maps an instance of IPublishedElement to the passed view model based on conventions (and/or overrides)
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="content">Instance of IPublishedContent</param>
+        /// <param name="model">View model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="propertySet">Set of properties to map</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        IUmbracoMapper Map<T>(IPublishedElement content,
+                              T model,
+                              string culture = "",
+                              Dictionary<string, PropertyMapping> propertyMappings = null,
+                              PropertySet propertySet = PropertySet.All)
+            where T : class;
+
+        /// <summary>
         /// Maps content held in XML to the passed view model based on conventions (and/or overrides)
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
@@ -112,6 +129,25 @@
                                         string culture = "",
                                         Dictionary<string, PropertyMapping> propertyMappings = null,
                                         PropertySet propertySet = PropertySet.All, 
+                                        bool clearCollectionBeforeMapping = true)
+            where T : class, new();
+
+        /// <summary>
+        /// Maps a collection of IPublishedElement to the passed view model
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="contentCollection">Collection of IPublishedContent</param>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="propertySet">Set of properties to map</param>
+        /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedElement> contentCollection,
+                                        IList<T> modelCollection,
+                                        string culture = "",
+                                        Dictionary<string, PropertyMapping> propertyMappings = null,
+                                        PropertySet propertySet = PropertySet.All,
                                         bool clearCollectionBeforeMapping = true)
             where T : class, new();
 

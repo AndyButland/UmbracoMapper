@@ -5,7 +5,7 @@
 
     public class DefaultPropertyValueGetter : IPropertyValueGetter
     {
-        public virtual object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
+        public virtual object GetPropertyValue(IPublishedElement content, string alias, string culture, string segment, Fallback fallback)
         {
             return content.Value(alias, string.IsNullOrEmpty(culture) ? null : culture, segment, fallback);
         }

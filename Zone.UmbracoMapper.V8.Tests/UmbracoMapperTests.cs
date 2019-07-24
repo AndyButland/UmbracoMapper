@@ -283,7 +283,7 @@
                         "HeadingAndBodyText", 
                         new PropertyMapping 
                         { 
-                            SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, 
+                            SourcePropertiesForConcatenation = new[] { "Name", "bodyText" }, 
                             ConcatenationSeperator = ",",
                         } 
                     } 
@@ -323,7 +323,7 @@
                         "SummaryText", 
                         new PropertyMapping 
                         { 
-                            SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
+                            SourcePropertiesForCoalescing = new[] { "summaryText", "bodyText" }, 
                         } 
                     } 
                 });
@@ -362,7 +362,7 @@
                         "SummaryText", 
                         new PropertyMapping 
                         { 
-                            SourcePropertiesForCoalescing = new string[] { "emptyText", "bodyText" }, 
+                            SourcePropertiesForCoalescing = new[] { "emptyText", "bodyText" }, 
                         } 
                     } 
                 });
@@ -1107,6 +1107,848 @@
 
         #endregion
 
+        #region Tests - Single Maps From IPublishedElement
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithMatchingNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyText);
+            Assert.AreEqual("<p>This is the body text</p>", model.BodyTextAsHtmlString.ToString());
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithDifferentNames()
+        {
+            // Arrange
+            var model = new SimpleViewModel4();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "BodyCopy", new PropertyMapping { SourceProperty = "bodyText", } } });
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyCopy);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithStringFormatter()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
+
+            // Assert
+            Assert.AreEqual("THIS IS THE BODY TEXT", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithDifferentNamesUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel4WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyCopy);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_DoesNotMapIgnoredCustomPropertiesUsingDictionary()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { Ignore = true, } } });
+
+            // Assert
+            Assert.IsNull(model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_DoesNotMapIgnoredCustomPropertiesUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel3bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNull(model.BodyText);
+        }
+
+        /// <remarks>
+        /// Failing test for bug report: 
+        /// http://our.umbraco.org/projects/developer-tools/umbraco-mapper/bugs,-questions,-suggestions/60295-Property-Mapping-issue
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithDifferentNamesUsingAttributeAndRecursiveProperty()
+        {
+            // Arrange
+            var model = new SimpleViewModel4bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyCopy);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithConcatenation()
+        {
+            // Arrange
+            var model = new SimpleViewModel5();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "SummaryAndBodyText",
+                        new PropertyMapping
+                            {
+                                SourcePropertiesForConcatenation = new[] { "summaryText", "bodyText" },
+                                ConcatenationSeperator = ",",
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.AreEqual("This is the summary text,This is the body text", model.SummaryAndBodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithConcatenationUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel5WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the summary text,This is the body text", model.SummaryAndBodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithCoalescingAndFirstItemAvailable()
+        {
+            // Arrange
+            var model = new SimpleViewModel5();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "SummaryText",
+                        new PropertyMapping
+                            {
+                                SourcePropertiesForCoalescing = new[] { "summaryText", "bodyText" },
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.AreEqual("This is the summary text", model.SummaryText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithCoalescingAndFirstItemAvailableUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel5WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the summary text", model.SummaryText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithCoalescingAndFirstItemNotAvailable()
+        {
+            // Arrange
+            var model = new SimpleViewModel5();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "SummaryText",
+                        new PropertyMapping
+                            {
+                                SourcePropertiesForCoalescing = new[] { "emptyText", "bodyText" },
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.SummaryText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithCoalescingAndFirstItemNotAvailableUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel5bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.SummaryText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithMatchingCondition()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "BodyText",
+                        new PropertyMapping
+                            {
+                                MapIfPropertyMatches = new KeyValuePair<string, string>("testText", "Test value")
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsCustomPropertiesWithNonMatchingCondition()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "BodyText",
+                        new PropertyMapping
+                            {
+                                MapIfPropertyMatches = new KeyValuePair<string, string>("summaryText", "Another value")
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.IsNull(model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingCustomMapping()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingCustomMappingWithMatchingPropertyCondition()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "GeoCoordinate");
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingCustomMappingWithNonMatchingPropertyCondition()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate, "AnotherProperty");
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNull(model.GeoCoordinate);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingCustomMappingWhenProvidedViaDictionary()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "GeoCoordinate",
+                        new PropertyMapping
+                            {
+                                CustomMappingType = typeof(UmbracoMapperTests),
+                                CustomMappingMethod = nameof(MapGeoCoordinate)
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingCustomMappingWhenProvidedViaAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel8a();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingCustomMappingOverridingExistingMapping()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                {
+                    {
+                        "GeoCoordinate",
+                        new PropertyMapping
+                            {
+                                CustomMappingType = typeof(UmbracoMapperTests),
+                                CustomMappingMethod = nameof(MapInversedGeoCoordinate)
+                            }
+                    }
+                });
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual((decimal)-5.5, model.GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)-10.5, model.GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model.GeoCoordinate.Zoom);
+        }
+
+        // Test for issue #13
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingMapFromAttributeAndRespectsConcatenationParameters()
+        {
+            // Arrange
+            SimpleMapFromForContatenateStringAttribute.ResetCallCount();
+            var model = new SimpleViewModel9a();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test 1,Test 2", model.Test);
+        }
+
+        // Test for issue #13
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingMapFromAttributeAndRespectsCoalesceParameter()
+        {
+            // Arrange
+            SimpleMapFromForContatenateStringAttribute.ResetCallCount();
+            var model = new SimpleViewModel9b();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Test 2", model.Test);
+        }
+
+        // Test for issue #13
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsUsingMapFromAttributeAndRespectsCoalesceParameter2()
+        {
+            // Arrange
+            SimpleMapFromForContatenateStringAttribute.ResetCallCount();
+            var model = new SimpleViewModel9c();
+            var content = MockPublishedElement();
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the summary text", model.Test);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsOnlyNativeProperties()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertySet: PropertySet.Native);
+
+            // Assert
+            Assert.IsNull(model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsOnlyCustomProperties()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertySet: PropertySet.Custom);
+
+            // Assert
+            Assert.IsNull(model.Name);
+            Assert.AreEqual("This is the body text", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithStringDefaultValue()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement(bodyTextValue: null);
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                                                                    {
+                                                                        {
+                                                                            "BodyText",
+                                                                            new PropertyMapping
+                                                                                {
+                                                                                    DefaultValue = "Default body text",
+                                                                                }
+                                                                        },
+                                                                        {
+                                                                            "BodyText2",
+                                                                            new PropertyMapping
+                                                                                {
+                                                                                    DefaultValue = "Default body text 2",
+                                                                                }
+                                                                        }
+                                                                    });
+
+            // Assert
+            Assert.AreEqual("Default body text", model.BodyText);
+            Assert.AreEqual("Default body text 2", model.BodyText2);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithStringDefaultValueUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel3WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement(bodyTextValue: null);
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("Default body text", model.BodyText);
+            Assert.AreEqual("Default body text 2", model.BodyText2);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithIntegerDefaultValue()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                                                                    {
+                                                                        {
+                                                                            "NonMapped",
+                                                                            new PropertyMapping
+                                                                                {
+                                                                                    DefaultValue = 99,
+                                                                                }
+                                                                        }
+                                                                    });
+
+            // Assert
+            Assert.AreEqual(99, model.NonMapped);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithIntegerDefaultValueUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel3WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual(99, model.NonMapped);
+        }
+
+        /// <remarks>
+        /// Failing test for issue: 
+        /// https://github.com/AndyButland/UmbracoMapper/issues/10
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_DoesNotApplyIntegerDefaultValueWhenZeroMapped()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                                                                    {
+                                                                        {
+                                                                            "MappedFromZero",
+                                                                            new PropertyMapping
+                                                                                {
+                                                                                    SourceProperty = "zeroInt",
+                                                                                    DefaultValue = 1,
+                                                                                }
+                                                                        }
+                                                                    });
+
+            // Assert
+            Assert.AreEqual(0, model.MappedFromZero);
+        }
+
+        /// <remarks>
+        /// Failing test for issue: 
+        /// https://github.com/AndyButland/UmbracoMapper/issues/10
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_DoesNotApplyBooleanDefaultValueWhenFalseMapped()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, propertyMappings: new Dictionary<string, PropertyMapping>
+                                                                    {
+                                                                        {
+                                                                            "MappedFromFalse",
+                                                                            new PropertyMapping
+                                                                                {
+                                                                                    SourceProperty = "falseBool",
+                                                                                    DefaultValue = true,
+                                                                                }
+                                                                        }
+                                                                    });
+
+            // Assert
+            Assert.IsFalse(model.MappedFromFalse);
+        }
+
+        /// <remarks>
+        /// Failing test for issue: 
+        /// https://github.com/AndyButland/UmbracoMapper/issues/1
+        /// </remarks>
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsNullToNullableDateTimeWithNoValue()
+        {
+            // Arrange
+            var model = new SimpleViewModel4bWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsFalse(model.DateTime.HasValue);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_AutomapsRelatedIPublishedElement()
+        {
+            // Arrange
+            var model = new SimpleViewModel3WithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text", model.BodyText);
+            Assert.AreEqual("This is the sub-heading", model.SubModelValue.SubHeading);
+            Assert.AreEqual(2, model.SubModelValues.Count);
+            Assert.AreEqual("This is the sub-heading", model.SubModelValues.First().SubHeading);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithCustomPropertyValueGetter()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, null,
+                new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { PropertyValueGetter = typeof(SuffixAddingPropertyValueGetter), } } });
+
+            // Assert
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithCustomPropertyValueGetterUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel3cWithAttribute();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithCustomDefaultPropertyValueGetterProvidedInConstructor()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper(new SuffixAddingPropertyValueGetter());
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithCustomDefaultPropertyValueGetterProvidedInProperty()
+        {
+            // Arrange
+            var model = new SimpleViewModel3();
+            var mapper = GetMapper();
+            ((UmbracoMapper)mapper).DefaultPropertyValueGetter = new SuffixAddingPropertyValueGetter();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("This is the body text...", model.BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithCustomPropertyValueGetterReturningComplexType()
+        {
+            // Arrange
+            var model = new SimpleViewModel8();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, null,
+                new Dictionary<string, PropertyMapping> { { "GeoCoordinate", new PropertyMapping { PropertyValueGetter = typeof(ComplexTypeReturningPropertyValueGetter), } } });
+
+            // Assert
+            Assert.IsNotNull(model.GeoCoordinate);
+            Assert.AreEqual(1.9M, model.GeoCoordinate.Latitude);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithDefaultCulture()
+        {
+            // Arrange
+            var model = new SimpleViewModel10();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, "en-GB");
+
+            // Assert
+            Assert.AreEqual("Welcome", model.WelcomeText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsWithAlternateCulture()
+        {
+            // Arrange
+            var model = new SimpleViewModel10();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model, "it");
+
+            // Assert
+            Assert.AreEqual("Benvenuto", model.WelcomeText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapsLinksCollection()
+        {
+            // Arrange
+            var model = new SimpleViewModel11();
+            var mapper = GetMapper();
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNotNull(model.LinksAsList);
+            Assert.AreEqual(2, model.LinksAsList.Count);
+            Assert.AreEqual("Link 1", model.LinksAsList[0].Name);
+            Assert.IsNotNull(model.LinksAsEnumerable);
+            Assert.AreEqual(2, model.LinksAsEnumerable.Count());
+            Assert.AreEqual("Link 1", model.LinksAsEnumerable.First().Name);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElement_MapMediaFiles()
+        {
+            // Arrange
+            var model = new SimpleViewModel12();
+            var mapper = GetMapper();
+            mapper.AssetsRootUrl = "http://www.mysite.com";
+            var content = MockPublishedElement();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.IsNotNull(model.MainImage);
+            Assert.AreEqual(2000, model.MainImage.Id);
+            Assert.AreEqual("/media/test.jpg", model.MainImage.Url);
+            Assert.AreEqual("http://www.mysite.com/media/test.jpg", model.MainImage.DomainWithUrl);
+            Assert.AreEqual("Test image", model.MainImage.Name);
+            Assert.AreEqual("Test image alt text", model.MainImage.AltText);
+            Assert.AreEqual(100, model.MainImage.Width);
+            Assert.AreEqual(200, model.MainImage.Height);
+            Assert.AreEqual(1000, model.MainImage.Size);
+            Assert.AreEqual(".jpg", model.MainImage.FileExtension);
+            Assert.AreEqual("Image", model.MainImage.DocumentTypeAlias);
+
+            Assert.IsNotNull(model.MoreImages);
+            Assert.AreEqual(2, model.MoreImages.Count());
+            var firstImage = model.MoreImages.First();
+            Assert.AreEqual(2000, firstImage.Id);
+            Assert.AreEqual("/media/test.jpg", firstImage.Url);
+            Assert.AreEqual("http://www.mysite.com/media/test.jpg", firstImage.DomainWithUrl);
+            Assert.AreEqual("Test image", firstImage.Name);
+            Assert.AreEqual("Test image alt text", firstImage.AltText);
+            Assert.AreEqual(100, firstImage.Width);
+            Assert.AreEqual(200, firstImage.Height);
+            Assert.AreEqual(1000, firstImage.Size);
+            Assert.AreEqual(".jpg", firstImage.FileExtension);
+            Assert.AreEqual("Image", model.MainImage.DocumentTypeAlias);
+        }
+
+        #endregion
+
         #region Tests - Single Maps From XML
 
         [TestMethod]
@@ -1515,6 +2357,130 @@
             var model = new List<SimpleViewModel3>();
             var mapper = GetMapper();
             var content = new List<IPublishedContent> { MockPublishedContent().Object, MockPublishedContent(id: 1001).Object };
+
+            // Act
+            mapper.MapCollection(content, model);
+            mapper.MapCollection(content, model, clearCollectionBeforeMapping: false);
+
+            // Assert
+            Assert.AreEqual(4, model.Count);
+        }
+
+        #endregion
+
+        #region Tests - Collection Maps From IPublishedElement
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElementToCollection_MapsCustomPropertiesWithMatchingNames()
+        {
+            // Arrange
+            var model = new List<SimpleViewModel3>();
+            var mapper = GetMapper();
+            var content = new List<IPublishedElement> { MockPublishedElement().Object, MockPublishedElement().Object };
+
+            // Act
+            mapper.MapCollection(content, model);
+
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.AreEqual("This is the body text", model[0].BodyText);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElementToCollection_MapsUsingCustomMapping()
+        {
+            // Arrange
+            var model = new List<SimpleViewModel8>();
+            var content = new List<IPublishedElement> { MockPublishedElement().Object, MockPublishedElement().Object };
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinate);
+
+            // Act
+            mapper.MapCollection(content, model);
+
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.IsNotNull(model[0].GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model[0].GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model[0].GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model[0].GeoCoordinate.Zoom);
+            Assert.IsNotNull(model[1].GeoCoordinate);
+            Assert.AreEqual((decimal)5.5, model[1].GeoCoordinate.Latitude);
+            Assert.AreEqual((decimal)10.5, model[1].GeoCoordinate.Longitude);
+            Assert.AreEqual(7, model[1].GeoCoordinate.Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElementToCollectionWithoutParentObject_MapsUsingCustomMapping()
+        {
+            // Arrange
+            var model = new List<GeoCoordinate>();
+            var content = new List<IPublishedElement> { MockPublishedElement().Object, MockPublishedElement().Object };
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollection);
+
+            // Act
+            mapper.MapCollection(content, model);
+
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.IsNotNull(model[0]);
+            Assert.AreEqual((decimal)5.5, model[0].Latitude);
+            Assert.AreEqual((decimal)10.5, model[0].Longitude);
+            Assert.AreEqual(7, model[0].Zoom);
+            Assert.IsNotNull(model[1]);
+            Assert.AreEqual((decimal)5.5, model[1].Latitude);
+            Assert.AreEqual((decimal)10.5, model[1].Longitude);
+            Assert.AreEqual(7, model[1].Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElementToCollectionWithoutParentObject_MapsUsingCustomObjectMapping()
+        {
+            // Arrange
+            var model = new List<GeoCoordinate>();
+            var content = new List<IPublishedElement> { MockPublishedElement().Object, MockPublishedElement().Object };
+            var mapper = GetMapper();
+            mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, MapGeoCoordinateForCollectionFromObject);
+
+            // Act
+            mapper.MapCollection(content, model);
+
+            // Assert
+            Assert.AreEqual(2, model.Count);
+            Assert.IsNotNull(model[0]);
+            Assert.AreEqual((decimal)5.5, model[0].Latitude);
+            Assert.AreEqual((decimal)10.5, model[0].Longitude);
+            Assert.AreEqual(7, model[0].Zoom);
+            Assert.IsNotNull(model[1]);
+            Assert.AreEqual((decimal)5.5, model[1].Latitude);
+            Assert.AreEqual((decimal)10.5, model[1].Longitude);
+            Assert.AreEqual(7, model[1].Zoom);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElementToCollection_WithClearCollection_ClearsCollectionBeforeMapping()
+        {
+            // Arrange
+            var model = new List<SimpleViewModel3>();
+            var mapper = GetMapper();
+            var content = new List<IPublishedElement> { MockPublishedElement().Object, MockPublishedElement().Object };
+
+            // Act
+            mapper.MapCollection(content, model);
+            mapper.MapCollection(content, model);
+
+            // Assert
+            Assert.AreEqual(2, model.Count);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedElementToCollection_WithoutClearCollection_DoesNotClearCollectionBeforeMapping()
+        {
+            // Arrange
+            var model = new List<SimpleViewModel3>();
+            var mapper = GetMapper();
+            var content = new List<IPublishedElement> { MockPublishedElement().Object, MockPublishedElement().Object };
 
             // Act
             mapper.MapCollection(content, model);
@@ -2413,12 +3379,12 @@
 
         #region Custom mappings
 
-        internal static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, Fallback fallback) 
+        internal static object MapGeoCoordinate(IUmbracoMapper mapper, IPublishedElement contentToMapFrom, string propName, Fallback fallback) 
         {
             return GetGeoCoordinate(contentToMapFrom.Value(propName, fallback: fallback).ToString());
         }
 
-        private static object MapInversedGeoCoordinate(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, Fallback fallback)
+        private static object MapInversedGeoCoordinate(IUmbracoMapper mapper, IPublishedElement contentToMapFrom, string propName, Fallback fallback)
         {
             var value = GetGeoCoordinate(contentToMapFrom.Value(propName, fallback: fallback).ToString());
             value.Latitude = -value.Latitude;
@@ -2426,14 +3392,14 @@
             return value;
         }
 
-        private static object MapGeoCoordinateForCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, string propName, Fallback fallback)
+        private static object MapGeoCoordinateForCollection(IUmbracoMapper mapper, IPublishedElement contentToMapFrom, string propName, Fallback fallback)
         {
             return GetGeoCoordinate(contentToMapFrom.Value("geoCoordinate").ToString());
         }
 
         private static object MapGeoCoordinateForCollectionFromObject(IUmbracoMapper mapper, object value)
         {
-            return GetGeoCoordinate(((IPublishedContent)value).Value("geoCoordinate").ToString());
+            return GetGeoCoordinate(((IPublishedElement)value).Value("geoCoordinate").ToString());
         }
 
         private static object MapGeoCoordinateFromObject(IUmbracoMapper mapper, object value)
@@ -2469,10 +3435,31 @@
 
         #region Mocks
 
+        private static Mock<IPublishedElement> MockPublishedElement(string bodyTextValue = "This is the body text",
+                                                                    bool recursiveCall = false)
+        {
+            var contentMock = new Mock<IPublishedElement>();
+            SetUpPropertyMocks(bodyTextValue, recursiveCall, contentMock);
+            return contentMock;
+        }
+
         private static Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
-            string bodyTextValue = "This is the body text",
-            bool recursiveCall = false,
-            bool mockParent = true)
+                                                                    string bodyTextValue = "This is the body text",
+                                                                    bool recursiveCall = false,
+                                                                    bool mockParent = true)
+        {
+            var contentMock = new Mock<IPublishedContent>();
+            SetUpPropertyMocks(bodyTextValue, recursiveCall, contentMock.As<IPublishedElement>());
+
+            contentMock.Setup(c => c.Id).Returns(id);
+            contentMock.Setup(c => c.Name).Returns("Test content");
+            contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
+
+            SetUpParentContentMock(contentMock, mockParent);
+            return contentMock;
+        }
+
+        private static void SetUpPropertyMocks(string bodyTextValue, bool recursiveCall, Mock<IPublishedElement> contentMock)
         {
             var summaryTextPropertyMock = new Mock<IPublishedProperty>();
             summaryTextPropertyMock.Setup(c => c.Alias).Returns("summaryText");
@@ -2551,19 +3538,24 @@
             {
                 subModelValueContentMock.Setup(c => c.Alias).Returns("subModelValue");
                 subModelValueContentMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-                subModelValueContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>())).Returns(MockPublishedContent(recursiveCall: true).Object);
+                subModelValueContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>()))
+                    .Returns(MockPublishedContent(recursiveCall: true).Object);
 
                 subModelValuesContentMock.Setup(c => c.Alias).Returns("subModelValue");
                 subModelValuesContentMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-                subModelValuesContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>()))
-                    .Returns(new List<IPublishedContent> { MockPublishedContent(recursiveCall: true).Object, MockPublishedContent(recursiveCall: true).Object });
+                subModelValuesContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>())).Returns(
+                    new List<IPublishedContent>
+                        {
+                            MockPublishedContent(recursiveCall: true).Object,
+                            MockPublishedContent(recursiveCall: true).Object
+                        });
             }
 
             var linksContentMock = new Mock<IPublishedProperty>();
             linksContentMock.Setup(c => c.Alias).Returns("links");
             linksContentMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            linksContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>()))
-                .Returns(new List<Umbraco.Web.Models.Link>
+            linksContentMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>())).Returns(
+                new List<Umbraco.Web.Models.Link>
                     {
                         new Umbraco.Web.Models.Link
                             {
@@ -2585,24 +3577,9 @@
             var moreImagesMock = new Mock<IPublishedProperty>();
             moreImagesMock.Setup(c => c.Alias).Returns("moreImages");
             moreImagesMock.Setup(c => c.HasValue(It.IsAny<string>(), It.IsAny<string>())).Returns(true);
-            moreImagesMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>())).Returns(new List<IPublishedContent> { MockImage().Object, MockImage().Object });
+            moreImagesMock.Setup(c => c.GetValue(It.IsAny<string>(), It.IsAny<string>()))
+                .Returns(new List<IPublishedContent> { MockImage().Object, MockImage().Object });
 
-            var parentContentMock = new Mock<IPublishedContent>();
-            parentContentMock.Setup(c => c.Id).Returns(1001);
-
-            var contentMock = new Mock<IPublishedContent>();
-            contentMock.Setup(c => c.Id).Returns(id);
-            if (mockParent)
-            {
-                contentMock.Setup(c => c.Parent).Returns(parentContentMock.Object);
-            }
-            else
-            {
-                contentMock.Setup(c => c.Parent).Returns((IPublishedContent)null);
-            }
-
-            contentMock.Setup(c => c.Name).Returns("Test content");
-            contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "summaryText"))).Returns(summaryTextPropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "welcomeText"))).Returns(welcomeTextPropertyMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "emptyText"))).Returns(emptyTextPropertyMock.Object);
@@ -2622,8 +3599,20 @@
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "links"))).Returns(linksContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "mainImage"))).Returns(mainImageMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "moreImages"))).Returns(moreImagesMock.Object);
+        }
 
-            return contentMock;
+        private static void SetUpParentContentMock(Mock<IPublishedContent> contentMock, bool mockParent)
+        {
+            var parentContentMock = new Mock<IPublishedContent>();
+            parentContentMock.Setup(c => c.Id).Returns(1001);
+            if (mockParent)
+            {
+                contentMock.Setup(c => c.Parent).Returns(parentContentMock.Object);
+            }
+            else
+            {
+                contentMock.Setup(c => c.Parent).Returns((IPublishedContent)null);
+            }
         }
 
         private static Mock<IPublishedContent> MockImage()

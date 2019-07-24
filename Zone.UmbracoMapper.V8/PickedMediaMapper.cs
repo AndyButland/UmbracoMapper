@@ -16,7 +16,7 @@
         /// <param name="propName">Name of the property to map</param>
         /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <returns>MediaFile instance</returns>
-        public static object MapMediaFileCollection(IUmbracoMapper mapper, IPublishedContent contentToMapFrom,
+        public static object MapMediaFileCollection(IUmbracoMapper mapper, IPublishedElement contentToMapFrom,
             string propName, Fallback fallback)
         {
             // With V8 will get IPublishedContent
@@ -42,7 +42,7 @@
         /// <param name="propName">Name of the property to map</param>
         /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <returns>MediaFile instance</returns>
-        public static object MapMediaFile(IUmbracoMapper mapper, IPublishedContent contentToMapFrom, 
+        public static object MapMediaFile(IUmbracoMapper mapper, IPublishedElement contentToMapFrom, 
             string propName, Fallback fallback)
         {
             // With V8 will get IPublishedContent

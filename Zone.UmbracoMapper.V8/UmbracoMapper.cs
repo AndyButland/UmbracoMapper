@@ -82,6 +82,26 @@
                                      PropertySet propertySet = PropertySet.All)
             where T : class
         {
+            return Map((IPublishedElement)content, model, culture, propertyMappings, propertySet);
+        }
+
+        /// <summary>
+        /// Maps an instance of IPublishedElement to the passed view model based on conventions (and/or overrides)
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="content">Instance of IPublishedContent</param>
+        /// <param name="model">View model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="propertySet">Set of properties to map</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        public IUmbracoMapper Map<T>(IPublishedElement content,
+                                     T model,
+                                     string culture = "",
+                                     Dictionary<string, PropertyMapping> propertyMappings = null,
+                                     PropertySet propertySet = PropertySet.All)
+            where T : class
+        {
             if (content == null)
             {
                 return this;
@@ -115,8 +135,12 @@
                 }
 
                 // Get content to map from (check if we want to map to content at a level above the currently passed node) and also
-                // get the level above the current node that we are mapping from
-                var contentToMapFrom = GetContentToMapFrom(content, propertyMappings, property.Name, out int levelsAbove);
+                // get the level above the current node that we are mapping from.
+                // Can only do this for IPublishedContent, not IPublishedElement, as the latter has no concept of a Parent.
+                var levelsAbove = 0;
+                var contentToMapFrom = content is IPublishedContent
+                    ? GetContentToMapFrom((IPublishedContent)content, propertyMappings, property.Name, out levelsAbove)
+                    : content;
 
                 // Check if property is a complex type and is being asked to be mapped from a higher level in the node tree.
                 // If so, we need to trigger a separate mapping operation for this.
@@ -351,7 +375,7 @@
         }
 
         /// <summary>
-        /// Maps a collection of IPublishedContent to the passed view model
+        /// Maps a collection of IPublishedElement to the passed view model
         /// </summary>
         /// <typeparam name="T">View model type</typeparam>
         /// <param name="contentCollection">Collection of IPublishedContent</param>
@@ -362,6 +386,28 @@
         /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
         /// <returns>Instance of IUmbracoMapper</returns>
         public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection,
+                                               IList<T> modelCollection,
+                                               string culture = "",
+                                               Dictionary<string, PropertyMapping> propertyMappings = null,
+                                               PropertySet propertySet = PropertySet.All,
+                                               bool clearCollectionBeforeMapping = true)
+            where T : class, new()
+        { 
+            return MapCollection((IEnumerable<IPublishedElement>)contentCollection, modelCollection, culture, propertyMappings, propertySet, clearCollectionBeforeMapping);
+        }
+
+        /// <summary>
+        /// Maps a collection of IPublishedElement to the passed view model
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="contentCollection">Collection of IPublishedContent</param>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <param name="propertySet">Set of properties to map</param>
+        /// <param name="clearCollectionBeforeMapping">Flag indicating whether to clear the collection mapping too before carrying out the mapping</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        public IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedElement> contentCollection,
                                                IList<T> modelCollection,
                                                string culture = "",
                                                Dictionary<string, PropertyMapping> propertyMappings = null,
@@ -694,7 +740,7 @@
         /// <param name="propName">Name of property to map</param>
         /// <param name="levelsAbove">Output parameter indicating the levels above the current node we are mapping from</param>
         /// <returns>Instance of IPublishedContent to map from</returns>
-        private static IPublishedContent GetContentToMapFrom(IPublishedContent content, 
+        private static IPublishedElement GetContentToMapFrom(IPublishedContent content, 
                                                              IReadOnlyDictionary<string, PropertyMapping> propertyMappings, 
                                                              string propName, 
                                                              out int levelsAbove)
@@ -733,7 +779,7 @@
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
         /// <param name="stringValueFormatter">A function for transformation of the string value, if passed</param>
         /// <param name="propertySet">Set of properties to map</param>
-        private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
+        private void MapContentProperty<T>(T model, PropertyInfo property, IPublishedElement contentToMapFrom,
                                            string culture,
                                            IReadOnlyDictionary<string, PropertyMapping> propertyMappings,
                                            bool concatenateToExistingValue = false, string concatenationSeperator = "",
@@ -919,7 +965,7 @@
         /// <param name="concatenateToExistingValue">Flag for if we want to concatenate the value to the existing value</param>
         /// <param name="concatenationSeperator">If using concatenation, use this string to separate items</param>
         /// <param name="coalesceWithExistingValue">Flag for if we want to coalesce the value to the existing value</param>
-        private void SetValueFromMapFromAttribute<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
+        private void SetValueFromMapFromAttribute<T>(T model, PropertyInfo property, IPublishedElement contentToMapFrom,
                                                      IMapFromAttribute mapFromAttribute, string propName,
                                                      string culture,
                                                      Fallback fallback, IPropertyValueGetter propertyValueGetter,
@@ -997,7 +1043,7 @@
         /// <param name="customMapping">Instance of <see cref="CustomMapping"/> to use for mapping</param>
         /// <param name="propName">Name of property to map to</param>
         /// <param name="fallback">Fallback method(s) to use when content not found</param>
-        private void SetValueFromCustomMapping<T>(T model, PropertyInfo property, IPublishedContent contentToMapFrom,
+        private void SetValueFromCustomMapping<T>(T model, PropertyInfo property, IPublishedElement contentToMapFrom,
                                                   CustomMapping customMapping, string propName, Fallback fallback)
         {
             var value = customMapping(this, contentToMapFrom, propName, fallback);
@@ -1039,7 +1085,7 @@
         /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="fallback">Fallback method(s) to use when content not found</param>
         /// <returns>Property value</returns>
-        private static object GetPropertyValue(IPublishedContent content, 
+        private static object GetPropertyValue(IPublishedElement content, 
                                                IPropertyValueGetter propertyValueGetter, 
                                                string propName, 
                                                string culture,
@@ -1056,7 +1102,7 @@
         /// <param name="culture">Culture to use when retrieving content</param>
         /// <param name="mapIfPropertyMatches">Property alias and value to match</param>
         /// <returns>True if mapping condition is met</returns>
-        private static bool IsMappingConditionMet(IPublishedContent contentToMapFrom, 
+        private static bool IsMappingConditionMet(IPublishedElement contentToMapFrom, 
                                                   IPropertyValueGetter propertyValueGetter, 
                                                   string culture, 
                                                   KeyValuePair<string, string> mapIfPropertyMatches)
@@ -1081,7 +1127,7 @@
         /// <param name="stringValueFormatter">A function for transformation of the string value, if passed</param>
         /// <param name="propertySet">Set of properties to map. This function will only run for All and Native</param>
         private static void MapNativeContentProperty<T>(T model, PropertyInfo property,
-                                                        IPublishedContent contentToMapFrom, string propName,
+                                                        IPublishedElement contentToMapFrom, string propName,
                                                         bool concatenateToExistingValue = false, string concatenationSeperator = "",
                                                         bool coalesceWithExistingValue = false,
                                                         Func<string, string> stringValueFormatter = null, 

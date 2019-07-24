@@ -127,24 +127,29 @@
     {
         public string HeadingAndBodyText { get; set; }
 
+        public string SummaryAndBodyText { get; set; }
+
         public string SummaryText { get; set; }
     }
 
     public class SimpleViewModel5WithAttribute : SimpleViewModel2WithAttribute
     {
-        [PropertyMapping(SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
+        [PropertyMapping(SourcePropertiesForConcatenation = new[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
         public string HeadingAndBodyText { get; set; }
 
-        [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" })]
+        [PropertyMapping(SourcePropertiesForConcatenation = new[] { "summaryText", "bodyText" }, ConcatenationSeperator = ",")]
+        public string SummaryAndBodyText { get; set; }
+
+        [PropertyMapping(SourcePropertiesForCoalescing = new[] { "summaryText", "bodyText" })]
         public string SummaryText { get; set; }
     }
 
     public class SimpleViewModel5bWithAttribute : SimpleViewModel2WithAttribute
     {
-        [PropertyMapping(SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
+        [PropertyMapping(SourcePropertiesForConcatenation = new[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
         public string HeadingAndBodyText { get; set; }
 
-        [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "emptyText", "bodyText" })]
+        [PropertyMapping(SourcePropertiesForCoalescing = new[] { "emptyText", "bodyText" })]
         public string SummaryText { get; set; }
     }
 
@@ -269,7 +274,7 @@
 
     public class SuffixAddingPropertyValueGetter : DefaultPropertyValueGetter
     {
-        public override object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
+        public override object GetPropertyValue(IPublishedElement content, string alias, string culture, string segment, Fallback fallback)
         {
             var value = base.GetPropertyValue(content, alias, culture, segment, fallback) as string ?? string.Empty;
             return value + "...";
@@ -278,7 +283,7 @@
 
     public class ComplexTypeReturningPropertyValueGetter : DefaultPropertyValueGetter
     {
-        public override object GetPropertyValue(IPublishedContent content, string alias, string culture, string segment, Fallback fallback)
+        public override object GetPropertyValue(IPublishedElement content, string alias, string culture, string segment, Fallback fallback)
         {
             return new GeoCoordinate
                 {

@@ -7,7 +7,6 @@
     using Microsoft.VisualStudio.TestTools.UnitTesting;
     using Moq;
     using Umbraco.Core.Models;
-    using Umbraco.Core.Models.PublishedContent;
     using Umbraco.Web;
     using Zone.UmbracoMapper.Common;
     using Zone.UmbracoMapper.V7;
@@ -269,7 +268,7 @@
                         "HeadingAndBodyText", 
                         new PropertyMapping 
                         { 
-                            SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, 
+                            SourcePropertiesForConcatenation = new[] { "Name", "bodyText" }, 
                             ConcatenationSeperator = ",",
                         } 
                     } 
@@ -309,7 +308,7 @@
                         "SummaryText", 
                         new PropertyMapping 
                         { 
-                            SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" }, 
+                            SourcePropertiesForCoalescing = new[] { "summaryText", "bodyText" }, 
                         } 
                     } 
                 });
@@ -348,7 +347,7 @@
                         "SummaryText", 
                         new PropertyMapping 
                         { 
-                            SourcePropertiesForCoalescing = new string[] { "emptyText", "bodyText" }, 
+                            SourcePropertiesForCoalescing = new[] { "emptyText", "bodyText" }, 
                         } 
                     } 
                 });

@@ -10,7 +10,7 @@
     /// <param name="propertyName">Name of the property to map</param>
     /// <param name="fallback">Fallback method(s) to use when content not found</param>
     /// <returns>Instance of object containing mapped data</returns>
-    public delegate object CustomMapping(IUmbracoMapper mapper, IPublishedContent content, string propertyName, Fallback fallback);
+    public delegate object CustomMapping(IUmbracoMapper mapper, IPublishedElement content, string propertyName, Fallback fallback);
 
     /// <summary>
     /// Provides a custom mapping from a dictionary object to an object

@@ -132,19 +132,19 @@
 
     public class SimpleViewModel5WithAttribute : SimpleViewModel2WithAttribute
     {
-        [PropertyMapping(SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
+        [PropertyMapping(SourcePropertiesForConcatenation = new[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
         public string HeadingAndBodyText { get; set; }
 
-        [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "summaryText", "bodyText" })]
+        [PropertyMapping(SourcePropertiesForCoalescing = new[] { "summaryText", "bodyText" })]
         public string SummaryText { get; set; }
     }
 
     public class SimpleViewModel5bWithAttribute : SimpleViewModel2WithAttribute
     {
-        [PropertyMapping(SourcePropertiesForConcatenation = new string[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
+        [PropertyMapping(SourcePropertiesForConcatenation = new[] { "Name", "bodyText" }, ConcatenationSeperator = ",")]
         public string HeadingAndBodyText { get; set; }
 
-        [PropertyMapping(SourcePropertiesForCoalescing = new string[] { "emptyText", "bodyText" })]
+        [PropertyMapping(SourcePropertiesForCoalescing = new[] { "emptyText", "bodyText" })]
         public string SummaryText { get; set; }
     }
 
