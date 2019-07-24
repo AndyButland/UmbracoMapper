@@ -23,7 +23,7 @@ Umbraco Mapper provides an interface **IUmbracoMapper** and implementation **Umb
 The operations supported are:
 
 - Mapping of an Umbraco **IPublishedContent** to a custom view model.
-- Mapping of a **collection of IPublishedContent** items - e.g. from a node query picker - to a custom view model's collection.
+- Mapping of a **collection of IPublishedContent**  (or, for v8, a collection of nested content **IPublishedElement**) items - e.g. from a node query picker - to a custom view model's collection.
 - Mapping of **XML** to a custom view model or collection.  This might be from a particular Umbraco data type (e.g. Related Links) or from a custom source of XML.
 - Mapping of **JSON** to a custom view model or collection.  This might be from a particular Umbraco data type or from a custom source of JSON.
 - Mapping of a **Dictionary** to a custom view model or collection.  
@@ -295,7 +295,7 @@ Or - to support the more flexible fall-back methods provided via version 8:
 
 Version 1.5.0 introduced a new feature that would auto-map related and ancestor content to avoid having to explicitly make secondary mapping calls.  It works when you have a view model that itself contains a property that is a complex type - i.e. an instance of a class with one or more properties - or a collection of complex types.
 
-If in the standard mapping operation that property is mapped to a single or multiple content/node picker AND you have the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters) installed (required so we get back an IPublishedContent or IEnumerable<IPublishedContent>), OR you use the **LevelsAbove** property mapping attribute field to indicate that the mapping should be made from a parent node, Umbraco Mapper will automatically make further mapping operations for that related or ancestor content to the complex type on your view model.
+If in the standard mapping operation that property is mapped to a single or multiple content/node picker or an instance of nested content, AND you are either running V8 or have the [Umbraco Core Property Editor Converters](https://our.umbraco.org/projects/developer-tools/umbraco-core-property-value-converters) installed (required so we get back an IPublishedContent or IEnumerable<IPublishedContent>), OR you use the **LevelsAbove** property mapping attribute field to indicate that the mapping should be made from a parent node, Umbraco Mapper will automatically make further mapping operations for that related or ancestor content to the complex type on your view model.
 
 To take an example illustrating all three types of auto-mapping (single related content, multiple related content and parent content), say you have a view model that looks like this:
 
@@ -624,6 +624,12 @@ Full signature of mapping methods are as follows:
         Dictionary<string, PropertyMapping> propertyMappings = null,
         PropertySet propertySet = PropertySet.All);
 
+    IUmbracoMapper Map<T>(IPublishedElement content, 
+        T model, 
+		string culture, 	// versions supporting Umbraco 8 only
+        Dictionary<string, PropertyMapping> propertyMappings = null,
+        PropertySet propertySet = PropertySet.All);
+
     IUmbracoMapper Map<T>(XElement xml, 
         T model,
         Dictionary<string, PropertyMapping> propertyMappings = null);
@@ -637,6 +643,13 @@ Full signature of mapping methods are as follows:
         Dictionary<string, PropertyMapping> propertyMappings = null);
 
     IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedContent> contentCollection, 
+        IList<T> modelCollection,
+		string culture, 	// versions supporting Umbraco 8 only
+        Dictionary<string, PropertyMapping> propertyMappings = null,
+        PropertySet propertySet = PropertySet.All, 
+        bool clearCollectionBeforeMapping = true) where T : new();
+
+    IUmbracoMapper MapCollection<T>(IEnumerable<IPublishedElement> contentCollection, 
         IList<T> modelCollection,
 		string culture, 	// versions supporting Umbraco 8 only
         Dictionary<string, PropertyMapping> propertyMappings = null,
@@ -840,7 +853,7 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 - 4.1.0
     - Upgraded dependencies for version targetting Umbraco V8 to use 8.1
 - 4.2.0
-    - Added support for mapping from IPublishedElement
+    - Added support for mapping from nested content's IPublishedElement
 	
 ## Credits
 
@@ -848,6 +861,6 @@ Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigi
 
 ## License
 
-Copyright &copy; 2016-18 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
+Copyright &copy; 2016-19 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
 
 Licensed under the [MIT License](License.md)

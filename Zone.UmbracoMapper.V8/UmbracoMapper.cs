@@ -931,7 +931,22 @@
                         typeof(UmbracoMapper)
                             .GetMethod("MapCollectionOfIPublishedContent", BindingFlags.NonPublic | BindingFlags.Instance)
                             .MakeGenericMethod(collectionPropertyType)
-                            .Invoke(this, new[] { (IEnumerable<IPublishedContent>)value, property.GetValue(model), culture, null });
+                            .Invoke(this, new[] { (IEnumerable<IPublishedElement>)value, property.GetValue(model), culture, null });
+                    }
+                    else if (value is IPublishedElement)
+                    {
+                        typeof(UmbracoMapper)
+                            .GetMethod("MapIPublishedElement", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(property.PropertyType)
+                            .Invoke(this, new[] { (IPublishedContent)value, property.GetValue(model), culture });
+                    }
+                    else if (value is IEnumerable<IPublishedElement> && property.PropertyType.GetInterface("IEnumerable") != null)
+                    {
+                        var collectionPropertyType = GetGenericCollectionType(property);
+                        typeof(UmbracoMapper)
+                            .GetMethod("MapCollectionOfIPublishedElement", BindingFlags.NonPublic | BindingFlags.Instance)
+                            .MakeGenericMethod(collectionPropertyType)
+                            .Invoke(this, new[] { (IEnumerable<IPublishedElement>)value, property.GetValue(model), culture, null });
                     }
                     else if (property.PropertyType.IsInstanceOfType(value))
                     {
@@ -1182,6 +1197,48 @@
         /// </remarks>
 #pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
         private IUmbracoMapper MapIPublishedContent<T>(IPublishedContent content, T model, string culture) where T : class, new()
+        {
+            return Map<T>(content, model, culture);
+        }
+#pragma warning restore S1144 // Unused private types or members should be removed
+
+        /// <summary>
+        /// Maps a collection of IPublishedElement to the passed view model
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="contentCollection">Collection of IPublishedElement</param>
+        /// <param name="modelCollection">Collection from view model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
+        /// <param name="propertyMappings">Optional set of property mappings, for use when convention mapping based on name is not sufficient.  Can also indicate the level from which the map should be made above the current content node.  This allows you to pass the level in above the current content for where you want to map a particular property.  E.g. passing { "heading", 1 } will get the heading from the node one level up.</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        /// <remarks>
+        /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
+        /// by having multiple overloads.
+        /// </remarks>
+#pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
+        private IUmbracoMapper MapCollectionOfIPublishedElement<T>(IEnumerable<IPublishedElement> contentCollection,
+                                                                   IList<T> modelCollection,
+                                                                   string culture,
+                                                                   Dictionary<string, PropertyMapping> propertyMappings) where T : class, new()
+        {
+            return MapCollection<T>(contentCollection, modelCollection, culture, propertyMappings);
+        }
+#pragma warning restore S1144 // Unused private types or members should be removedB
+
+        /// <summary>
+        /// Maps a single IPublishedElement to the passed view model
+        /// </summary>
+        /// <typeparam name="T">View model type</typeparam>
+        /// <param name="content">Single IPublishedElement</param>
+        /// <param name="model">Model to map to</param>
+        /// <param name="culture">Culture to use when retrieving content</param>
+        /// <returns>Instance of IUmbracoMapper</returns>
+        /// <remarks>
+        /// This method is created purely to support making a call to mapping a collection via reflection, to avoid the ambiguous match exception caused 
+        /// by having multiple overloads.
+        /// </remarks>
+#pragma warning disable S1144 // Unused private types or members should be removed (as is used, via refelection call)
+        private IUmbracoMapper MapIPublishedElement<T>(IPublishedElement content, T model, string culture) where T : class, new()
         {
             return Map<T>(content, model, culture);
         }
