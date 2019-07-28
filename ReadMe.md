@@ -401,15 +401,19 @@ And secondly when mapping from a dictionary object value:
 
     delegate object CustomObjectMapping(IUmbracoMapper mapper, object value);
 	
-> When working with Umbraco 8 (Umbraco Mapper package version 4.0 and above), the first signature is slightly different, as we have support of more flexible fall-back methods (such as via language variant, in addition to recursive retrieval up the content free):
+> When working with Umbraco 8 (Umbraco Mapper package version 4.0 and above), the first signature is slightly different, as we have support of more flexible fall-back methods (such as via language variant, in addition to recursive retrieval up the content free) and we can map from IPublishedElement (e.g. as used with Nested Content):
 
-    delegate object CustomMapping(IUmbracoMapper mapper, IPublishedContent content, string propertyName, Fallback fallback);
-    
-The add-on package provides this method, **DampMapper.MapMediaFile**, for the purposes of mapping from the DAMP model to the standard MediaFile class provided with the mapper. If you want to use this in your project you'll just need to add it to the custom mappings like this:
+    delegate object CustomMapping(IUmbracoMapper mapper, IPublishedElement content, string propertyName, Fallback fallback);
 
-    mapper.AddCustomMapping(typeof(MediaFile).FullName, DampMapper.MapMediaFile);
+> For V8, if you need to access properties available on IPublishedContent, but not IPublishedElement, you can cast to the former like this:
+
+    var publishedContent = contentToMapFrom as IPublishedContent;
+    if (publishedContent != null)
+    {
+        // Can now use e.g. publishedContent.Name;
+    }
     
-Here's another example, this time mapping from the [Google Maps data type](http://our.umbraco.org/projects/backoffice-extensions/google-maps-datatype) (which stores it's data as three values - lat, long, zoom - in CSV format):
+Here'an example, mapping from the [Google Maps data type](http://our.umbraco.org/projects/backoffice-extensions/google-maps-datatype) (which stores it's data as three values - lat, long, zoom - in CSV format):
 
     mapper.AddCustomMapping(typeof(GeoCoordinate).FullName, CustomMappings.MapGeoCoordinate);
     ...
@@ -608,7 +612,7 @@ Full signature of delegates are as follows:
 And for versions targetting Umbraco 8:
 
     object CustomMapping(IUmbracoMapper mapper,
-                         IPublishedContent content,
+                         IPublishedElement content,
                          string propertyName,
                          Fallback fallback)			
 
