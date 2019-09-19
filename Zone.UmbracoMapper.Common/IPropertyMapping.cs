@@ -102,5 +102,12 @@
         /// custom mapping that might be registered globally. 
         /// </summary>
         string CustomMappingMethod { get; set; }
+
+        /// <summary>
+        /// A flag that if set to true will attempt to map the retrieved single property value to a prevalue label (e.g. from a radio button list).
+        /// Will only be applied if the property value is an integer and the viewmodel field a string.
+        /// Only used in V7 (in V8, prevalue labels are returned natively).
+        /// </summary>
+        bool MapFromPreValue { get; set; }
     }
 }

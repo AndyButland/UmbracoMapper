@@ -604,6 +604,11 @@
             {
                 propertyMappings[property.Name].CustomMappingMethod = propertyMapping.CustomMappingMethod;
             }
+
+            if (!propertyMappings[property.Name].MapFromPreValue)
+            {
+                propertyMappings[property.Name].MapFromPreValue = propertyMapping.MapFromPreValue;
+            }
         }
 
         /// <summary>
@@ -640,6 +645,7 @@
             mapping.FallbackMethods = attribute.FallbackMethods;
             mapping.CustomMappingType = attribute.CustomMappingType;
             mapping.CustomMappingMethod = attribute.CustomMappingMethod;
+            mapping.MapFromPreValue = attribute.MapFromPreValue;
         }
 
         /// <summary>

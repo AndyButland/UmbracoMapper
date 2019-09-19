@@ -861,7 +861,7 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 	
 ## Credits
 
-Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigitial.com) for code, reviews and testing. 
+Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigital.com) for code, reviews and testing. 
 
 ## License
 

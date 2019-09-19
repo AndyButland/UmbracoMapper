@@ -884,9 +884,38 @@
                 else
                 {
                     // Map primitive types
+
+                    // If mapping to prevalue label is requested, create a custom string formatter to handle that, making sure to wrap
+                    // the existing formatter if provided.
+                    if (propertyMappings.ShouldMapFromPreValue(property.Name))
+                    {
+                        stringValueFormatter = GetMapFromPreValueStringValueFormatter(stringValueFormatter);
+                    }
+
                     SetTypedPropertyValue(model, property, value.ToString(), concatenateToExistingValue, concatenationSeperator, coalesceWithExistingValue, stringValueFormatter, propertySet);
                 }
             }
+        }
+
+        /// <summary>
+        /// Constructs a string value formatter used for mapping prevalue values to labels, wrapping an existing formatter if provided.
+        /// </summary>
+        /// <param name="stringValueFormatter">Existing string value formatter function.</param>
+        /// <returns></returns>
+        private Func<string, string> GetMapFromPreValueStringValueFormatter(Func<string, string> stringValueFormatter)
+        {
+            return x =>
+                {
+                    var result = x;
+                    int intValue;
+                    if (int.TryParse(x, out intValue))
+                    {
+                        var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
+                        result = umbracoHelper.GetPreValueAsString(intValue);
+                    }
+
+                    return stringValueFormatter != null ? stringValueFormatter(result) : result;
+                };
         }
 
         /// <summary>

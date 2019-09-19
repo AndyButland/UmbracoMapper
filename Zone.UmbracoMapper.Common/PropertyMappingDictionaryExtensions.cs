@@ -113,6 +113,17 @@
         }
 
         /// <summary>
+        /// Helper to check if property should be mapped from the prevalue label
+        /// </summary>
+        /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
+        /// <param name="propName">Name of property to map to</param>
+        /// <returns>True if should map from prevalue label</returns>
+        public static bool ShouldMapFromPreValue(this IReadOnlyDictionary<string, PropertyMapping> propertyMappings, string propName)
+        {
+            return propertyMappings.ContainsKey(propName) && propertyMappings[propName].MapFromPreValue;
+        }
+
+        /// <summary>
         /// Helper to check if particular property should be mapped recursively
         /// </summary>
         /// <param name="propertyMappings">Dictionary of mapping convention overrides</param>
