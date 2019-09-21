@@ -530,7 +530,7 @@
                                                                                                PropertyInfo property,
                                                                                                PropertyMapping propertyMapping)
         {
-            if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceProperty))
+            if (string.IsNullOrEmpty(propertyMappings[property.Name].SourceProperty))
             {
                 propertyMappings[property.Name].SourceProperty = propertyMapping.SourceProperty;
             }
@@ -540,12 +540,12 @@
                 propertyMappings[property.Name].LevelsAbove = propertyMapping.LevelsAbove;
             }
 
-            if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceRelatedProperty))
+            if (string.IsNullOrEmpty(propertyMappings[property.Name].SourceRelatedProperty))
             {
                 propertyMappings[property.Name].SourceRelatedProperty = propertyMapping.SourceRelatedProperty;
             }
 
-            if (!string.IsNullOrEmpty(propertyMappings[property.Name].SourceChildProperty))
+            if (string.IsNullOrEmpty(propertyMappings[property.Name].SourceChildProperty))
             {
                 propertyMappings[property.Name].SourceChildProperty = propertyMapping.SourceChildProperty;
             }
@@ -556,7 +556,7 @@
                     propertyMapping.SourcePropertiesForConcatenation;
             }
 
-            if (!string.IsNullOrEmpty(propertyMappings[property.Name].ConcatenationSeperator))
+            if (string.IsNullOrEmpty(propertyMappings[property.Name].ConcatenationSeperator))
             {
                 propertyMappings[property.Name].ConcatenationSeperator = propertyMapping.ConcatenationSeperator;
             }
@@ -605,10 +605,7 @@
                 propertyMappings[property.Name].CustomMappingMethod = propertyMapping.CustomMappingMethod;
             }
 
-            if (!propertyMappings[property.Name].MapFromPreValue)
-            {
-                propertyMappings[property.Name].MapFromPreValue = propertyMapping.MapFromPreValue;
-            }
+            propertyMappings[property.Name].MapFromPreValue = propertyMapping.MapFromPreValue;
         }
 
         /// <summary>

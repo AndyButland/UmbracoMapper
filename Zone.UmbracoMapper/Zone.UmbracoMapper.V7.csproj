@@ -250,10 +250,12 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Attributes\IMapFromAttribute.cs" />
+    <Compile Include="IPreValueLabelGetter.cs" />
     <Compile Include="IPropertyValueGetter.cs" />
     <Compile Include="PickedMediaMapper.cs" />
     <Compile Include="CustomMapping.cs" />
     <Compile Include="IUmbracoMapper.cs" />
+    <Compile Include="DefaultPreValueLabeLGetter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="UmbracoMapper.cs" />
     <Compile Include="DefaultPropertyValueGetter.cs" />

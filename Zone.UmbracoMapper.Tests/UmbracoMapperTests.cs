@@ -59,7 +59,7 @@
             var mapper = GetMapper();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); }, } } });
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "Name", new PropertyMapping { StringValueFormatter = x => x.ToUpper(), } } });
 
             // Assert
             Assert.AreEqual("TEST CONTENT", model.Name);
@@ -175,12 +175,12 @@
             var content = MockPublishedContent();
 
             // Act
-            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => { return x.ToUpper(); } } } });
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping> { { "BodyText", new PropertyMapping { StringValueFormatter = x => x.ToUpper() } } });
 
             // Assert
             Assert.AreEqual("THIS IS THE BODY TEXT", model.BodyText);
-        }        
-        
+        }
+
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsCustomPropertiesWithDifferentNamesUsingAttribute()
         {
@@ -1058,6 +1058,83 @@
             Assert.AreEqual(1000, firstImage.Size);
             Assert.AreEqual(".jpg", firstImage.FileExtension);
             Assert.AreEqual("Image", model.MainImage.DocumentTypeAlias);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsPreValueToLabel()
+        {
+            // Arrange
+            var model = new SimpleViewModel13();
+            var mockPreValueGetter = new Mock<IPreValueLabelGetter>();
+            mockPreValueGetter.Setup(x => x.GetPreValueAsString(It.Is<string>(y => y == "1"))).Returns("x");
+            var mapper = GetMapper(preValueLabelGetter: mockPreValueGetter.Object);
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+                {
+                    { "Letter", new PropertyMapping { MapFromPreValue = true } }
+                });
+
+            // Assert
+            Assert.AreEqual("x", model.Letter);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsPreValueToLabelUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel13a();
+            var mockPreValueGetter = new Mock<IPreValueLabelGetter>();
+            mockPreValueGetter.Setup(x => x.GetPreValueAsString(It.Is<string>(y => y == "1"))).Returns("x");
+            var mapper = GetMapper(preValueLabelGetter: mockPreValueGetter.Object);
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual("x", model.Letter);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsPreValueToLabelWithStringFormmater()
+        {
+            // Arrange
+            var model = new SimpleViewModel13();
+            var mockPreValueGetter = new Mock<IPreValueLabelGetter>();
+            mockPreValueGetter.Setup(x => x.GetPreValueAsString(It.Is<string>(y => y == "1"))).Returns("x");
+            var mapper = GetMapper(preValueLabelGetter: mockPreValueGetter.Object);
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+                {
+                    { "Letter", new PropertyMapping { MapFromPreValue = true, StringValueFormatter = x => x.ToUpper() } },
+                });
+
+            // Assert
+            Assert.AreEqual("X", model.Letter);
+        }
+
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsPreValueToLabelWithStringFormatterUsingAttribute()
+        {
+            // Arrange
+            var model = new SimpleViewModel13a();
+            var mockPreValueGetter = new Mock<IPreValueLabelGetter>();
+            mockPreValueGetter.Setup(x => x.GetPreValueAsString(It.Is<string>(y => y == "1"))).Returns("x");
+            var mapper = GetMapper(preValueLabelGetter: mockPreValueGetter.Object);
+            var content = MockPublishedContent();
+
+            // Act
+            mapper.Map(content.Object, model, new Dictionary<string, PropertyMapping>
+                {
+                    { "Letter", new PropertyMapping { StringValueFormatter = x => x.ToUpper() } },
+                });
+
+            // Assert
+            Assert.AreEqual("X", model.Letter);
         }
 
         #endregion
@@ -2053,9 +2130,20 @@
 
         #region Test helpers
 
-        private static IUmbracoMapper GetMapper(IPropertyValueGetter propertyValueGetter = null)
+        private static IUmbracoMapper GetMapper(IPropertyValueGetter propertyValueGetter = null, IPreValueLabelGetter preValueLabelGetter = null)
         {
-            return propertyValueGetter == null ? new UmbracoMapper() : new UmbracoMapper(propertyValueGetter);
+            var mapper = new UmbracoMapper();
+            if (propertyValueGetter != null)
+            {
+                mapper.DefaultPropertyValueGetter = propertyValueGetter;
+            }
+
+            if (preValueLabelGetter != null)
+            {
+                mapper.DefaultPreValueLabeLGetter = preValueLabelGetter;
+            }
+
+            return mapper;
         }
 
         private static XElement GetXmlForSingle()
@@ -2517,6 +2605,10 @@
             moreImagesMock.Setup(c => c.PropertyTypeAlias).Returns("moreImages");
             moreImagesMock.Setup(c => c.Value).Returns(new List<IPublishedContent> { MockImage(), MockImage() });
 
+            var letterRadioButtonPropertyMock = new Mock<IPublishedProperty>();
+            letterRadioButtonPropertyMock.Setup(c => c.PropertyTypeAlias).Returns("letter");
+            letterRadioButtonPropertyMock.Setup(c => c.Value).Returns("1");
+
             var parentContentMock = new Mock<IPublishedContent>();
             parentContentMock.Setup(c => c.Id).Returns(1001);
 
@@ -2551,6 +2643,7 @@
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "links"), It.IsAny<bool>())).Returns(linksContentMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "mainImage"), It.IsAny<bool>())).Returns(mainImageMock.Object);
             contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "moreImages"), It.IsAny<bool>())).Returns(moreImagesMock.Object);
+            contentMock.Setup(c => c.GetProperty(It.Is<string>(x => x == "letter"), It.IsAny<bool>())).Returns(letterRadioButtonPropertyMock.Object);
 
             return contentMock;
         }

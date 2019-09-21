@@ -848,6 +848,9 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Allowed the direct mapping of a List collection type to an IEnumerable rather than requiring the view model use a List too
 - 3.0.2
     - Minor change to picked media mapper to resolve conflict between v6 and v7 method signature.  From this version on v6 is no longer supported.
+- 3.0.3
+	- Added MapFromPreValue attribute property to allow mapping from a prevalue label to a view model property.
+	- Fixed error in mapping options passed from attribute to dictionary when both are in use.
 - 4.0.0
     - Support of Umbraco version 8 (read more at this [blog post](https://web-matters.blogspot.com/2019/03/umbraco-mapper-new-releases-supporting-v8.html)
     - Changed mapping signature to allow the passing of a culture string, such that properties are mapping using the language variant indicated by the culture code.	
@@ -858,6 +861,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Upgraded dependencies for version targetting Umbraco V8 to use 8.1
 - 4.2.0
     - Added support for mapping from nested content's IPublishedElement
+- 4.2.1
+	- Fixed error in mapping options passed from attribute to dictionary when both are in use.
 	
 ## Credits
 

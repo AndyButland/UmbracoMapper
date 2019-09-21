@@ -20,13 +20,25 @@
         private readonly Dictionary<string, CustomObjectMapping> _customObjectMappings;
 
         public UmbracoMapper() 
-            : this(new DefaultPropertyValueGetter())
+            : this(new DefaultPropertyValueGetter(), new DefaultPreValueLabeLGetter())
         {
         }
 
         public UmbracoMapper(IPropertyValueGetter propertyValueGetter)
+            : this(propertyValueGetter, new DefaultPreValueLabeLGetter())
+        {
+        }
+
+        public UmbracoMapper(IPreValueLabelGetter preValueLabelGetter)
+            : this(new DefaultPropertyValueGetter(), preValueLabelGetter)
+        {
+        }
+
+        public UmbracoMapper(IPropertyValueGetter propertyValueGetter, IPreValueLabelGetter preValueLabelGetter)
         {
             DefaultPropertyValueGetter = propertyValueGetter;
+            DefaultPreValueLabeLGetter = preValueLabelGetter;
+
             _customMappings = new Dictionary<string, CustomMapping>();
             _customObjectMappings = new Dictionary<string, CustomObjectMapping>();
 
@@ -38,6 +50,11 @@
         /// Defines the default method for retrieving values from a property
         /// </summary>
         public IPropertyValueGetter DefaultPropertyValueGetter { get; set; }
+
+        /// <summary>
+        /// Defines the default method for retrieving labels from a prevalue
+        /// </summary>
+        public IPreValueLabelGetter DefaultPreValueLabeLGetter { get; set; }
 
         /// <summary>
         /// Allows the mapper to use a custom mapping for a specified type from IPublishedContent
@@ -906,14 +923,7 @@
         {
             return x =>
                 {
-                    var result = x;
-                    int intValue;
-                    if (int.TryParse(x, out intValue))
-                    {
-                        var umbracoHelper = new UmbracoHelper(UmbracoContext.Current);
-                        result = umbracoHelper.GetPreValueAsString(intValue);
-                    }
-
+                    var result = DefaultPreValueLabeLGetter.GetPreValueAsString(x);
                     return stringValueFormatter != null ? stringValueFormatter(result) : result;
                 };
         }

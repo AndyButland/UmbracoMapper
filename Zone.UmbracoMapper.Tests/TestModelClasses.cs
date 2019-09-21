@@ -232,6 +232,17 @@
         public IEnumerable<MediaFile> MoreImages { get; set; }
     }
 
+    public class SimpleViewModel13 : SimpleViewModel
+    {
+        public string Letter { get; set; }
+    }
+
+    public class SimpleViewModel13a : SimpleViewModel
+    {
+        [PropertyMapping(MapFromPreValue = true)]
+        public string Letter { get; set; }
+    }
+
     public class LinksPropertyModel
     {
         public string Name { get; set; }
