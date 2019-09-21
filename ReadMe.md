@@ -252,6 +252,9 @@ The "magic numbers" can (and should) be replaced by those defined in Umbraco 8's
         }, 
       });
 
+
+**MapFromPreValue** will map a single-value property from a prevalue (for example a radio button list).  Without this the prevalue's numeric Id will be mapped; by setting to true, the label from the prevalue will be mapped instead (normally more useful).  In Umbraco V8 this setting has no effect as the prevalue labels are mapped automatically.
+
 #### Mapping Using Attributes
 
 A newer feature that has been added to the package is the ability to configure your mappings using attributes on the view model, instead of passing in these overrides to the default mapping behaviour via the Dictionary parameter of the Map() method.         
