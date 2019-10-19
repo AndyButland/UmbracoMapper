@@ -866,6 +866,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
     - Added support for mapping from nested content's IPublishedElement
 - 4.2.1
 	- Fixed error in mapping options passed from attribute to dictionary when both are in use.
+- 4.2.2
+	- Fixed issue with mapping to ancestors.
 	
 ## Credits
 

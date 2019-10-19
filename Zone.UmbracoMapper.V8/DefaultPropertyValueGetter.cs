@@ -7,7 +7,13 @@
     {
         public virtual object GetPropertyValue(IPublishedElement content, string alias, string culture, string segment, Fallback fallback)
         {
-            return content.Value(alias, string.IsNullOrEmpty(culture) ? null : culture, segment, fallback);
+            // We need to cast to IPublishedContent if that's what we are mapping from, such that the fallback methods are
+            // handled correctly.
+            var publishedContent = content as IPublishedContent;
+            var cultureOrNull = string.IsNullOrEmpty(culture) ? null : culture;
+            return publishedContent != null
+                ? publishedContent.Value(alias, cultureOrNull, segment, fallback)
+                : content.Value(alias, cultureOrNull, segment, fallback);
         }
     }
 }
