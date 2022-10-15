@@ -868,6 +868,8 @@ With that dependency updated Umbraco 6 *appears to me* to work unaffected, which
 	- Fixed error in mapping options passed from attribute to dictionary when both are in use.
 - 4.2.2
 	- Fixed issue with mapping to ancestors.
+- 4.2.3
+	- Fixed NullReferenceException when mapping Name to a property value ([PR 54](https://github.com/AndyButland/UmbracoMapper/pull/54))
 	
 ## Credits
 
@@ -875,6 +877,6 @@ Thanks to Ali Taheri, Neil Cumpstey and Robin Herd at [Zone](http://www.zonedigi
 
 ## License
 
-Copyright &copy; 2016-19 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
+Copyright &copy; 2016-22 Andy Butland, Zone and [other contributors](https://github.com/AndyButland/UmbracoMapper/graphs/contributors)
 
 Licensed under the [MIT License](License.md)
