@@ -47,6 +47,22 @@
             Assert.AreEqual(1000, model.Id);
             Assert.AreEqual("Test content", model.Name);
         }
+        
+        [TestMethod]
+        public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesWithNullName()
+        {
+            // Arrange
+            var model = new SimpleViewModel();
+            var content = MockPublishedContent(name: null);
+            var mapper = GetMapper();
+
+            // Act
+            mapper.Map(content.Object, model);
+
+            // Assert
+            Assert.AreEqual(1000, model.Id);
+            Assert.IsNull(model.Name);
+        }
 
         [TestMethod]
         public void UmbracoMapper_MapFromIPublishedContent_MapsNativePropertiesWithDifferentNames()
@@ -3446,13 +3462,14 @@
         private static Mock<IPublishedContent> MockPublishedContent(int id = 1000, 
                                                                     string bodyTextValue = "This is the body text",
                                                                     bool recursiveCall = false,
-                                                                    bool mockParent = true)
+                                                                    bool mockParent = true,
+                                                                    string name = "Test content")
         {
             var contentMock = new Mock<IPublishedContent>();
             SetUpPropertyMocks(bodyTextValue, recursiveCall, contentMock.As<IPublishedElement>());
 
             contentMock.Setup(c => c.Id).Returns(id);
-            contentMock.Setup(c => c.Name).Returns("Test content");
+            contentMock.Setup(c => c.Name).Returns(name);
             contentMock.Setup(c => c.CreatorName).Returns("A.N. Editor");
 
             SetUpParentContentMock(contentMock, mockParent);

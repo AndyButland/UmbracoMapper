@@ -329,7 +329,10 @@
             // Concatenation and coalescing only supported/makes sense in this case too.
             if (property.PropertyType.Name == "String")
             {
-                var stringValue = value.ToString();
+                // Prevent null reference exception if a value gets here from NuCache.PublishedContent.Name and the value is null. This can
+                // happen when content with a localised set of values references another piece of content, and that other piece of content
+                // does not have a published version for that language
+                var stringValue = value == null ? null : value.ToString();
                 if (concatenateToExistingValue)
                 {
                     var prefixValueWith = property.GetValue(model) + concatenationSeperator;
